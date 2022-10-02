@@ -2,7 +2,7 @@
 
 Atomphys is a python module scripted by Matt Grau that helps to make calculations regarding any atomic properties. This is forked version, which was then subsequently edited to match the requirements of tiqi. On top of it it allows us to make quick edits to our version. It was also changed, such it is easily implementable as a python module in our script - using poetry and submodules.
 
-Most current edits were done by Wojtek, so in case of any queries please feel free to contact me: wadamczyk@phys.ethz.ch
+In case of any queries please feel free to contact me: wadamczyk@phys.ethz.ch - I should be able to answer some queries.
 
 ## Getting started
 
