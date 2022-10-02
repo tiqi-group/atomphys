@@ -1,8 +1,12 @@
 # atomphys_tiqi
 
-Atomphys is a python module scripted by Matt Grau that helps to make calculations regarding any atomic properties. This is forked version, which was then subsequently edited to match the requirements of tiqi.
+Atomphys is a python module scripted by Matt Grau that helps to make calculations regarding any atomic properties. This is forked version, which was then subsequently edited to match the requirements of tiqi. On top of it it allows us to make quick edits to our version. It was also changed, such it is easily implementable as a python module in our script - using poetry and submodules.
 
 ## Getting started
+
+
+
+
 
 To make it easy for you to get started with GitLab, here's a list of recommended next steps.
 
