@@ -21,7 +21,7 @@ Big part of documentation can be found here: https://atomphys.org
 
 ### Calculation of AC Stark shifts:
 
-What I found in the code of Matt, is that I dont fully understand where does the calculation of polarizability comes from. i.e. reference was not clearly given. Therefore I spend a week looking into this, and thinking what could have gone wrong and what could have gone right, and decided to use different method of calculating polarizability. I didnt directly edit the polarizability file, but I added functionality to calcualte the AC Stark shifts.
+What I found in the code of Matt, is that I dont fully understand where does the calculation of polarizability comes from. i.e. reference was not clearly given (I believe this is the reference https://arxiv.org/pdf/1703.09950v1.pdf). Therefore I spend a week looking into this, and thinking what could have gone wrong and what could have gone right, and decided to use different method of calculating polarizability. I didnt directly edit the polarizability file, but I added functionality to calcualte the AC Stark shifts.
 
 This calculation follows from Thesis of Christoph Fisher Chapter 3.3.1.
 
