@@ -7,8 +7,9 @@ In case of any queries please feel free to contact me: wadamczyk@phys.ethz.ch - 
 ## Getting started
 
 If you would like to install atomphys as a package:
-1) Download the package locally
-2) type pip3 install "PATH"
+```
+python -m pip install git+https://gitlab.phys.ethz.ch/tiqi-projects/optical-trap/atomphys_tiqi.git
+```
 
 You can also use it as a package:
 1) include it in your project as a submodule
