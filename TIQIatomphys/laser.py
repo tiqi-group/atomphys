@@ -13,6 +13,9 @@ class Laser:
     __linewidth = pint.Quantity
     __electric_field = pint.Quantity
 
+    __A = 0
+    __theta_k = 0
+    __theta_p = π / 2
 
     def __init__(self, ureg=None, laser=None, **new_laser):
         if ureg is not None:
@@ -30,6 +33,9 @@ class Laser:
             self.__linewidth = laser.__linewidth
             self.__electric_field = laser.__electric_field
 
+            self.__A = laser.__A
+            self.__theta_k = laser.__theta_k
+            self.__theta_p = laser.__theta_p
 
         for attr in new_laser:
             if attr in dir(self):
@@ -173,4 +179,53 @@ class Laser:
     def I(self, I):
         self.intensity = I
 
- 
+    # ------------
+    # Polarization
+    # ------------
+
+    @property
+    def A(self):
+        return self.__A
+
+    @A.setter
+    def A(self, A):
+        self.__A = A
+
+    @property
+    def theta_k(self):
+        return self.__theta_k
+
+    @theta_k.setter
+    def theta_k(self, theta_k):
+        self.__theta_k = theta_k
+
+    @property
+    def theta_p(self):
+        return self.__theta_p
+
+    @theta_p.setter
+    def theta_p(self, theta_p):
+        self.__theta_p = theta_p
+
+    # ---------------------
+    # high level properties
+    # ---------------------
+
+    def Rabi_frequency(self, transition):
+        # this is not quite right, as d is reduced dipole matrix element.
+        # also transition is not necessarily dipole
+        ħ = self._ureg.ħ
+        return (transition.d * self.E / ħ).to("MHz")
+
+    @property
+    def Ω(self):
+        return self.Rabi_frequency
+
+    @default_units("MHz")
+    def set_Rabi_frequency(self, Rabi_frequency, transition):
+        ħ = self._ureg.ħ
+        self.E = ħ * Rabi_frequency / transition.d
+
+    @property
+    def set_Ω(self):
+        return self.set_Rabi_frequency
