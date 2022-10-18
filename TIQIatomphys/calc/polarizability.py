@@ -1,5 +1,6 @@
 from math import cos
 from math import pi as π
+from sympy.physics.wigner import wigner_6j
 
 import pint
 
