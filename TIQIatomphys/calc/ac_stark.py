@@ -80,7 +80,7 @@ def tensor(state, omega, mj):
     ħ = state._ureg.ħ
     j = state.J
     α = 0
-    k=0
+    k=2
 
     for transition in state.up:
         #print(transition.matrix_element)
