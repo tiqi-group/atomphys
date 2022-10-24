@@ -29,7 +29,7 @@ This calculation follows from Thesis of Christoph Fisher Chapter 3.3.1.
 Example of its use is 
 
 ```
-from atomphys import Atom, Laser
+from TIQIatomphys import Atom, Laser
 import numpy as np
 import matplotlib.pyplot as plt
 
