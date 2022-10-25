@@ -163,7 +163,7 @@ def total_ACshift(
     ae_z = np.sqrt(abs(e_z[0])**2 + abs(e_z[1])**2 + abs(e_z[2])**2)
     e_z_n = (e_z[0]/ae_z, e_z[1]/ae_z, e_z[2]/ae_z)
     
-    c0 = 1/np.sqrt(3)
+    c0 = -1/np.sqrt(3)
     c1 = 1j/np.sqrt(2) * np.dot(np.cross(eps, np.conjugate(eps)), e_z)
     c2 = 1/np.sqrt(6) * (3*abs(np.dot(eps, e_z))**2-1)
                             
