@@ -29,6 +29,7 @@ class State:
     __quantum_numbers: dict
     __atom = None
     __transitions: TransitionRegistry
+    __configuration: str
 
     def __init__(self, term=None, energy=None, ureg=None, atom=None, **state):
         self.__atom = atom
@@ -55,6 +56,9 @@ class State:
                 self.__quantum_numbers[qN] = state[qN]
         if "J" not in self.__quantum_numbers:
             self.J = 0
+
+        if "configuration" in state:
+            self.__configuration = state["configuration"]
 
         self.__transitions = TransitionRegistry(atom=self.__atom)
 
@@ -120,6 +124,10 @@ class State:
     @property
     def quantum_numbers(self) -> dict:
         return self.__quantum_numbers
+    
+    @property
+    def configuration(self) -> str:
+        return self.__configuration
 
     @property
     def term(self):
