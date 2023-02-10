@@ -83,10 +83,12 @@ class Transition:
             self.__type = ""
 
     def __repr__(self):
+        wavelength = self.λ.to("nm")
+        decay_rate = (self.Γ/(2*π)).to('Hz').to_compact()
         return (
             f"Transition({self.i.name} <--> {self.f.name} : "
-            f"λ={self.λ.to('nm'):0.5g~P}, "
-            f"Γ=2π×{(self.Γ/(2*π)).to('Hz').to_compact():0.3g~P})"
+            f"λ={wavelength:0.5g~P}, "
+            f"Γ=2π×{decay_rate:0.3g~P})"
         )
 
     def __lt__(self, other):
@@ -189,12 +191,12 @@ class Transition:
 
     @property
     def _frequency(self):
-        return (self._energy) / self._ureg.h
+        return (self._energy) / self._ureg.planck_constant
 
     @_frequency.setter
     @default_units("THz")
     def _frequency(self, frequency):
-        self._energy = frequency * self._ureg.h
+        self._energy = frequency * self._ureg.planck_constant
 
     @property
     def frequency(self):
@@ -227,14 +229,14 @@ class Transition:
     @property
     def _wavelength(self):
         try:
-            return (self._ureg.h * self._ureg.c) / self._energy
+            return (self._ureg.planck_constant * self._ureg.c) / self._energy
         except ZeroDivisionError:
             return self._ureg.Quantity(inf, "nm")
 
     @_wavelength.setter
     @default_units("nm")
     def _wavelength(self, wavelength):
-        self._energy = (self._ureg.h * self._ureg.c) / wavelength
+        self._energy = (self._ureg.planck_constant * self._ureg.c) / wavelength
 
     @property
     def wavelength(self):
@@ -347,7 +349,7 @@ class Transition:
 
     @property
     def saturation_intensity(self):
-        h = self._ureg.h
+        h = self._ureg.planck_constant
         c = self._ureg.c
         return π * h * c * self.Γ / (3 * self.λ ** 3)
 
