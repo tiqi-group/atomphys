@@ -29,36 +29,31 @@ This calculation follows from Thesis of Christoph Fisher Chapter 3.3.1.
 Example of its use is 
 
 ```
-from TIQIatomphys import Atom, Laser
+from TIQIatomphys import Atom, Laser, State
 import numpy as np
 import matplotlib.pyplot as plt
 
-Ca_ion = Atom('Ca+')
-u = Ca_ion.units
+Ca = Atom('Ca')
 
-#DEFINE PARAMETERS FOR THE BEAM
-laser = Laser(λ=np.linspace(200, 1550, 10_000) * u.nm, A=0)
-lam = laser.wavelength.to('nm').magnitude
-I = 1*u.mW/(1*(u.micrometer)**2)
-eps = (1,0,0) # Polarization vector of Electric wave
-e_z = (0,0,1) # Quantization Axis
+CaS = Ca('1S0')
+CaP = Ca('1P1')
+CaD = Ca('1D2')
+CatP = Ca('3P1')
 
-states_mJ_pairs = [('S1/2', 0.5),('P1/2', 0.5)] #pairs of statenames and mJ for which we want to calculate the things
+#Definition of Laser Tweezer
+u = Ca._ureg   # Units Registry
+eps  = (1,0,0) # Polarisation
+e_z  = (0,0,1)
+P    = 200*u('mW')
+σ    = 10 * u('um')
+x = np.linspace(-20, 20, 100)*u('um')
+I0   = P/σ**2
+laser_tweezer = Laser(λ=np.linspace(300, 1200, 600), ureg=u, I=I0)
 
-AC_Stark_shifts = [(x[0], x[1], (Ca_ion(x[0]).ACstark(mJ=x[1], laser=laser, eps=eps, e_z=e_z, I=I, u=u)/u('k_B')).to('mK')) for x in states_mJ_pairs]
-
-plt.figure(figsize=(9, 7))
-
-for (state_name, mJ, ACshifts) in AC_Stark_shifts:
-    plt.plot(lam, ACshifts, label=f"{state_name}: mJ = {mJ}")
-
-plt.xlabel('Wavelength (nm)')
-plt.ylabel('Trap depth (mK)')
-plt.ylim(-1, 1)
-plt.xlim(300,)
-plt.legend()
-
-plt.show()
+CaS_0 = CaS.ACstark(mJ=0, laser=laser_tweezer, eps=eps, e_z=e_z, I=I0, u=u)
+CaP_m1 = CaP.ACstark(mJ=-1, laser=laser_tweezer, eps=eps, e_z=e_z, I=I0, u=u)
+CaP_0 = CaP.ACstark(mJ=0, laser=laser_tweezer, eps=eps, e_z=e_z, I=I0, u=u)
+CaP_p1 = CaP.ACstark(mJ=1, laser=laser_tweezer, eps=eps, e_z=e_z, I=I0, u=u)
 ```
 
 
