@@ -170,4 +170,4 @@ def total_ACshift(
 
     E_square = 2*I/(u.ε_0*u.c)    
     
-    return E_square*(c0*prefix0*α0 + c1*prefix1*α1 + c2*prefix2*α2).to_base_units()
+    return E_square/4*(c0*prefix0*α0 + c1*prefix1*α1 + c2*prefix2*α2).to_base_units()
