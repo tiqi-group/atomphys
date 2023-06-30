@@ -1,5 +1,4 @@
 import json
-import os
 
 import pint
 
@@ -7,12 +6,6 @@ from . import _ureg
 from .data import nist
 from .state import State, StateRegistry
 from .transition import Transition, TransitionRegistry
-
-_directory = os.path.dirname(os.path.realpath(__file__))
-_periodic_table = os.path.join(_directory, "data", "PeriodicTableJSON.json")
-with open(_periodic_table) as f:
-    periodic_table = json.load(f)
-    elements = [element["symbol"] for element in periodic_table["elements"]]
 
 
 class Atom:
@@ -97,24 +90,10 @@ class Atom:
         self._load_transitions(data["transitions"])
 
     def load_nist(self, name, refresh_cache=False):
-        if name in elements:
-            atom = name + " i"
-        elif name[-1] == "+" and name[:-1] in elements:
-            atom = name[:-1] + " ii"
-        elif name[-1] == "+" and name[-2].isdigit() and name[:-2] in elements:
-            atom = name[:-2] + " " + "i" * (1 + int(name[-2]))
-        else:
-            atom = name
-            raise ValueError(
-                f"{atom} does not match a known neutral atom or ionic ion name"
-            )
-        atom = atom.lower()
-
         self.name = name
-        self._load_states(nist.parse_states(nist.fetch_states(atom, refresh_cache)))
-        self._load_transitions(
-            nist.parse_transitions(nist.fetch_transitions(atom, refresh_cache))
-        )
+        states_data, transitions_data = nist.load_from_nist(name, refresh_cache)
+        self._load_states(states_data)
+        self._load_transitions(transitions_data)
 
     @property
     def states(self) -> StateRegistry:

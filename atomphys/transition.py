@@ -215,7 +215,7 @@ class Transition:
     @property
     def _wavelength(self):
         try:
-            return (self._ureg.planck_constant * self._ureg.c) / self._energy
+            return (self._ureg.planck_constant * self._ureg.c / self._energy).to("nm")
         except ZeroDivisionError:
             return self._ureg.Quantity(inf, "nm")
 
