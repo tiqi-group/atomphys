@@ -1,10 +1,10 @@
-from collections import UserList
 from collections.abc import Iterable
 from math import inf
 from math import pi as π
-from typing import Any
 
 import pint
+
+from atomphys.registry import TypeRegistry
 
 from . import _ureg, state
 from .util import default_units, fsolve
@@ -58,21 +58,9 @@ class Transition:
 
         self._matrix_element = 0
         for attr in [
-            "energy",
-            "En",
-            "angular_frequency",
-            "omega",
-            "ω",
-            "frequency",
-            "nu",
-            "ν",
-            "wavelength",
-            "λ",
-            "matrix_element",
-            "d",
-            "Gamma",
-            "Γ",
-            "A",
+            attr.strip("_")
+            for attr, val in self.__class__.__dict__.items()
+            if getattr(val, "fset", False)
         ]:
             if attr in transition:
                 setattr(self, "_" + attr, transition[attr])
@@ -83,12 +71,10 @@ class Transition:
             self.__type = ""
 
     def __repr__(self):
-        wavelength = self.λ.to("nm")
-        decay_rate = (self.Γ/(2*π)).to('Hz').to_compact()
         return (
             f"Transition({self.i.name} <--> {self.f.name} : "
-            f"λ={wavelength:0.5g~P}, "
-            f"Γ=2π×{decay_rate:0.3g~P})"
+            f"λ={self.λ.to('nm'):0.5g~P}, "
+            f"Γ=2π×{(self.Γ/(2*π)).to('Hz').to_compact():0.3g~P})"
         )
 
     def __lt__(self, other):
@@ -191,12 +177,12 @@ class Transition:
 
     @property
     def _frequency(self):
-        return (self._energy) / self._ureg.planck_constant
+        return (self._energy) / self._ureg.h
 
     @_frequency.setter
     @default_units("THz")
     def _frequency(self, frequency):
-        self._energy = frequency * self._ureg.planck_constant
+        self._energy = frequency * self._ureg.h
 
     @property
     def frequency(self):
@@ -229,14 +215,14 @@ class Transition:
     @property
     def _wavelength(self):
         try:
-            return (self._ureg.planck_constant * self._ureg.c) / self._energy
+            return (self._ureg.h * self._ureg.c) / self._energy
         except ZeroDivisionError:
             return self._ureg.Quantity(inf, "nm")
 
     @_wavelength.setter
     @default_units("nm")
     def _wavelength(self, wavelength):
-        self._energy = (self._ureg.planck_constant * self._ureg.c) / wavelength
+        self._energy = (self._ureg.h * self._ureg.c) / wavelength
 
     @property
     def wavelength(self):
@@ -349,7 +335,7 @@ class Transition:
 
     @property
     def saturation_intensity(self):
-        h = self._ureg.planck_constant
+        h = self._ureg.h
         c = self._ureg.c
         return π * h * c * self.Γ / (3 * self.λ ** 3)
 
@@ -386,25 +372,20 @@ class Transition:
         return self.magic_wavelength
 
 
-class TransitionRegistry(UserList):
-    _ureg: pint.UnitRegistry = None
-
-    def __init__(self, data=[], ureg=None, atom=None):
-        if not all(isinstance(transition, Transition) for transition in data):
-            raise TypeError("TransitionRegistry can only contain transitions")
-        super().__init__(data)
-
-        if atom:
-            self._ureg = atom._ureg
-        elif ureg:
-            self._ureg = ureg
-        else:
-            self._ureg = _ureg
+class TransitionRegistry(TypeRegistry):
+    def __init__(self, data=[], *args, **kwargs):
+        super().__init__(data=data, type=Transition, *args, **kwargs)
 
     def __call__(self, key):
         if isinstance(key, int):
             return self[key]
         elif isinstance(key, str):
+            try:
+                quantity = self._ureg.Quantity(key)
+                return self(quantity)
+            except (pint.errors.UndefinedUnitError, pint.errors.DimensionalityError):
+                pass
+
             try:
                 return next(
                     transition
@@ -432,29 +413,23 @@ class TransitionRegistry(UserList):
                             transition
                             for transition in self
                             if (
-                                (
-                                    transition.i.match(state_i.strip())
-                                    and transition.f.match(state_f.strip())
-                                )
-                                or (
-                                    transition.i.match(state_f.strip())
-                                    and transition.f.match(state_i.strip())
-                                )
+                                (transition.i.match(state_i.strip()) and transition.f.match(state_f.strip()))
+                                or (transition.i.match(state_f.strip()) and transition.f.match(state_i.strip()))
                             )
                         )
             except StopIteration:
-                pass
-
-            try:
-                quantity = self._ureg.Quantity(key)
-                return self(quantity)
-            except (pint.errors.UndefinedUnitError, pint.errors.DimensionalityError):
                 pass
 
             raise KeyError(f"no transition {key} found")
         elif isinstance(key, float):
             wavelength = self._ureg.Quantity(key, "nm")
             return min(self, key=lambda t: abs(t.wavelength - wavelength))
+        elif isinstance(key, state.State):
+            return next(
+                filter(
+                    lambda transition: transition.i is key or transition.f is key, self
+                )
+            )
         elif isinstance(key, self._ureg.Quantity):
             if key.check("[length]"):
                 return min(self, key=lambda t: abs(t.wavelength - key))
@@ -466,52 +441,3 @@ class TransitionRegistry(UserList):
             return TransitionRegistry([self(item) for item in key], ureg=self._ureg)
         else:
             raise TypeError("key must be integer index, term string")
-
-    def __repr__(self):
-        repr = f"{len(self)} Transitions (\n"
-        if self.__len__() <= 6:
-            for transition in self:
-                repr += str(transition) + "\n"
-        else:
-            for transition in self[:3]:
-                repr += str(transition) + "\n"
-            repr += "...\n"
-            for transition in self[-3:]:
-                repr += str(transition) + "\n"
-        repr = repr[:-1] + ")"
-        return repr
-
-    def _assert_Transition(self, transition: Any):
-        if not isinstance(transition, Transition):
-            raise TypeError("TransitionRegistry can only contain transitions")
-
-    def __setitem__(self, index: int, transition: Transition):
-        self._assert_Transition(transition)
-        super().__setitem__(index, transition)
-
-    def insert(self, index: int, transition: Transition):
-        self._assert_Transition(transition)
-        super().insert(index, transition)
-
-    def append(self, transition: Transition):
-        self._assert_Transition(transition)
-        super().append(transition)
-
-    def extend(self, transitions):
-        [self._assert_Transition(transition) for transition in transitions]
-        super().extend(transitions)
-
-    def up_from(self, state):
-        return TransitionRegistry(
-            [transition for transition in self if transition.i == state],
-            ureg=self._ureg,
-        )
-
-    def down_from(self, state):
-        return TransitionRegistry(
-            [transition for transition in self if transition.f == state],
-            ureg=self._ureg,
-        )
-
-    def to_dict(self):
-        return [transition.to_dict() for transition in self]
