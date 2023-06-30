@@ -23,6 +23,7 @@ def remove_annotations(s: str) -> str:
 
 @disk_cache
 def fetch_states(atom, refresh_cache=False):
+    # option "off" is invalid, to not include a field just do not query for it
     url = "https://physics.nist.gov/cgi-bin/ASD/energy1.pl"
     values = {
         "spectrum": atom,
@@ -32,10 +33,10 @@ def fetch_states(atom, refresh_cache=False):
         "term_out": "on",  # output the term symbol string
         "conf_out": "on",  # output the configutation string
         "level_out": "on",  # output the energy level
-        "unc_out": 0,  # uncertainty on energy
+        # "unc_out": "on",  # uncertainty on energy
         "j_out": "on",  # output the J level
         "g_out": "on",  # output the g-factor
-        "lande_out": "off",  # output experimentally measured g-factor
+        # "lande_out": "on",  # output experimentally measured g-factor
     }
 
     get_postfix = urllib.parse.urlencode(values)
