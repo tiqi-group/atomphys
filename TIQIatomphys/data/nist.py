@@ -56,7 +56,7 @@ def parse_states(data: List[dict]):
         {
             **{
                 "energy": remove_annotations(state["Level (Ry)"]) + " Ry",
-                "term": print_term(state["Term"], J=state["J"]),
+                "term": print_term(state["Term"], include_parity=True, J=state["J"]),
                 "configuration": state["Configuration"],
                 "g": None if state["g"] == "" else float(state["g"]),
             },

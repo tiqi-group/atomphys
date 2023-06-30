@@ -124,7 +124,7 @@ class State:
     @property
     def quantum_numbers(self) -> dict:
         return self.__quantum_numbers
-    
+
     @property
     def configuration(self) -> str:
         return self.__configuration
@@ -224,13 +224,13 @@ class State:
     @property
     def α(self):
         return self.polarizability
-    
+
     def ACstark(self, mJ, laser, eps, e_z, I, u):
         return ac_stark.total_ACshift(
             self,
             mJ,
             laser.omega,
-            eps, 
+            eps,
             e_z,
             I,
             u,
@@ -242,6 +242,7 @@ class StateRegistry(UserList):
 
     def __init__(self, data=[], ureg=None, atom=None):
         if not all(isinstance(state, State) for state in data):
+            print([type(d) for d in data if not isinstance(d, State)])
             raise TypeError("StateRegistry can only contain states")
         super().__init__(data)
 
