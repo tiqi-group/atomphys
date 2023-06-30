@@ -4,7 +4,7 @@ from sympy.physics.wigner import wigner_6j
 
 import pint
 
-from TIQIatomphys.calc.wigner import ishalfint, isint
+from atomphys.calc.wigner import ishalfint, isint
 
 
 def scalar(state, omega: pint.Quantity = 0) -> pint.Quantity:

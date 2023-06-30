@@ -1,9 +1,9 @@
 import pint
 import pytest
 
-from TIQIatomphys.atom import Atom
-from TIQIatomphys.state import State
-from TIQIatomphys.transition import Transition, TransitionRegistry
+from atomphys.atom import Atom
+from atomphys.state import State
+from atomphys.transition import Transition, TransitionRegistry
 
 
 def test_initialization():
@@ -76,21 +76,21 @@ def test_json():
     assert TransitionRegistry(
         [Transition(), Transition(λ="532 nm", d=1)]
     ).to_dict() == [
-               {
-                   "state_i": {"energy": "0 E_h", "term": None},
-                   "state_f": {"energy": "0 E_h", "term": None},
-                   "wavelength": "inf nm",
-                   "matrix_element": "0 a_0·e",
-                   "type": "",
-               },
-               {
-                   "state_i": {"energy": "0 E_h", "term": None},
-                   "state_f": {"energy": "0.08564539949082586 E_h", "term": None},
-                   "wavelength": "532.000 nm",
-                   "matrix_element": "1 a_0·e",
-                   "type": "",
-               },
-           ]
+        {
+            "state_i": {"energy": "0 E_h", "term": None},
+            "state_f": {"energy": "0 E_h", "term": None},
+            "wavelength": "inf nm",
+            "matrix_element": "0 a_0·e",
+            "type": "",
+        },
+        {
+            "state_i": {"energy": "0 E_h", "term": None},
+            "state_f": {"energy": "0.08564539949082586 E_h", "term": None},
+            "wavelength": "532.000 nm",
+            "matrix_element": "1 a_0·e",
+            "type": "",
+        },
+    ]
 
 
 def test_match_states():
@@ -112,8 +112,8 @@ def test_match_states():
 def test_repr():
     assert str(Transition()) == "Transition(None <--> None : λ=inf nm, Γ=2π×0 Hz)"
     assert (
-            str(Transition(State("2S1/2"), State("2P1/2", energy="planck_constant*c/(532 nm)"), d=1))
-            == "Transition(2S1/2 <--> 2P1/2 : λ=532 nm, Γ=2π×1.07 MHz)"
+        str(Transition(State("2S1/2"), State("2P1/2", energy="planck_constant*c/(532 nm)"), d=1))
+        == "Transition(2S1/2 <--> 2P1/2 : λ=532 nm, Γ=2π×1.07 MHz)"
     )
 
 
@@ -121,13 +121,13 @@ def test_units():
     ureg = pint.UnitRegistry()
     assert Transition(d=1).d - Transition(d=1).d == 0
     assert (
-            Transition(ureg=ureg, d="1 e a0").d - Transition(ureg=ureg, d="1 e a0").d == 0
+        Transition(ureg=ureg, d="1 e a0").d - Transition(ureg=ureg, d="1 e a0").d == 0
     )
     with pytest.raises(ValueError):
         Transition(d="1 e cm").d - Transition(ureg=ureg, d="1 e cm").d
 
     assert (
-            Transition(state_i=State(), state_f=State(), atom=Atom(ureg=ureg))._ureg is ureg
+        Transition(state_i=State(), state_f=State(), atom=Atom(ureg=ureg))._ureg is ureg
     )
 
 
@@ -245,10 +245,10 @@ def test_registry_search():
 def test_registry_repr():
     assert str(TransitionRegistry()) == "0 Transitions ()"
     assert (
-            str(TransitionRegistry([Transition()]))
-            == "1 Transitions (\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz))"
+        str(TransitionRegistry([Transition()]))
+        == "1 Transitions (\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz))"
     )
     assert (
-            str(TransitionRegistry([Transition()] * 10))
-            == "10 Transitions (\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\n...\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz))"
+        str(TransitionRegistry([Transition()] * 10))
+        == "10 Transitions (\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\n...\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz))"
     )

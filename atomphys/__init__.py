@@ -9,7 +9,7 @@ from .laser import Laser  # noqa: E402
 from .state import State  # noqa: E402
 from .transition import Transition  # noqa: E402
 
-__version__ = pkg_resources.get_distribution("TIQIatomphys").version
+__version__ = pkg_resources.get_distribution("atomphys").version
 
 __all__ = [
     "elements",

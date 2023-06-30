@@ -5,8 +5,8 @@ import urllib
 import urllib.request
 from typing import List
 
-from TIQIatomphys.term import print_term
-from TIQIatomphys.util import disk_cache
+from atomphys.term import print_term
+from atomphys.util import disk_cache
 
 monovalent = re.compile(r"^[a-z0-9]*\.(?P<n>\d+)[a-z]$")
 
