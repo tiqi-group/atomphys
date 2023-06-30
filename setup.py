@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 setup(
-    name='TIQIatomphys',
+    name='atomphys',
     packages=find_packages(),
     install_requires=[
         line.strip() for line in open("requirements.txt").readlines()
