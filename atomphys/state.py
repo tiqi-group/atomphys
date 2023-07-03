@@ -1,286 +1,186 @@
-import enum
-from collections.abc import Iterable
-from fractions import Fraction
-from typing import Any
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+#
+# Created: 06/2023
+# Author: Carmelo Mordini <cmordini@phys.ethz.ch>
+
 
 import pint
 
 from . import _ureg
-from .calc import polarizability
-from .calc import ac_stark
-from .constants import gs
-from .laser import Laser
-from .registry import TypeRegistry
-from .term import L_inv, parse_term, print_term
-from .transition import TransitionRegistry
+from .term import Coupling, QuantumNumbers
 from .util import default_units
 
-
-class Coupling(enum.Enum):
-    LS = "LS"  # Russell-Saunders
-    jj = "jj"
-    LK = "LK"  # pair coupling
+from fractions import Fraction
+from atomphys.calc.hyperfine import hyperfine_shift
+from atomphys.calc.zeeman import g_lande_fine_LS, g_lande_hyperfine
+from atomphys.calc.angular_momentum import couple_angular_momenta, magnetic_sublevels
 
 
 class State:
 
+    _configuration: str
+    _energy: pint.Quantity
+    _quantum_numbers: QuantumNumbers
     _ureg: pint.UnitRegistry
-    __energy: pint.Quantity
-    __quantum_numbers: dict
-    __atom = None
-    __transitions: TransitionRegistry
-    __configuration: str
+    _atom = None
 
-    def __init__(self, term=None, energy=None, ureg=None, atom=None, **state):
-        self.__atom = atom
+    def __init__(self, configuration: str, term: str, energy: pint.Quantity, ureg=None, atom=None) -> None:
+        self._configuration = configuration
+        self._term = term
+        self._energy = pint.Quantity(energy)
+        self._quantum_numbers = QuantumNumbers.from_term(term)
 
         self._ureg = _ureg
+        self._atom = atom
         if ureg is not None:
             self._ureg = ureg
         if atom is not None:
             self._ureg = atom._ureg
 
-        if energy:
-            self._energy = energy
-        elif "En" in state:
-            self._En = state["En"]
-        else:
-            self._energy = 0
-
-        self.__quantum_numbers = {}
-        if term:
-            self.__quantum_numbers = parse_term(term)
-
-        for qN in ["S", "L", "J1", "J2", "S2", "K", "J", "n", "parity"]:
-            if qN in state:
-                self.__quantum_numbers[qN] = state[qN]
-        if "J" not in self.__quantum_numbers:
-            self.J = 0
-
-        if "configuration" in state:
-            self.__configuration = state["configuration"]
-
-        self.__transitions = TransitionRegistry(atom=self.__atom)
-
     def __repr__(self):
-        name = f"{self.name}: " if self.name else ""
-        return f"State({name}{self.energy:0.4g~P})"
-
-    def __getattr__(self, name: str) -> Any:
-        if name in self.__quantum_numbers:
-            return self.__quantum_numbers[name]
-        raise AttributeError(f"{self.__class__.__name__} has no attribute {name}")
+        return f"State({self.configuration} {self.term} {self.energy:0.4g~P})"
 
     def __eq__(self, other):
-        return (
-            self.energy == other.energy and self.quantum_numbers == other.quantum_numbers
-        )
+        return self.energy == other.energy and self.quantum_numbers == other.quantum_numbers
 
     def __lt__(self, other):
         return self.energy < other.energy
 
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "energy": f"{self.energy:~P}",
-            "term": self.term,
-            "quantum numbers": self.quantum_numbers,
-        }
-
-    def match(self, name):
-        return name.lower() in self.name.lower()
-
-    # ------
-    # Energy
-    # ------
-
-    @property
-    def _energy(self) -> pint.Quantity:
-        return self.__energy
-
-    @_energy.setter
-    @default_units("E_h")
-    def _energy(self, energy):
-        self.__energy = energy
-
-    @property
-    def energy(self) -> pint.Quantity:
-        return self.__energy
-
-    @property
-    def _En(self) -> pint.Quantity:
-        return self.__energy
-
-    @_En.setter
-    @default_units("E_h")
-    def _En(self, energy):
-        self.__energy = energy
-
-    @property
-    def En(self) -> pint.Quantity:
-        return self.__energy
-
-    @property
-    def quantum_numbers(self) -> dict:
-        return self.__quantum_numbers
+    def match(self, pattern):
+        name = f"{self.configuration} {self.term}"
+        return pattern.lower() in name.lower()
 
     @property
     def configuration(self) -> str:
-        return self.__configuration
+        return self._configuration
 
     @property
-    def term(self):
-        return print_term(**self.__quantum_numbers)
+    def term(self) -> str:
+        return self.quantum_numbers.term
 
     @property
-    def name(self):
-        if self.term is None:
-            return None
-        if all(k in self.__quantum_numbers for k in ("n", "L", "J")):
-            return f"{self.n}{L_inv[self.L]}{Fraction(self.J)}, {self.term}"
-        return f"{self.term}"
+    def energy(self) -> pint.Quantity:
+        return self._energy
 
-    # -----------
-    # Transitions
-    # -----------
+    @energy.setter
+    @default_units("E_h")
+    def energy(self, energy: pint.Quantity):
+        self._energy = energy
 
     @property
-    def states(self):
-        return StateRegistry(
-            [
-                transition.f if transition.i is self else transition.i
-                for transition in self.__transitions
-            ]
-        )
-
-    @property
-    def transitions(self):
-        return self.__transitions
-
-    @property
-    def to(self):
-        return self.__transitions
-
-    @property
-    def transitions_down(self):
-        return self.__transitions.filter(lambda state: state.f == self)
-
-    @property
-    def transitions_up(self):
-        return self.__transitions.filter(lambda state: state.i == self)
-
-    @property
-    def down(self):
-        return self.transitions_down
-
-    @property
-    def up(self):
-        return self.transitions_up
-
-    # ---------------------
-    # high level properties
-    # ---------------------
+    def quantum_numbers(self) -> QuantumNumbers:
+        return self._quantum_numbers
 
     @property
     def coupling(self):
-        if all(key in self.__quantum_numbers.keys() for key in ["S", "L"]):
+        if self.quantum_numbers.L is not None and self.quantum_numbers.S is not None:
             return Coupling.LS
-        if all(key in self.__quantum_numbers.keys() for key in ["J1", "J2"]):
+        if self.quantum_numbers.J1 is not None and self.quantum_numbers.J2 is not None:
             return Coupling.jj
-        if all(key in self.__quantum_numbers.keys() for key in ["S2", "K"]):
+        if self.quantum_numbers.S2 is not None and self.quantum_numbers.K is not None:
             return Coupling.LK
-        return None
 
     @property
-    def g(self):
-        try:
-            L, S, J = self.L, self.S, self.J
-        except AttributeError:
-            return None
-        if J == 0:
-            return 0
-        return (J * (J + 1) - S * (S + 1) + L * (L + 1)) / (2 * J * (J + 1)) + gs * (
-            J * (J + 1) + S * (S + 1) - L * (L + 1)
-        ) / (2 * J * (J + 1))
+    def gJ(self) -> float:
+        if self.coupling == Coupling.LS:
+            L, S, J = (getattr(self.quantum_numbers, n) for n in ('L', 'S', 'J'))
+            return g_lande_fine_LS(L, S, J)
+        else:
+            raise NotImplementedError(
+                f"Lande factor calculation is implemented only for LS coupling, but state has {self.coupling}")
+
+    @property
+    def g(self) -> float:
+        return self.gJ
+
+    @property
+    def sublevels(self) -> list[float]:
+        return magnetic_sublevels(self.quantum_numbers.J)
+
+    @property
+    def Gamma(self):
+        # return sum([transition.Gamma for transition in self.transitions_down])
+        raise NotImplementedError
 
     @property
     def lifetime(self):
-        Gamma = sum([transition.Gamma for transition in self.transitions_down])
-        if Gamma == 0:
-            return self._ureg.Quantity(float("inf"), "s")
-        else:
-            return 1 / Gamma
+        return 1 / self.Gamma
+
+
+class HyperfineState(State):
+    def __init__(self, configuration: str, term: str, energy: pint.Quantity,
+                 I: float, F: float,
+                 ureg=None, atom=None) -> None:
+        super().__init__(configuration, term, energy, ureg, atom)
+        self._quantum_numbers = QuantumNumbers.from_term(term, I=I, F=F)
+
+    def __repr__(self):
+        F = self.quantum_numbers.F
+        return f"HyperfineState({self.configuration} {self.term} F={Fraction(F)} {self.energy:0.4g~P})"
 
     @property
-    def τ(self):
-        return self.lifetime
-
-    def polarizability(self, laser=None, mJ=None, **kwargs):
-        if laser is None:
-            laser = Laser(**kwargs)
-        else:
-            laser = Laser(laser=laser, **kwargs)
-        return polarizability.total(
-            self,
-            mJ=mJ,
-            omega=laser.omega,
-            A=laser.A,
-            theta_k=laser.theta_k,
-            theta_p=laser.theta_p,
-        )
+    def gF(self) -> float:
+        J, I, F = (getattr(self.quantum_numbers, n) for n in ('J', 'I', 'F'))
+        return g_lande_hyperfine(J, I, F, self.gJ)
 
     @property
-    def α(self):
-        return self.polarizability
+    def g(self) -> float:
+        return self.gF
 
-    def ACstark(self, mJ, laser, eps, e_z, intensity, u):
-        return ac_stark.total_ACshift(
-            self,
-            mJ,
-            laser.omega,
-            eps,
-            e_z,
-            intensity,
-            u,
-        )
+    @property
+    def sublevels(self) -> list[float]:
+        return magnetic_sublevels(self.quantum_numbers.F)
 
 
-class StateRegistry(TypeRegistry):
-    def __init__(self, data=[], *args, **kwargs):
-        super().__init__(data=data, type=State, *args, **kwargs)
+def hyperfine_manifold(state: State, I: float, Ahf: pint.Quantity, Bhf: pint.Quantity = 0) -> list[HyperfineState]:
+    J = state.quantum_numbers.J
+    Fs = couple_angular_momenta(J, I)
 
-    def __call__(self, key):
-        if isinstance(key, int):
-            return self[key]
-        elif isinstance(key, str):
-            try:
-                return self(self._ureg.Quantity(key))
-            except (pint.errors.UndefinedUnitError, pint.errors.DimensionalityError):
-                pass
+    hstates = []
+    for F in Fs:
+        energy = state.energy + hyperfine_shift(J, I, F, Ahf, Bhf)
+        hs = HyperfineState(state.configuration, state.term, energy, I, F, state._ureg, state._atom)
+        hstates.append(hs)
+    return hstates
 
-            try:
-                return next(state for state in self if state.match(key))
-            except StopIteration:
-                pass
 
-            raise KeyError(f"no state {key} found")
-        elif isinstance(key, float):
-            energy = self._ureg.Quantity(key, "E_h")
-            return min(self, key=lambda state: abs(state.energy - energy))
-        elif isinstance(key, self._ureg.Quantity):
-            return min(self, key=lambda state: abs(state.energy - key))
-        elif isinstance(key, Iterable):
-            return StateRegistry([self(item) for item in key], ureg=self._ureg)
-        else:
-            raise TypeError(
-                "key must be integer index, term string, energy, or iterable"
-            )
+# class StateRegistry(TypeRegistry):
+#     def __init__(self, data=[], *args, **kwargs):
+#         super().__init__(data=data, type=State, *args, **kwargs)
 
-    def match(self, **kwargs):
-        return self.filter(
-            lambda state: all(
-                getattr(state, key, lambda: None) == val
-                for key, val in kwargs.items()
-                if key not in ["energy", "En"]
-            )
-        )
+#     def __call__(self, key):
+#         if isinstance(key, int):
+#             return self[key]
+#         elif isinstance(key, str):
+#             try:
+#                 return self(self._ureg.Quantity(key))
+#             except (pint.errors.UndefinedUnitError, pint.errors.DimensionalityError):
+#                 pass
+
+#             try:
+#                 return next(state for state in self if state.match(key))
+#             except StopIteration:
+#                 pass
+
+#             raise KeyError(f"no state {key} found")
+#         elif isinstance(key, float):
+#             energy = self._ureg.Quantity(key, "E_h")
+#             return min(self, key=lambda state: abs(state.energy - energy))
+#         elif isinstance(key, self._ureg.Quantity):
+#             return min(self, key=lambda state: abs(state.energy - key))
+#         elif isinstance(key, Iterable):
+#             return StateRegistry([self(item) for item in key], ureg=self._ureg)
+#         else:
+#             raise TypeError(
+#                 "key must be integer index, term string, energy, or iterable"
+#             )
+
+#     def match(self, **kwargs):
+#         return self.filter(
+#             lambda state: all(
+#                 getattr(state, key, lambda: None) == val
+#                 for key, val in kwargs.items()
+#                 if key not in ["energy", "En"]
+#             )
+#         )

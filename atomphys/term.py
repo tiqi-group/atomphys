@@ -92,11 +92,12 @@ class QuantumNumbers:
     def term(self) -> str:
         return print_term(**asdict(self))
 
+    def as_dict(self):
+        return asdict(self)
+
     def __repr__(self) -> str:
-        s = f"{self.term}"
-        if self.F is not None:
-            s += f" F = {Fraction(self.F)}"
-        return s
+        out = {key: value for key, value in asdict(self).items() if value is not None}
+        return f"QuantumNumbers{out}"
 
 
 def parse_term(term: str) -> dict:
@@ -117,7 +118,7 @@ def parse_term(term: str) -> dict:
     def convert(key, value):
         if key in ["S", "S2"]:
             return float(Fraction((int(value) - 1) / 2))
-        if key in ["J1", "J2", "J", "K"]:
+        if key in ["J1", "J2", "J", "K", "I", "F"]:
             return float(Fraction(value))
         if key == "L":
             return L[value]
