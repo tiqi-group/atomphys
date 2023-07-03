@@ -5,12 +5,11 @@ import requests
 from typing import List
 from html.parser import HTMLParser
 
+from .name import parse_atom_name
 from atomphys.term import print_term
 from atomphys.util import disk_cache
 
 re_monovalent = re.compile(r"^[a-z0-9]*p6\.(?P<n>\d+)[a-z]$")
-# re_atom_name = re.compile(r"^(?P<A>\d*)(?P<element>[A-Za-z]*)(?P<charge>(?:\d+\+|\++)+)$")
-re_atom_name = re.compile(r"^(?P<A>\d*)(?P<element>[A-Za-z]*)(?P<charge>\d*\+|\++)?$")
 
 
 def remove_annotations(s: str) -> str:
@@ -23,6 +22,22 @@ def remove_annotations(s: str) -> str:
     return s.strip("()[]aluxyz +?").replace("&dagger;", "")
 
 
+def tokenize_name(name):
+    A, element, charge = parse_atom_name(name)
+    element = element.lower()
+    ionization_state = 'i' * (charge + 1)
+    token = f"{element} {ionization_state}"
+    return token
+
+
+def load_from_nist(name, refresh_cache=False):
+    # TODO: do something with the mass number
+    token = tokenize_name(name)
+    states_data = parse_states(fetch_states(token, refresh_cache))
+    transitions_data = parse_transitions(fetch_transitions(token, refresh_cache))
+    return states_data, transitions_data
+
+
 class NISTHTMLParser(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -32,13 +47,13 @@ class NISTHTMLParser(HTMLParser):
         self.error_message = ''
 
     def handle_starttag(self, tag, attrs):
-        if tag == 'title':
+        if tag == 'h2':
             self.in_title = True
         elif tag == 'font' and ('color', 'red') in attrs:
             self.in_error = True
 
     def handle_endtag(self, tag):
-        if tag == 'title':
+        if tag == 'h2':
             self.in_title = False
         elif tag == 'font':
             self.in_error = False
@@ -52,54 +67,12 @@ class NISTHTMLParser(HTMLParser):
 
 def query_nist_database(url: str, params: dict):
     resp = requests.get(url, params=params)
-    if 'text/plain' in resp.headers['content-type']:
-        return resp.text
-    elif 'text/html' in resp.headers['content-type']:
+    if resp.text.startswith('<'):
         parser = NISTHTMLParser()
         parser.feed(resp.text)
         raise ValueError(f"{parser.title} : {parser.error_message}")
     else:
-        raise ValueError("Invalid response")
-
-
-def parse_atom_name(name):
-    """
-    Parse atom name
-
-    Args:
-        input_string (str): The input string containing the information.
-
-    Returns:
-        tuple or None: A tuple containing the extracted information or None if no match found.
-
-    Description:
-        The function extracts information from the input string based on the following pattern:
-
-        - A: Any number of digits (0 or more).
-        - element: Any number of uppercase or lowercase letters (0 or more).
-        - charge: Either any number of digits followed by a single "+" or any number of "+" characters.
-
-        The function returns a tuple containing the extracted information in the following order:
-
-        - A (int): The value of "A" as an integer.
-        - element (str): The content of "element" as a string.
-        - num_charge (int): Either the number in the "charge" group if present, or the number of "+" characters.
-
-        If no match is found, None is returned.
-    """
-    # TODO move this docstring perhaps somewhere else
-    match = re_atom_name.match(name)
-    if match:
-        A = int(match.group('A')) if match.group('A') else 0
-        element = match.group('element')
-        charge = match.group('charge')
-        if charge:
-            num_charge = charge.count('+') if len(set(charge)) == 1 else int(charge[:-1])
-        else:
-            num_charge = 0
-        return A, element, num_charge
-    else:
-        return None
+        return resp.text
 
 
 @disk_cache
@@ -117,7 +90,7 @@ def fetch_states(atom, refresh_cache=False):
         # "unc_out": "on",  # uncertainty on energy
         "j_out": "on",  # output the J level
         "g_out": "on",  # output the g-factor
-        # "lande_out": "on",  # output experimentally measured g-factor
+        "lande_out": "on",  # output experimentally measured g-factor
     }
 
     resp_text = query_nist_database(url, values)
@@ -125,24 +98,26 @@ def fetch_states(atom, refresh_cache=False):
     return data
 
 
-def parse_states(data: List[dict]):
-    return [
-        {
-            **{
-                "energy": remove_annotations(state["Level (Ry)"]) + " Ry",
-                "term": print_term(state["Term"], include_parity=True, J=state["J"]),
-                "configuration": state["Configuration"],
-                "g": None if state["g"] == "" else float(state["g"]),
-            },
-            **(
-                {"n": int(re_monovalent.match(state["Configuration"])["n"])}
-                if re_monovalent.match(state["Configuration"])
-                else {}
-            ),
+def parse_states1(state: dict):
+    term = print_term(state["Term"], include_parity=True, J=state["J"])
+    if term:
+        _parsed_data = {
+            "energy": remove_annotations(state["Level (Ry)"]) + " Ry",
+            "term": term,
+            "configuration": state["Configuration"],
+            "g": None if state["g"] == "" else float(state["g"]),
+            "Lande": None if "Lande" not in state or state["Lande"] == "" else float(state["Lande"])
         }
-        for state in data
-        if print_term(state["Term"], J=state["J"])
-    ]
+        n_match = re_monovalent.match(state["Configuration"])
+        if n_match:
+            _parsed_data['n'] = int(n_match['n'])
+    else:
+        _parsed_data = {}
+    return _parsed_data
+
+
+def parse_states(data: List[dict]):
+    return [parse_states1(state) for state in data]
 
 
 @disk_cache
@@ -169,35 +144,24 @@ def fetch_transitions(atom, refresh_cache=False):
 
 
 def parse_transitions(data: List[dict]):
-    return [
-        {
-            "state_i": {
-                "energy": remove_annotations(transition["Ei(Ry)"]) + " Ry",
-                "term": print_term(term=transition["term_i"], J=transition["J_i"]),
-            },
-            "state_f": {
-                "energy": remove_annotations(transition["Ek(Ry)"]) + " Ry",
-                "term": print_term(term=transition["term_k"], J=transition["J_k"]),
-            },
-            "A": transition["Aki(s^-1)"] + "s^-1",
-            "type": transition["Type"],
-        }
-        for transition in data
-        if (
-            transition["Aki(s^-1)"] and
-            print_term(term=transition["term_i"], J=transition["J_i"]) and
-            print_term(term=transition["term_k"], J=transition["J_k"])
-        )
-    ]
+    parsed = []
+    for transition in data:
+        A = transition["Aki(s^-1)"] + "s^-1"
+        term_i = print_term(term=transition["term_i"], include_parity=True, J=transition["J_i"])
+        term_k = print_term(term=transition["term_k"], include_parity=True, J=transition["J_k"])
 
-
-def load_from_nist(name, refresh_cache):
-    # TODO: do something with the mass number
-    A, element, num_charge = parse_atom_name(name)
-    element = element.lower()
-    ionization_state = 'i' * (num_charge + 1)
-    token = f"{element} {ionization_state}"
-
-    states_data = parse_states(fetch_states(token, refresh_cache))
-    transitions_data = parse_transitions(fetch_transitions(token, refresh_cache))
-    return states_data, transitions_data
+        print(transition['term_k'], transition['J_k'], term_k)
+        if A and term_i and term_k:
+            _parsed_data = {
+                "A": A, "type": transition["Type"],
+                "state_i": {
+                    "energy": remove_annotations(transition["Ei(Ry)"]) + " Ry",
+                    "term": term_i,
+                },
+                "state_f": {
+                    "energy": remove_annotations(transition["Ek(Ry)"]) + " Ry",
+                    "term": term_k,
+                },
+            }
+            parsed.append(_parsed_data)
+    return parsed
