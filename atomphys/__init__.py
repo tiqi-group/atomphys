@@ -2,6 +2,7 @@ import pkg_resources
 from pint import UnitRegistry
 
 _ureg = UnitRegistry(system="atomic", auto_reduce_dimensions=True)
+_ureg.enable_contexts('spectroscopy', 'Gaussian')
 _ureg.default_format = "~0.3gP"
 
 from .atom import Atom  # noqa: E402

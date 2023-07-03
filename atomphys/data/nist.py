@@ -99,7 +99,7 @@ def fetch_states(atom, refresh_cache=False):
 
 
 def parse_states1(state: dict):
-    term = print_term(state["Term"], include_parity=True, J=state["J"])
+    term = state["Term"] + state["J"]
     if term:
         _parsed_data = {
             "energy": remove_annotations(state["Level (Ry)"]) + " Ry",

@@ -10,10 +10,6 @@ class Coupling(enum.Enum):
     LK = "LK"  # pair coupling
 
 
-# LS_term = re.compile(r"(?P<S>\d+)(?P<L>[A-Z])\*?(?P<J>\d+(/\d)?\d*)?")
-# J1J2_term = re.compile(r"\((?P<J1>\d+/?\d*),(?P<J2>\d+/?\d*)\)\*?(?P<J>\d+(/\d)?\d*)?")
-# LK_term = re.compile(r"(?P<S2>\d+)\[(?P<K>\d+/?\d*)\]\*?(?P<J>\d+(/\d)?\d*)?")
-
 LS_term = re.compile(r"^(?P<S>\d+)(?P<L>[A-Z])(?P<parity>\*)?(?P<J>\d+(/2)?)$")
 r"""
 Regular expression for LS terms.
@@ -79,6 +75,8 @@ class QuantumNumbers:
     J2: float | None = None
     S2: float | None = None
     K: float | None = None
+    I: float | None = None
+    F: float | None = None
     parity: int | None = None
     ionization_limit: bool | None = None
 
@@ -86,13 +84,19 @@ class QuantumNumbers:
         return self.__dict__[key]
 
     @staticmethod
-    def from_term(term: str):
+    def from_term(term: str, I=None, F=None):
         data = parse_term(term)
-        return QuantumNumbers(**data)
+        return QuantumNumbers(**data, I=I, F=F)
 
     @property
     def term(self) -> str:
         return print_term(**asdict(self))
+
+    def __repr__(self) -> str:
+        s = f"{self.term}"
+        if self.F is not None:
+            s += f" F = {Fraction(self.F)}"
+        return s
 
 
 def parse_term(term: str) -> dict:
@@ -129,6 +133,7 @@ def parse_term(term: str) -> dict:
 
 def print_term(J=None, S=None, L=None,
                J1=None, J2=None, S2=None, K=None,
+               I=None, F=None,
                parity=None, ionization_limit=None) -> str:
 
     if ionization_limit is not None and ionization_limit:

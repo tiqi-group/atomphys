@@ -4,22 +4,24 @@
 # Created: 07/2023
 # Author: Carmelo Mordini <cmordini@phys.ethz.ch>
 """
-Lande factors and Zeeman spliggin for fine and hyperfine states
+Lande factors and Zeeman shift for fine and hyperfine states
 
 References:
 [1] Hans A. Bethe and Edwin E. Salpeter, Quantum Mechanics of One- and Two-Electron Atoms (SpringerVerlag, Berlin, 1957).
 """
 
+from pint import Quantity
+
 g_spin = 2.00231930436256
 
 
-def g_lande_fine(S, L, J, gL=1):
+def g_lande_fine_LS(L, S, J, gL=1):
     """
-    Calculates the Landé g-factor for fine structure. [1]
+    Calculates the Landé g-factor for fine structure states with LS coupling. [1]
 
     Args:
-        S (float): Total electron spin.
         L (float): Total orbital angular momentum.
+        S (float): Total electron spin.
         J (float): Total angular momentum.
         gL (float, optional): Landé g-factor for the orbital angular momentum. Default is 1.
 
@@ -57,5 +59,6 @@ def g_lande_hyperfine(J, I, F, gJ, gI=0):  # noqa: E741
     return gF
 
 
-# def zeeman_splitting(g, m, B, ureg: UnitRegistry):
-#     mu = ureg.bohr_magneton
+def zeeman_shift(g, m, B: Quantity):
+    mu = B._REGISTRY.bohr_magneton
+    return mu * g * m * B.to('tesla', 'Gaussian')
