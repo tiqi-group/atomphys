@@ -96,8 +96,8 @@ class QuantumNumbers:
         return asdict(self)
 
     def __repr__(self) -> str:
-        out = {key: value for key, value in asdict(self).items() if value is not None}
-        return f"QuantumNumbers{out}"
+        out = [f"{key}={Fraction(value)}" for key, value in asdict(self).items() if value is not None]
+        return f"QuantumNumbers({', '.join(out)})"
 
 
 def parse_term(term: str) -> dict:

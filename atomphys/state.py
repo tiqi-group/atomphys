@@ -7,7 +7,6 @@
 
 import pint
 
-from . import _ureg
 from .term import Coupling, QuantumNumbers
 from .util import default_units
 
@@ -25,39 +24,25 @@ class State:
     _ureg: pint.UnitRegistry
     _atom = None
 
-    def __init__(self, configuration: str, term: str, energy: pint.Quantity, ureg=None, atom=None) -> None:
-        self._configuration = configuration
-        self._term = term
-        self._energy = pint.Quantity(energy)
-        self._quantum_numbers = QuantumNumbers.from_term(term)
+    def __init__(self, configuration: str, term: str, energy: pint.Quantity, _ureg=None, atom=None) -> None:
 
-        self._ureg = _ureg
         self._atom = atom
-        if ureg is not None:
-            self._ureg = ureg
-        if atom is not None:
-            self._ureg = atom._ureg
+        self._ureg = pint.get_application_registry() if _ureg is None else _ureg
+        # if atom is not None:
+        #     self._ureg = atom._ureg
 
-    def __repr__(self):
-        return f"State({self.configuration} {self.term} {self.energy:0.4g~P})"
-
-    def __eq__(self, other):
-        return self.energy == other.energy and self.quantum_numbers == other.quantum_numbers
-
-    def __lt__(self, other):
-        return self.energy < other.energy
-
-    def match(self, pattern):
-        name = f"{self.configuration} {self.term}"
-        return pattern.lower() in name.lower()
+        self._configuration = configuration
+        self._quantum_numbers = QuantumNumbers.from_term(term)
+        self._energy = pint.Quantity(energy)
+    # Data
 
     @property
     def configuration(self) -> str:
         return self._configuration
 
     @property
-    def term(self) -> str:
-        return self.quantum_numbers.term
+    def quantum_numbers(self) -> QuantumNumbers:
+        return self._quantum_numbers
 
     @property
     def energy(self) -> pint.Quantity:
@@ -68,9 +53,40 @@ class State:
     def energy(self, energy: pint.Quantity):
         self._energy = energy
 
+    # Identifiers
+
     @property
-    def quantum_numbers(self) -> QuantumNumbers:
-        return self._quantum_numbers
+    def name(self):
+        return f"{self.configuration} {self.term}"
+
+    def __repr__(self):
+        return f"State({self.name} {self.energy:0.4g~P})"
+
+    @property
+    def __key(self):
+        return (self.configuration, self.quantum_numbers)
+
+    def __eq__(self, other):
+        if isinstance(other, State):
+            return self.__key == other.__key
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, State):
+            return self.energy < other.energy
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.__key)
+
+    def match(self, pattern):
+        return pattern.lower() in self.name.lower()
+
+    # Derived properties
+
+    @property
+    def term(self) -> str:
+        return self.quantum_numbers.term
 
     @property
     def coupling(self):
@@ -115,9 +131,13 @@ class HyperfineState(State):
         super().__init__(configuration, term, energy, ureg, atom)
         self._quantum_numbers = QuantumNumbers.from_term(term, I=I, F=F)
 
-    def __repr__(self):
+    @property
+    def name(self):
         F = self.quantum_numbers.F
-        return f"HyperfineState({self.configuration} {self.term} F={Fraction(F)} {self.energy:0.4g~P})"
+        return f"{self.configuration} {self.term} F={Fraction(F)}"
+
+    def __repr__(self):
+        return f"HyperfineState({self.name} {self.energy:0.4g~P})"
 
     @property
     def gF(self) -> float:

@@ -4,17 +4,41 @@ import pathlib
 from functools import wraps
 from typing import Callable
 
+import pint
+_ureg = pint.get_application_registry()
+
+
+# def default_units(unit: str):
+#     def decorator(setter):
+#         @wraps(setter)
+#         def wrapper(self, quantity, *args, **kwargs):
+#             if isinstance(quantity, str):
+#                 quantity = self._ureg(quantity)
+#             if not isinstance(quantity, self._ureg.Quantity) or quantity.dimensionless:
+#                 quantity = self._ureg.Quantity(quantity, unit)
+#             if not quantity.check(unit):
+#                 raise ValueError(f"must have units equivalent to {unit}")
+#             return setter(self, quantity, *args, **kwargs)
+
+#         return wrapper
+
+#     return decorator
+
+def set_default_units(quantity, unit, _ureg=_ureg):
+    if isinstance(quantity, str):
+        quantity = _ureg(quantity)
+    if not isinstance(quantity, _ureg.Quantity) or quantity.dimensionless:
+        quantity = _ureg.Quantity(quantity, unit)
+    if not quantity.check(unit):
+        raise ValueError(f"must have units equivalent to {unit}")
+    return quantity
+
 
 def default_units(unit: str):
     def decorator(setter):
         @wraps(setter)
         def wrapper(self, quantity, *args, **kwargs):
-            if isinstance(quantity, str):
-                quantity = self._ureg(quantity)
-            if not isinstance(quantity, self._ureg.Quantity) or quantity.dimensionless:
-                quantity = self._ureg.Quantity(quantity, unit)
-            if not quantity.check(unit):
-                raise ValueError(f"must have units equivalent to {unit}")
+            quantity = set_default_units(quantity, unit, self._ureg)
             return setter(self, quantity, *args, **kwargs)
 
         return wrapper

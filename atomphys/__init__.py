@@ -1,9 +1,12 @@
 import pkg_resources
-from pint import UnitRegistry
+import pint
 
-_ureg = UnitRegistry(system="atomic", auto_reduce_dimensions=True)
+_ureg = pint.UnitRegistry(system="atomic", auto_reduce_dimensions=True)
 _ureg.enable_contexts('spectroscopy', 'Gaussian')
 _ureg.default_format = "~0.3gP"
+
+pint.set_application_registry(_ureg)
+_ureg = pint.get_application_registry()
 
 from .atom import Atom  # noqa: E402
 from .laser import Laser  # noqa: E402

@@ -6,7 +6,6 @@ from typing import List
 from html.parser import HTMLParser
 
 from .name import parse_atom_name
-from atomphys.term import print_term
 from atomphys.util import disk_cache
 
 re_monovalent = re.compile(r"^[a-z0-9]*p6\.(?P<n>\d+)[a-z]$")
@@ -143,25 +142,30 @@ def fetch_transitions(atom, refresh_cache=False):
     return data
 
 
-def parse_transitions(data: List[dict]):
-    parsed = []
-    for transition in data:
-        A = transition["Aki(s^-1)"] + "s^-1"
-        term_i = print_term(term=transition["term_i"], include_parity=True, J=transition["J_i"])
-        term_k = print_term(term=transition["term_k"], include_parity=True, J=transition["J_k"])
+def parse_transitions1(transition: dict):
+    A = transition["Aki(s^-1)"] + "s^-1"
+    term_i = transition["term_i"] + transition["J_i"]
+    term_k = transition["term_k"] + transition["J_k"]
+    data = {
+        k.lower(): v for k, v in transition.items()
+        if k in ['Acc', 'Type']
+    }
 
-        print(transition['term_k'], transition['J_k'], term_k)
-        if A and term_i and term_k:
-            _parsed_data = {
-                "A": A, "type": transition["Type"],
-                "state_i": {
-                    "energy": remove_annotations(transition["Ei(Ry)"]) + " Ry",
-                    "term": term_i,
-                },
-                "state_f": {
-                    "energy": remove_annotations(transition["Ek(Ry)"]) + " Ry",
-                    "term": term_k,
-                },
-            }
-            parsed.append(_parsed_data)
-    return parsed
+    if A and term_i and term_k:
+        _parsed_data = {
+            "A": A,
+            "state_i": {
+                "energy": remove_annotations(transition["Ei(Ry)"]) + " Ry",
+                "term": term_i,
+            },
+            "state_f": {
+                "energy": remove_annotations(transition["Ek(Ry)"]) + " Ry",
+                "term": term_k,
+            },
+            **data
+        }
+    return _parsed_data
+
+
+def parse_transitions(data: list[dict]):
+    return [parse_transitions1(tr) for tr in data]
