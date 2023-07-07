@@ -1,10 +1,10 @@
-import enum
 import re
+from enum import Enum
 from fractions import Fraction
 from dataclasses import dataclass, asdict
 
 
-class Coupling(enum.Enum):
+class Coupling(Enum):
     LS = "LS"  # Russell-Saunders coupling
     jj = "jj"
     LK = "LK"  # pair coupling
@@ -157,3 +157,13 @@ def print_term(J=None, S=None, L=None,
         return f"{2 * S2 + 1:g}[{Fraction(K)}]{P}{J}"
 
     raise ValueError("Invalid arguments")
+
+
+def vaildate_term(term: str) -> dict:
+    """
+    parse term symbol string in NIST ASD
+    """
+    return "Limit" in term or \
+        LS_term.search(term) or \
+        J1J2_term.search(term) or \
+        LK_term.search(term)

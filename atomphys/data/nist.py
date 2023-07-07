@@ -7,6 +7,7 @@ from html.parser import HTMLParser
 
 from .name import parse_atom_name
 from atomphys.util import disk_cache
+from atomphys.term import vaildate_term
 
 re_monovalent = re.compile(r"^[a-z0-9]*p6\.(?P<n>\d+)[a-z]$")
 
@@ -97,26 +98,31 @@ def fetch_states(atom, refresh_cache=False):
     return data
 
 
-def parse_states1(state: dict):
+def _parse_state(state: dict):
     term = state["Term"] + state["J"]
-    if term:
+    if vaildate_term(term):
         _parsed_data = {
-            "energy": remove_annotations(state["Level (Ry)"]) + " Ry",
-            "term": term,
             "configuration": state["Configuration"],
-            "g": None if state["g"] == "" else float(state["g"]),
-            "Lande": None if "Lande" not in state or state["Lande"] == "" else float(state["Lande"])
+            "term": term,
+            "energy": remove_annotations(state["Level (Ry)"]) + " Ry",
+            # "g": None if state["g"] == "" else float(state["g"]),
+            # "Lande": None if "Lande" not in state or state["Lande"] == "" else float(state["Lande"])
         }
-        n_match = re_monovalent.match(state["Configuration"])
-        if n_match:
-            _parsed_data['n'] = int(n_match['n'])
+        # n_match = re_monovalent.match(state["Configuration"])
+        # if n_match:
+        #     _parsed_data['n'] = int(n_match['n'])
     else:
-        _parsed_data = {}
+        _parsed_data = None
     return _parsed_data
 
 
 def parse_states(data: List[dict]):
-    return [parse_states1(state) for state in data]
+    states = []
+    for state in data:
+        parsed = _parse_state(state)
+        if parsed is not None:
+            states.append(parsed)
+    return states
 
 
 @disk_cache
@@ -142,14 +148,14 @@ def fetch_transitions(atom, refresh_cache=False):
     return data
 
 
-def parse_transitions1(transition: dict):
-    A = transition["Aki(s^-1)"] + "s^-1"
+def _parse_transition(transition: dict):
+    A = transition["Aki(s^-1)"] + " s^-1"
     term_i = transition["term_i"] + transition["J_i"]
     term_k = transition["term_k"] + transition["J_k"]
-    data = {
-        k.lower(): v for k, v in transition.items()
-        if k in ['Acc', 'Type']
-    }
+    # data = {
+    #     k.lower(): v for k, v in transition.items()
+    #     if k in ['Acc', 'Type']
+    # }
 
     if A and term_i and term_k:
         _parsed_data = {
@@ -162,10 +168,10 @@ def parse_transitions1(transition: dict):
                 "energy": remove_annotations(transition["Ek(Ry)"]) + " Ry",
                 "term": term_k,
             },
-            **data
+            # **data
         }
     return _parsed_data
 
 
 def parse_transitions(data: list[dict]):
-    return [parse_transitions1(tr) for tr in data]
+    return [_parse_transition(tr) for tr in data]

@@ -4,39 +4,67 @@
 # Created: 06/2023
 # Author: Carmelo Mordini <cmordini@phys.ethz.ch>
 
-from dataclasses import dataclass
-from math import inf
+import pint
+from math import pi
+from enum import Enum
 
 from .state import State
-import pint
+from .util import default_units
 
 
-@dataclass(frozen=True, repr=False)
+class TransitionType(Enum):
+    E1 = "E1"  # electric dipole
+    E2 = "E2"  # electric quadrupole
+    E3 = "E3"  # electric octupole
+    M1 = "M1"  # magnetic dipole
+
+
 class Transition:
-    # TODO: not sure dataclasses are good, this is ust a prototype
     state_i: State
     state_f: State
-    _ureg: pint.UnitRegistry = None
+    _A: pint.Quantity
+    _ureg: pint.UnitRegistry
 
-    def __post_init__(self):
-        if self._ureg is None:
-            super().__setattr__('_ureg', pint.get_application_registry())
+    def __init__(self, state_i: State, state_f: State, A: pint.Quantity,
+                 _ureg: pint.UnitRegistry | None = None):
+        self._ureg = _ureg if _ureg is not None else pint.get_application_registry()
         # sort states
-        si, sf = sorted([self.state_i, self.state_f])
-        super().__setattr__('state_i', si)
-        super().__setattr__('state_f', sf)
+        self.state_i, self.state_f = sorted([state_i, state_f])
+        self.A = A
 
     def __repr__(self) -> str:
-        return f"Transition({self.state_i.name} --> {self.state_f.name} {self.wavelength})"
+        return f"Transition({self.state_i.name} --> {self.state_f.name} {self.wavelength} ({self.type}))"
 
     @property
-    def A(self):
-        # TODO this is just a mock value, get it from input
-        return self._ureg.Quantity('inf s^-1')
+    def A(self) -> pint.Quantity:
+        """Einstein coefficient"""
+        return self._A
+
+    @A.setter
+    @default_units('rad / s')
+    def A(self, value: pint.Quantity):
+        self._A = value
 
     @property
-    def wavelength(self):
+    def energy(self) -> pint.Quantity:
+        return self.state_f.energy - self.state_i.energy
+
+    @property
+    def frequency(self) -> pint.Quantity:
+        return self.energy.to('THz', 'sp')
+
+    @property
+    def wavelength(self) -> pint.Quantity:
         try:
-            return (self.state_f.energy - self.state_i.energy).to('nm', 'sp')
+            return self.energy.to('nm', 'sp')
         except ZeroDivisionError:
-            return self._ureg.Quantity(inf, "nm")
+            return self._ureg.Quantity("inf nm")
+
+    @property
+    def Gamma(self) -> pint.Quantity:
+        return self.A.to('MHz') / 2 / pi
+
+    @property
+    def type(self) -> TransitionType:
+        # TODO: get the correct transition type from quantum numbers
+        return TransitionType.E1

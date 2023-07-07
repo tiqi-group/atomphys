@@ -6,60 +6,58 @@
 
 
 import pint
+from math import pi
+import warnings
+from fractions import Fraction
 
 from .term import Coupling, QuantumNumbers
 from .util import default_units
 
-from fractions import Fraction
-from atomphys.calc.hyperfine import hyperfine_shift
-from atomphys.calc.zeeman import g_lande_fine_LS, g_lande_hyperfine
-from atomphys.calc.angular_momentum import couple_angular_momenta, magnetic_sublevels
+from .calc.hyperfine import hyperfine_shift
+from .calc.zeeman import g_lande_fine_LS, g_lande_hyperfine
+from .calc.angular_momentum import couple_angular_momenta, magnetic_sublevels
 
 
 class State:
 
-    _configuration: str
+    configuration: str
+    quantum_numbers: QuantumNumbers
     _energy: pint.Quantity
-    _quantum_numbers: QuantumNumbers
     _ureg: pint.UnitRegistry
-    _atom = None
 
-    def __init__(self, configuration: str, term: str, energy: pint.Quantity, _ureg=None, atom=None) -> None:
+    def __init__(self, configuration: str, term: str, energy: pint.Quantity,
+                 atom=None,
+                 _ureg: pint.UnitRegistry | None = None):
 
         self._atom = atom
-        self._ureg = pint.get_application_registry() if _ureg is None else _ureg
-        # if atom is not None:
-        #     self._ureg = atom._ureg
+        if atom is not None:
+            self._ureg = atom._ureg
+        elif _ureg is not None:
+            self._ureg = _ureg
+        else:
+            self._ureg = pint.get_application_registry()
 
-        self._configuration = configuration
-        self._quantum_numbers = QuantumNumbers.from_term(term)
-        self._energy = pint.Quantity(energy)
+        self.configuration = configuration
+        self.quantum_numbers = QuantumNumbers.from_term(term)
+        self.energy = energy
     # Data
-
-    @property
-    def configuration(self) -> str:
-        return self._configuration
-
-    @property
-    def quantum_numbers(self) -> QuantumNumbers:
-        return self._quantum_numbers
 
     @property
     def energy(self) -> pint.Quantity:
         return self._energy
 
     @energy.setter
-    @default_units("E_h")
-    def energy(self, energy: pint.Quantity):
-        self._energy = energy
+    @default_units("Ry")
+    def energy(self, value: pint.Quantity):
+        self._energy = value
 
     # Identifiers
 
     @property
-    def name(self):
+    def name(self) -> str:
         return f"{self.configuration} {self.term}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"State({self.name} {self.energy:0.4g~P})"
 
     @property
@@ -89,7 +87,7 @@ class State:
         return self.quantum_numbers.term
 
     @property
-    def coupling(self):
+    def coupling(self) -> Coupling:
         if self.quantum_numbers.L is not None and self.quantum_numbers.S is not None:
             return Coupling.LS
         if self.quantum_numbers.J1 is not None and self.quantum_numbers.J2 is not None:
@@ -115,20 +113,28 @@ class State:
         return magnetic_sublevels(self.quantum_numbers.J)
 
     @property
-    def Gamma(self):
-        # return sum([transition.Gamma for transition in self.transitions_down])
-        raise NotImplementedError
+    def Gamma(self) -> pint.Quantity:
+        if self._atom is None:
+            warnings.warn("State not attached to an Atom: no transitions available")
+            return self._ureg("0 MHz")
+        transitions_to = self._atom.transitions_to(self)
+        if len(transitions_to) == 0:
+            return self._ureg("0 MHz")
+        return sum([tr.Gamma for tr in transitions_to])
 
     @property
-    def lifetime(self):
-        return 1 / self.Gamma
+    def lifetime(self) -> pint.Quantity:
+        try:
+            return (1 / (2 * pi * self.Gamma)).to('seconds')
+        except ZeroDivisionError:
+            return self._ureg("inf seconds")
 
 
 class HyperfineState(State):
     def __init__(self, configuration: str, term: str, energy: pint.Quantity,
                  I: float, F: float,
-                 ureg=None, atom=None) -> None:
-        super().__init__(configuration, term, energy, ureg, atom)
+                 atom=None, _ureg=None):
+        super().__init__(configuration, term, energy, atom, _ureg)
         self._quantum_numbers = QuantumNumbers.from_term(term, I=I, F=F)
 
     @property

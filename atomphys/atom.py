@@ -7,12 +7,14 @@
 # from .state import State, StateRegistry
 # from .transition import Transition, TransitionRegistry
 
+import pint
 import networkx as nx
+
 from .state import State
 from .transition import Transition
+from .util import default_units, set_default_units
 
-from .util import default_units
-import pint
+from .data import nist
 
 
 class Atom:
@@ -20,22 +22,53 @@ class Atom:
         self._graph = nx.DiGraph()
         self._ureg = pint.get_application_registry() if _ureg is None else _ureg
 
-    def add_state(self, state: State):
-        self._graph.add_node(state)
+    def add_state(self, s: State):
+        s._atom = self
+        s._ureg = self._ureg
+        self._graph.add_node(s)
 
     def add_states(self, states: list[State]):
-        self._graph.add_nodes_from(states)
+        for s in states:
+            self.add_state(s)
 
     def add_transition(self, tr: Transition):
         if tr.state_i not in self._graph:
             raise ValueError(f"Transition initial state {tr.state_i} not in atom")
         if tr.state_f not in self._graph:
             raise ValueError(f"Transition final state {tr.state_f} not in atom")
+        tr._ureg = self._ureg
         self._graph.add_edge(tr.state_i, tr.state_f, transition=tr)
 
     def add_transitions(self, transitions: list[Transition]):
         for tr in transitions:
             self.add_transition(tr)
+
+    @classmethod
+    def from_nist(cls, name: str, energy_cutoff="inf", refresh_cache=False) -> "Atom":
+        atom = cls()
+        states_data, transitions_data = nist.load_from_nist(name, refresh_cache)
+
+        # add states
+        energy_cutoff = set_default_units(energy_cutoff, 'Ry', atom._ureg)
+        states = [State(**d) for d in states_data if atom._ureg(d['energy']) < energy_cutoff]
+        atom.add_states(states)
+
+        # add transitions
+        transitions = []
+        unmatched = 0
+        for d in transitions_data:
+            si = atom._match_term_and_energy(d['state_i']['term'], d['state_i']['energy'])
+            sf = atom._match_term_and_energy(d['state_f']['term'], d['state_f']['energy'])
+            if si is not None and sf is not None:
+                tr = Transition(si, sf, d['A'])
+                transitions.append(tr)
+            else:
+                unmatched += 1
+        if unmatched:
+            print(f"{unmatched} unmatched transitions")
+        atom.add_transitions(transitions)
+
+        return atom
 
     # states
 
@@ -59,6 +92,16 @@ class Atom:
     @default_units('Ry')
     def get_state_by_energy(self, energy: str | float | pint.Quantity):
         return min(self.states, key=lambda state: abs(state.energy - energy))
+
+    def _match_term_and_energy(self, term: str, energy: str | float | pint.Quantity):
+        matching_states = self._match_term(term)
+        if len(matching_states) == 0:
+            return None
+        energy = set_default_units(energy, 'Ry', self._ureg)
+        return min(matching_states, key=lambda state: abs(state.energy - energy))
+
+    def _match_term(self, term: str):
+        return [s for s in self.states if s.match(term)]
 
     # transitions
 
