@@ -6,7 +6,7 @@ from typing import List
 from html.parser import HTMLParser
 
 from .name import parse_atom_name
-from atomphys.util import disk_cache
+from .cache import disk_cache
 from atomphys.term import vaildate_term
 
 re_monovalent = re.compile(r"^[a-z0-9]*p6\.(?P<n>\d+)[a-z]$")
