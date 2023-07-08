@@ -1,3 +1,6 @@
+pint
+networkx
+requests
 numpy
 sympy
-pint
+matplotlib
