@@ -1,0 +1,7 @@
+{
+    "flake8.importStrategy": "fromEnvironment",
+    "python.linting.flake8Path": ".venv/Scripts/flake8",
+    "flake8.args": [
+        "--conf=setup.cfg"
+    ]
+}

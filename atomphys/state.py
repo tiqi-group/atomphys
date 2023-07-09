@@ -10,12 +10,13 @@ from math import pi
 import warnings
 from fractions import Fraction
 
-from .term import Coupling, QuantumNumbers
+from .quantum_numbers import QuantumNumbers
 from .util import default_units
 
 from .calc.hyperfine import hyperfine_shift
 from .calc.zeeman import g_lande_fine_LS, g_lande_hyperfine
 from .calc.angular_momentum import couple_angular_momenta, magnetic_sublevels
+from .calc.coupling import get_coupling, Coupling
 
 
 class State:
@@ -88,12 +89,7 @@ class State:
 
     @property
     def coupling(self) -> Coupling:
-        if self.quantum_numbers.L is not None and self.quantum_numbers.S is not None:
-            return Coupling.LS
-        if self.quantum_numbers.J1 is not None and self.quantum_numbers.J2 is not None:
-            return Coupling.jj
-        if self.quantum_numbers.S2 is not None and self.quantum_numbers.K is not None:
-            return Coupling.LK
+        return get_coupling(self.quantum_numbers)
 
     @property
     def gJ(self) -> float:

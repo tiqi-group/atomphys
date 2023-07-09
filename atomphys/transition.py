@@ -6,17 +6,11 @@
 
 import pint
 from math import pi
-from enum import Enum
 
 from .state import State
 from .util import default_units
-
-
-class TransitionType(Enum):
-    E1 = "E1"  # electric dipole
-    E2 = "E2"  # electric quadrupole
-    E3 = "E3"  # electric octupole
-    M1 = "M1"  # magnetic dipole
+from .calc.selection_rules import get_transition_type_LS, TransitionType
+from .calc.coupling import Coupling
 
 
 class Transition:
@@ -33,7 +27,7 @@ class Transition:
         self.A = A
 
     def __repr__(self) -> str:
-        return f"Transition({self.state_i.name} --> {self.state_f.name} {self.wavelength} ({self.type}))"
+        return f"Transition({self.state_i.name} --> {self.state_f.name} {self.wavelength} ({self.type.value}))"
 
     @property
     def A(self) -> pint.Quantity:
@@ -67,4 +61,11 @@ class Transition:
     @property
     def type(self) -> TransitionType:
         # TODO: get the correct transition type from quantum numbers
-        return TransitionType.E1
+        if self.state_i.coupling == Coupling.LS and self.state_f.coupling == Coupling.LS:
+            qn_i = self.state_i.quantum_numbers
+            qn_f = self.state_f.quantum_numbers
+            return get_transition_type_LS(qn_i, qn_f)
+        else:
+            # print(
+            #     f"Transition type calculation is implemented only between states with LS coupling, but transition has {self.state_i.coupling} --> {self.state_f.coupling}")
+            return TransitionType.NONE
