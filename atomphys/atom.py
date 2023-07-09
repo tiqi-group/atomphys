@@ -113,11 +113,11 @@ class Atom:
     def transitions(self) -> list[Transition]:
         return list(nx.get_edge_attributes(self._graph, 'transition').values())
 
-    def transitions_from(self, state: State) -> list[Transition]:
-        return [edge['transition'] for edge in self._graph.succ[state].values()]
+    def transitions_from(self, state: State) -> dict[State, Transition]:
+        return {node: edge['transition'] for node, edge in self._graph.succ[state].items()}
 
-    def transitions_to(self, state: State) -> list[Transition]:
-        return [edge['transition'] for edge in self._graph.pred[state].values()]
+    def transitions_to(self, state: State) -> dict[State, Transition]:
+        return {node: edge['transition'] for node, edge in self._graph.pred[state].items()}
 
     @default_units('nm')
     def get_transition_by_wavelength(self, wavelength: str | float | pint.Quantity):

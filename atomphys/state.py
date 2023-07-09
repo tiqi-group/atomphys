@@ -109,14 +109,29 @@ class State:
         return magnetic_sublevels(self.quantum_numbers.J)
 
     @property
-    def Gamma(self) -> pint.Quantity:
+    def transitions_from(self) -> dict:
         if self._atom is None:
             warnings.warn("State not attached to an Atom: no transitions available")
-            return self._ureg("0 MHz")
-        transitions_to = self._atom.transitions_to(self)
+            return dict()
+        return self._atom.transitions_from(self)
+
+    @property
+    def transitions_to(self) -> dict:
+        if self._atom is None:
+            warnings.warn("State not attached to an Atom: no transitions available")
+            return dict()
+        return self._atom.transitions_to(self)
+
+    @property
+    def Gamma(self) -> pint.Quantity:
+        transitions_to = self.transitions_to
         if len(transitions_to) == 0:
             return self._ureg("0 MHz")
-        return sum([tr.Gamma for tr in transitions_to])
+        return sum([tr.Gamma for tr in transitions_to.values()])
+
+    @property
+    def decay_branching_ratios(self) -> dict:
+        return {s: (tr.Gamma / self.Gamma).m for s, tr in self.transitions_to.items()}
 
     @property
     def lifetime(self) -> pint.Quantity:
