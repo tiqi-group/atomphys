@@ -9,8 +9,9 @@ from math import pi
 
 from .state import State
 from .util import default_units
-from .calc.selection_rules import get_transition_type_LS, TransitionType
 from .calc.coupling import Coupling
+from .calc.selection_rules import get_transition_type_LS, TransitionType
+from .calc.matrix_element import reduced_dipole_matrix_element, reduced_quadrupole_matrix_element
 
 
 class Transition:
@@ -69,3 +70,13 @@ class Transition:
             # print(
             #     f"Transition type calculation is implemented only between states with LS coupling, but transition has {self.state_i.coupling} --> {self.state_f.coupling}")
             return TransitionType.NONE
+
+    @property
+    def matrix_element(self):
+        if self.type == TransitionType.E1:
+            return reduced_dipole_matrix_element(self.A, self.wavelength, self._ureg)
+        elif self.type == TransitionType.E2:
+            return reduced_quadrupole_matrix_element(self.A, self.wavelength, self._ureg)
+        else:
+            raise NotImplementedError(
+                f"Matrix element calculation is implemented only for type E1/E2, but transition has {self.type}")

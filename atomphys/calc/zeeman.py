@@ -10,8 +10,7 @@ References:
 [1] Hans A. Bethe and Edwin E. Salpeter, Quantum Mechanics of One- and Two-Electron Atoms (SpringerVerlag, Berlin, 1957).
 """
 
-from pint import Quantity
-
+import pint
 g_spin = 2.00231930436256
 
 
@@ -59,6 +58,7 @@ def g_lande_hyperfine(J, I, F, gJ, gI=0):  # noqa: E741
     return gF
 
 
-def zeeman_shift(g, m, B: Quantity):
-    mu = B._REGISTRY.bohr_magneton
+def zeeman_shift(g, m, B: pint.Quantity, _ureg: pint.UnitRegistry | None = None):
+    _ureg = pint.get_application_registry() if _ureg is None else _ureg
+    mu = _ureg.bohr_magneton
     return mu * g * m * B.to('tesla', 'Gaussian')

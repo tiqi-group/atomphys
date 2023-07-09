@@ -1,7 +1,7 @@
 import pkg_resources
 import pint
 
-_ureg = pint.UnitRegistry(system="atomic", auto_reduce_dimensions=True)
+_ureg = pint.UnitRegistry(system="SI", auto_reduce_dimensions=True)
 _ureg.enable_contexts('spectroscopy', 'Gaussian')
 _ureg.default_format = "~0.3gP"
 
