@@ -15,9 +15,14 @@ from .state import State
 from .atom import Atom
 
 
-def plot_atom(atom: Atom, ax=None, energy_units='Ry'):
+def plot_atom(atom: Atom, ax=None, energy_units='Ry', max_energy=nan, min_energy=nan):
     if ax is None:
         fig, ax = plt.subplots()
+    if max_energy is not nan:
+        atom = atom.remove_states_above_energy(max_energy)
+    if min_energy is not nan:
+        atom = atom.remove_states_below_energy(min_energy)
+    
     g = atom._graph
     pos = JE_graph_position(g.nodes, energy_units)
     # pos = nx.spring_layout(g)
@@ -34,6 +39,8 @@ def plot_atom(atom: Atom, ax=None, energy_units='Ry'):
     nx.draw_networkx_edge_labels(g, pos, edge_labels, font_size=9, clip_on=False, ax=ax)
     ax.tick_params(top=False, right=False, reset=True)
     ax.set(xlabel="Angular momentum [L]", ylabel=f"Energy [{energy_units}]", title=atom)
+
+
 
 
 def plot_energy_histogram(atom: Atom, unit='Ry', ax=None, **hist_kwargs):

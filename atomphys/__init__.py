@@ -12,13 +12,12 @@ from .atom import Atom  # noqa: E402
 # from .laser import Laser  # noqa: E402
 from .state import State  # noqa: E402
 from .transition import Transition  # noqa: E402
+from .plot import *
 
 __version__ = pkg_resources.get_distribution("atomphys").version
 
 __all__ = [
-    "elements",
     "Atom",
     "State",
     "Transition",
-    "Laser",
 ]

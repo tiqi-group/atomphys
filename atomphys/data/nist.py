@@ -13,13 +13,34 @@ re_monovalent = re.compile(r"^[a-z0-9]*p6\.(?P<n>\d+)[a-z]$")
 
 
 def remove_annotations(s: str) -> str:
-    """remove annotations from energy strings in NIST ASD"""
-    # re_energy = re.compile("-?\\d+\\.\\d*|$")
-    # return re_energy.findall(s)[0]
+    """
+    Removes specific characters used for annotations from a string.
 
-    # this is about 3.5× faster than re.findall, but it's less flexible
-    # overall this can make a several hundred ms difference when loading
-    return s.strip("()[]aluxyz +?").replace("&dagger;", "")
+    This function is designed to process strings representing energy levels or
+    similar scientific data from the NIST Atomic Spectra Database (ASD). It
+    removes any characters used for annotations and uncertainties, along with 
+    the specific "&dagger;" symbol.
+
+    An alternative approach using regex was considered but discarded in favor of 
+    the current method due to the significant performance improvement of the latter.
+
+    Parameters:
+    s (str): The input string that needs annotation characters removed.
+
+    Returns:
+    str: The string with specific annotation characters removed.
+    """
+    
+    # Strip the following characters from both ends of the string: '(', ')', '[', ']', 'a', 'l', 'u', 'x', 'y', 'z', ' ', '+', '?'.
+    # These characters are often used for annotations or uncertainties in NIST ASD data.
+    stripped_string = s.strip("()[]aluxyz +?")
+
+    # Replace the "&dagger;" symbol with an empty string, effectively removing it.
+    # The "&dagger;" symbol is often used to denote different states or variations in the data.
+    cleaned_string = stripped_string.replace("&dagger;", "")
+
+    return cleaned_string
+
 
 
 def tokenize_name(name):

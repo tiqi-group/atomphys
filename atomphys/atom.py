@@ -1,20 +1,11 @@
-# import json
-
-# import pint
-
-# from . import _ureg
-# from .data import nist
-# from .state import State, StateRegistry
-# from .transition import Transition, TransitionRegistry
-
-import pint
 import networkx as nx
+import pint
 from copy import deepcopy
+from typing import Union, List, Dict
 
 from .state import State
 from .transition import Transition
 from .util import default_units, set_default_units
-
 from .data import nist
 
 
@@ -43,7 +34,7 @@ class Atom:
         if s in self.states:
             raise ValueError(f"State {s} already in atom")
         
-        s._atom = self
+        s.atom = self
         s._ureg = self._ureg
         self._graph.add_node(s)
 
@@ -153,6 +144,44 @@ class Atom:
         isolated = list(nx.isolates(g))
         g.remove_nodes_from(isolated)
         print(f"Removed {len(isolated)} states without transitions")
+        return atom
+    
+    def remove_states_above_energy(self, energy: pint.Quantity, copy=True):
+        """
+        Removes states with energy above a given value from the Atom
+        
+        Args:
+            energy (pint.Quantity): Energy above which states will be removed
+            copy (bool, optional): Return a copy of the Atom with states removed. Defaults to True.
+        
+        Returns:
+            Atom: Atom with states above energy removed
+        """
+        atom = self.copy() if copy else self
+        states = atom.states
+        for s in states:
+            if s.energy > energy:
+                atom.remove_state(s)
+        print(f"Removed {len(states) - len(atom.states)} states above {energy}")
+        return atom
+    
+    def remove_states_below_energy(self, energy: pint.Quantity, copy=True):
+        """
+        Removes states with energy below a given value from the Atom
+        
+        Args:
+            energy (pint.Quantity): Energy below which states will be removed
+            copy (bool, optional): Return a copy of the Atom with states removed. Defaults to True.
+        
+        Returns:
+            Atom: Atom with states below energy removed
+        """
+        atom = self.copy() if copy else self
+        states = atom.states
+        for s in states:
+            if s.energy < energy:
+                atom.remove_state(s)
+        print(f"Removed {len(states) - len(atom.states)} states below {energy}")
         return atom
 
 
@@ -406,7 +435,8 @@ def load_from_database(name: str, states_data: list[dict], transitions_data: lis
 
     return atom
 
-def from_nist(self, name: str, energy_cutoff="inf", remove_isolated=False, refresh_cache=False) -> "Atom":
+
+def from_nist(name: str, energy_cutoff="inf", remove_isolated=False, refresh_cache=False) -> "Atom":
     """
     Returns an atom from the NIST database
 
@@ -425,6 +455,6 @@ def from_nist(self, name: str, energy_cutoff="inf", remove_isolated=False, refre
     
     """
     states_data, transitions_data = nist.load_from_nist(name, refresh_cache)
-    return self.load_from_database(name, states_data, transitions_data, energy_cutoff, remove_isolated)
+    return load_from_database(name, states_data, transitions_data, energy_cutoff, remove_isolated)
 
 
