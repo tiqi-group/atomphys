@@ -9,6 +9,10 @@ from .util import default_units, set_default_units
 from .data import nist
 
 
+#TODO: Add docstrings
+# - only select the nodes for plotting but dont modify the graph (?)
+# - change the name of the graph to something more meaningful
+
 class Atom:
     def __init__(self, name: str, _ureg=None) -> None:
         self.name = name
@@ -71,6 +75,22 @@ class Atom:
         """
         for s in states:
             self.remove_state(s)
+
+    def remove_all_but_states(self, states: list[State], copy: bool = False):
+        """
+        Removes all states and all associated transitions from the graph associated with the Atom except the ones in the list
+
+        Args:
+            states (list[State]): List of State objects to keep in the Atom
+        Returns:
+            Atom: Atom object with only the states in the list
+                
+        """
+        atom = self.copy() if copy else self
+        for s in self.states:
+            if s not in states:
+                atom.remove_state(s)
+        return atom
     
 
     def add_transition(self, tr: Transition):
@@ -146,13 +166,14 @@ class Atom:
         print(f"Removed {len(isolated)} states without transitions")
         return atom
     
-    def remove_states_above_energy(self, energy: pint.Quantity, copy=True):
+    def remove_states_above_energy(self, energy: pint.Quantity, copy=True, remove_isolated=True):
         """
         Removes states with energy above a given value from the Atom
         
         Args:
             energy (pint.Quantity): Energy above which states will be removed
             copy (bool, optional): Return a copy of the Atom with states removed. Defaults to True.
+            remove_isolated (bool, optional): Remove isolated states after removing states above energy. Defaults to True.
         
         Returns:
             Atom: Atom with states above energy removed
@@ -162,16 +183,20 @@ class Atom:
         for s in states:
             if s.energy > energy:
                 atom.remove_state(s)
+        atom.remove_isolated(copy=False)
         print(f"Removed {len(states) - len(atom.states)} states above {energy}")
         return atom
     
-    def remove_states_below_energy(self, energy: pint.Quantity, copy=True):
+    """Graph Truncation functions"""
+
+    def remove_states_below_energy(self, energy: pint.Quantity, copy=True, remove_isolated=True):
         """
         Removes states with energy below a given value from the Atom
         
         Args:
             energy (pint.Quantity): Energy below which states will be removed
             copy (bool, optional): Return a copy of the Atom with states removed. Defaults to True.
+            remove_isolated (bool, optional): Remove isolated states after removing states below energy. Defaults to True.
         
         Returns:
             Atom: Atom with states below energy removed
@@ -181,9 +206,11 @@ class Atom:
         for s in states:
             if s.energy < energy:
                 atom.remove_state(s)
+        atom.remove_isolated(copy=False)
         print(f"Removed {len(states) - len(atom.states)} states below {energy}")
         return atom
-
+    
+    
 
     """Retrieval functions"""
     @property
@@ -226,11 +253,11 @@ class Atom:
             StopIteration: If no matching state is found.
         """
         if isinstance(key, str):
-            return self.get_state_by_name(key)
+            return self.get_state_by_term(key)
         if isinstance(key, pint.Quantity):
             return self.get_state_by_energy(key)
 
-    def get_state_by_name(self, key: str):
+    def get_state_by_term(self, key: str):
         """
         Retrieves a state from the Atom by parsing name.
 
@@ -327,42 +354,42 @@ class Atom:
         return list(nx.get_edge_attributes(self._graph, 'transition').values())
     
 
-    def transitions_from(self, state: State) -> dict[State, Transition]:
+    def transitions_from(self, state: State) -> list[Transition]:
         """
         Retrieve all transitions from a given state
 
-        This method returns a dictionary of transitions from a given state. The keys of the dictionary are the states.
-        The values of the dictionary are the transitions from the given state to the corresponding state key.
+        This method returns a list of transitions from a given state. The transitions are returned in the order they are
+        stored in the Atom.
 
         Args:
             state (State): The state to retrieve transitions from.
         
         Returns:
-            dict[State, Transition]: A dictionary of transitions from the given state.
+            list[Transition]: A list of transitions from the given state.
         
         Raises:
             KeyError: If the given state is not in the Atom.
         """
-        return {node: edge['transition'] for node, edge in self._graph.succ[state].items()}
+        return [edge['transition'] for node, edge in self._graph.succ[state].items()]
 
-    def transitions_to(self, state: State) -> dict[State, Transition]:
+    def transitions_to(self, state: State) -> list[Transition]:
         """
         Retrieve all transitions to a given state
 
-        This method returns a dictionary of transitions to a given state. The keys of the dictionary are the states.
-        The values of the dictionary are the transitions from the corresponding state key to the given state.
+        This method returns a list of all transitions to a given state. The transitions are returned in the order they are
+        stored in the Atom.
 
         Args:
             state (State): The state to retrieve transitions to.
 
         Returns:
-            dict[State, Transition]: A dictionary of transitions to the given state.
+            list[Transition]: A list of transitions to the given state.
         
         Raises:
             KeyError: If the given state is not in the Atom.
         """
 
-        return {node: edge['transition'] for node, edge in self._graph.pred[state].items()}
+        return [edge['transition'] for node, edge in self._graph.pred[state].items()]
 
     @default_units('nm')
     def get_transition_by_wavelength(self, wavelength: str | float | pint.Quantity):
