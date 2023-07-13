@@ -26,13 +26,13 @@ class State:
 
     The idea behind this class is that all properties of the state are re-derived from
     few basic properties, such as the electron configuration, the term symbol and the energy of the atom.
-    
+
     Attributes:
         configuration (str): The electron configuration of the state.
         quantum_numbers (QuantumNumbers): Quantum numbers of the state.
         _energy (pint.Quantity): Energy of the state.
         _ureg (pint.UnitRegistry): Unit registry for the state.
-        
+
     Methods:
         __init__(configuration, term, energy, atom=None, _ureg=None): Initializes a new instance of the State class.
         energy: Property that gets or sets the energy of the state.
@@ -110,11 +110,11 @@ class State:
 
     def match(self, pattern):
         return pattern.lower() in self.name.lower()
-    
+
     @property
     def atom(self) -> 'Atom':
         return self._atom
-    
+
     @atom.setter
     def atom(self, value: 'Atom'):
         self._atom = value
@@ -186,7 +186,7 @@ class State:
 class HyperfineState(State):
     """
     This class represents a hyperfine quantum state in atomic physics, and it extends the State class.
-    
+
     Methods:
         __init__(configuration, term, energy, I, F, atom=None, _ureg=None): Initializes a new instance of the HyperfineState class.
         name: Property that gets the name of the state.
@@ -227,13 +227,13 @@ class HyperfineState(State):
 def hyperfine_manifold(state: State, I: float, Ahf: pint.Quantity, Bhf: pint.Quantity = 0) -> list[HyperfineState]:
     """
     This function generates a list of hyperfine states for a given state.
-    
+
     Arguments:
         state (State): The state for which to generate the hyperfine states.
         I (float): The nuclear spin quantum number.
         Ahf (pint.Quantity): The magnetic dipole hyperfine structure constant.
         Bhf (pint.Quantity, optional): The electric quadrupole hyperfine structure constant. Defaults to 0.
-        
+
     Returns:
         list[HyperfineState]: A list of hyperfine states.
     """
@@ -246,4 +246,3 @@ def hyperfine_manifold(state: State, I: float, Ahf: pint.Quantity, Bhf: pint.Qua
         hs = HyperfineState(state.configuration, state.term, energy, I, F, state._ureg, state._atom)
         hstates.append(hs)
     return hstates
-

@@ -11,7 +11,6 @@ from .state import State
 from .util import default_units
 from .calc.coupling import Coupling
 from .calc.selection_rules import get_transition_type_LS, TransitionType
-from .calc.matrix_element import reduced_dipole_matrix_element, reduced_quadrupole_matrix_element
 
 
 def make_property(attr_name: str, get_unit: str = None, conversion: str = None, extra_factor: pint.Quantity = 1):
