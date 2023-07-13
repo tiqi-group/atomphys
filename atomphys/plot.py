@@ -22,7 +22,7 @@ from collections import defaultdict
 #         atom = atom.remove_states_above_energy(max_energy)
 #     if min_energy is not nan:
 #         atom = atom.remove_states_below_energy(min_energy)
-    
+
 #     g = atom._graph
 #     pos = JE_graph_position(g.nodes, energy_units)
 #     # pos = nx.spring_layout(g)
@@ -40,20 +40,21 @@ from collections import defaultdict
 #     ax.tick_params(top=False, right=False, reset=True)
 #     ax.set(xlabel="Angular momentum [L]", ylabel=f"Energy [{energy_units}]", title=atom)
 
+
 def plot_atom(atom: Atom, ax=None, energy_units='Ry', max_energy=None, min_energy=None, introduce_offset=False, energy_threshold=0.001, x_offset_factor=0.1, y_offset_factor=0.01):
     if ax is None:
         fig, ax = plt.subplots()
-    
+
     if max_energy is not None:
         atom = atom.remove_states_above_energy(max_energy, copy=True)
     if min_energy is not None:
         atom = atom.remove_states_below_energy(min_energy, copy=True)
-    
+
     g = atom._graph
-    
+
     # Get original positions
     pos = JE_graph_position(g.nodes, energy_units, max_energy, min_energy)
-    
+
     # Calculate offsets for nodes with similar energy and same angular momentum
     if introduce_offset:
         pos = offset_similar_nodes(pos, energy_threshold, x_offset_factor, y_offset_factor)
@@ -61,17 +62,19 @@ def plot_atom(atom: Atom, ax=None, energy_units='Ry', max_energy=None, min_energ
     node_labels = {k: k.term for k in g.nodes}
     edge_labels = {edge: f"{tr.wavelength}" for edge, tr in nx.get_edge_attributes(g, 'transition').items()}
 
-    #https://petercbsmith.github.io/marker-tutorial.html
+    # https://petercbsmith.github.io/marker-tutorial.html
     node_path = Path([(-1, 0), (1, 0)], [Path.MOVETO, Path.LINETO])  # just a simple horizontal line
     node_color = ['k' if s not in atom.isolated_states else 'C1' for s in atom.states]
     edge_color = [_wavelength_to_rgb(tr.wavelength.to('nm').m) for tr in atom.transitions]
     nx.draw_networkx_nodes(g, pos, node_shape=node_path, node_color=node_color, node_size=200, linewidths=2, ax=ax)
     nx.draw_networkx_labels(g, pos, node_labels, font_size=9, verticalalignment='bottom', ax=ax, clip_on=False)
     nx.draw_networkx_edges(g, pos, edge_color=edge_color, node_size=50, ax=ax)
-    nx.draw_networkx_edge_labels(g, pos, edge_labels, font_size=9, clip_on=False, ax=ax, bbox=dict(facecolor='none', edgecolor='none', boxstyle='round,pad=0.5'))
-    #nx.draw_networkx_edge_labels(g, pos, edge_labels, font_size=9, clip_on=False, ax=ax)
+    nx.draw_networkx_edge_labels(g, pos, edge_labels, font_size=9, clip_on=False, ax=ax,
+                                 bbox=dict(facecolor='none', edgecolor='none', boxstyle='round,pad=0.5'))
+    # nx.draw_networkx_edge_labels(g, pos, edge_labels, font_size=9, clip_on=False, ax=ax)
     ax.tick_params(top=False, right=False, reset=True)
     ax.set(xlabel="Angular momentum [L]", ylabel=f"Energy [{energy_units}]", title=atom)
+
 
 def offset_similar_nodes(pos, energy_threshold, x_offset_factor, y_offset_factor):
     # Group nodes by x-coordinate
@@ -88,14 +91,13 @@ def offset_similar_nodes(pos, energy_threshold, x_offset_factor, y_offset_factor
             y_offset = 0
             for j in range(i):
                 if i > 0:
-                    prev_node, prev_y = node_list[i-j]
+                    prev_node, prev_y = node_list[i - j]
                     if abs(prev_y - y) < energy_threshold:
                         x_offset += x_offset_factor
                         y_offset += y_offset_factor
-            new_pos[node] = (x + x_offset, y+y_offset)
+            new_pos[node] = (x + x_offset, y + y_offset)
 
     return new_pos
-
 
 
 def plot_energy_histogram(atom: Atom, unit='Ry', ax=None, **hist_kwargs):
@@ -109,7 +111,7 @@ def plot_energy_histogram(atom: Atom, unit='Ry', ax=None, **hist_kwargs):
         unit (str, optional): The unit of the energy. Defaults to 'Ry'.
         ax (matplotlib.axes.Axes, optional): The axes to plot on. Defaults to None.
         **hist_kwargs: Additional keyword arguments passed to matplotlib.pyplot.hist.
-    
+
     """
     if ax is None:
         fig, ax = plt.subplots()
@@ -164,7 +166,7 @@ def JE_graph_position(states, energy_units: str, max_energy=None, min_energy=Non
 
 def _wavelength_to_rgb(wavelength, gamma=0.8):
     ''' taken from http://www.noah.org/wiki/Wavelength_to_RGB_in_Python
-    This converts a given wavelength of light to an 
+    This converts a given wavelength of light to an
     approximate RGB color value. The wavelength must be given
     in nanometers in the range from 380 nm through 750 nm
     (789 THz through 400 THz).

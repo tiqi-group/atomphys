@@ -1,7 +1,6 @@
 import networkx as nx
 import pint
 from copy import deepcopy
-from typing import Union, List, Dict
 
 from .state import State
 from .transition import Transition
@@ -9,7 +8,7 @@ from .util import default_units, set_default_units
 from .data import nist
 
 
-#TODO: Add docstrings
+# TODO: Add docstrings
 # - only select the nodes for plotting but dont modify the graph (?)
 # - change the name of the graph to something more meaningful
 
@@ -25,7 +24,6 @@ class Atom:
     def copy(self):
         return deepcopy(self)
 
-
     """Graph modification functions"""
 
     def add_state(self, s: State):
@@ -37,7 +35,7 @@ class Atom:
         """
         if s in self.states:
             raise ValueError(f"State {s} already in atom")
-        
+
         s.atom = self
         s._ureg = self._ureg
         self._graph.add_node(s)
@@ -51,7 +49,7 @@ class Atom:
         """
         if s not in self.states:
             raise ValueError(f"State {s} not in atom")
-        
+
         self._graph.remove_node(s)
 
     def add_states(self, states: list[State]):
@@ -64,14 +62,14 @@ class Atom:
 
         for s in states:
             self.add_state(s)
-    
+
     def remove_states(self, states: list[State]):
         """
         Removes states and all associated transitions from the graph associated with the Atom
 
         Args:
             states (list[State]): List of State objects to remove from the Atom
-                
+
         """
         for s in states:
             self.remove_state(s)
@@ -84,14 +82,13 @@ class Atom:
             states (list[State]): List of State objects to keep in the Atom
         Returns:
             Atom: Atom object with only the states in the list
-                
+
         """
         atom = self.copy() if copy else self
         for s in self.states:
             if s not in states:
                 atom.remove_state(s)
         return atom
-    
 
     def add_transition(self, tr: Transition):
         """
@@ -99,7 +96,7 @@ class Atom:
 
         Args:
             tr (Transition): Transition object to add to the Atom
-                
+
         """
 
         if tr.state_i not in self._graph:
@@ -108,7 +105,7 @@ class Atom:
             raise ValueError(f"Transition final state {tr.state_f} not in atom")
         if tr in self.transitions:
             raise ValueError(f"Transition {tr} already in atom")
-        
+
         tr._ureg = self._ureg
         self._graph.add_edge(tr.state_i, tr.state_f, transition=tr)
 
@@ -118,7 +115,7 @@ class Atom:
 
         Args:
             transitions (list[Transition]): List of Transition objects to add to the Atom
-                
+
         """
 
         for tr in transitions:
@@ -135,14 +132,14 @@ class Atom:
             raise ValueError(f"Transition {tr} not in atom")
 
         self._graph.remove_edge(tr.state_i, tr.state_f)
-    
+
     def remove_transitions(self, transitions: list[Transition]):
         """
         Removes transitions from a list from the graph associated with the Atom
 
         Args:
             transitions (list[Transition]): List of Transition objects to remove from the Atom
-                
+
         """
         for tr in transitions:
             self.remove_transition(tr)
@@ -150,31 +147,30 @@ class Atom:
     def remove_isolated(self, copy=True):
         """
         Removes isolated states(states without transitions) from the Atom
-        
+
         Args:
             copy (bool, optional): Return a copy of the Atom with isolated states removed. Defaults to True.
-        
+
         Returns:
             Atom: Atom with isolated states removed
         """
-        
-        
+
         atom = self.copy() if copy else self
         g = atom._graph
         isolated = list(nx.isolates(g))
         g.remove_nodes_from(isolated)
         print(f"Removed {len(isolated)} states without transitions")
         return atom
-    
+
     def remove_states_above_energy(self, energy: pint.Quantity, copy=True, remove_isolated=True):
         """
         Removes states with energy above a given value from the Atom
-        
+
         Args:
             energy (pint.Quantity): Energy above which states will be removed
             copy (bool, optional): Return a copy of the Atom with states removed. Defaults to True.
             remove_isolated (bool, optional): Remove isolated states after removing states above energy. Defaults to True.
-        
+
         Returns:
             Atom: Atom with states above energy removed
         """
@@ -186,18 +182,18 @@ class Atom:
         atom.remove_isolated(copy=False)
         print(f"Removed {len(states) - len(atom.states)} states above {energy}")
         return atom
-    
+
     """Graph Truncation functions"""
 
     def remove_states_below_energy(self, energy: pint.Quantity, copy=True, remove_isolated=True):
         """
         Removes states with energy below a given value from the Atom
-        
+
         Args:
             energy (pint.Quantity): Energy below which states will be removed
             copy (bool, optional): Return a copy of the Atom with states removed. Defaults to True.
             remove_isolated (bool, optional): Remove isolated states after removing states below energy. Defaults to True.
-        
+
         Returns:
             Atom: Atom with states below energy removed
         """
@@ -209,15 +205,13 @@ class Atom:
         atom.remove_isolated(copy=False)
         print(f"Removed {len(states) - len(atom.states)} states below {energy}")
         return atom
-    
-    
 
     """Retrieval functions"""
     @property
     def states(self) -> list[State]:
         """
         Returns a list of states in the Atom
-    
+
         Returns:
             - list[State]: List of states in the Atom
         """
@@ -233,7 +227,6 @@ class Atom:
         """
         return list(nx.isolates(self._graph))
 
-
     def get_state(self, key: str | pint.Quantity):
         """
         Retrieves a state from the Atom by parsing name or energy.
@@ -248,7 +241,7 @@ class Atom:
 
         Returns:
             State: A State object with a name or energy matching the key. Returns None if no match is found.
-        
+
         Raises:
             StopIteration: If no matching state is found.
         """
@@ -262,8 +255,8 @@ class Atom:
         Retrieves a state from the Atom by parsing name.
 
         This method iterates through the states of an Atom and returns the state
-        that matches the given key. The key is the name of the state to retrieve, 
-        which follows the format (configuration, quantum_numbers). If no matching 
+        that matches the given key. The key is the name of the state to retrieve,
+        which follows the format (configuration, quantum_numbers). If no matching
         state is found, it returns None.
 
         Args:
@@ -271,7 +264,7 @@ class Atom:
 
         Returns:
             State: A State object with a name matching the key. Returns None if no match is found.
-            
+
         Raises:
             StopIteration: If no matching state is found.
         """
@@ -289,10 +282,10 @@ class Atom:
 
         Args:
             energy (pint.Quantity): The energy of the state to retrieve.
-        
+
         Returns:
             State: A State object with an energy closest to the given energy.
-        
+
         Raises:
             StopIteration: If no matching state is found.
 
@@ -308,10 +301,10 @@ class Atom:
 
         Args:
             key (str): The name of the state to retrieve.
-        
+
         Returns:
             list[State]: A list of State objects with a name matching the key. Returns None if no match is found.
-        
+
         Raises:
             StopIteration: If no matching state is found.
         """
@@ -328,7 +321,7 @@ class Atom:
         Args:
             key (str): The name of the state to retrieve.
             energy (pint.Quantity): The energy of the state to retrieve. It should be in units of energy.
-        
+
         Returns:
             State: A State object with a name matching the key and energy closest to the energy argument. Returns None if no match is found.
         """
@@ -338,7 +331,6 @@ class Atom:
             return None
         energy = set_default_units(energy, 'Ry', self._ureg)
         return min(matching_states, key=lambda state: abs(state.energy - energy))
-
 
     @property
     def transitions(self) -> list[Transition]:
@@ -352,7 +344,6 @@ class Atom:
             list[Transition]: A list of all transitions in the Atom.
         """
         return list(nx.get_edge_attributes(self._graph, 'transition').values())
-    
 
     def transitions_from(self, state: State) -> list[Transition]:
         """
@@ -363,10 +354,10 @@ class Atom:
 
         Args:
             state (State): The state to retrieve transitions from.
-        
+
         Returns:
             list[Transition]: A list of transitions from the given state.
-        
+
         Raises:
             KeyError: If the given state is not in the Atom.
         """
@@ -384,7 +375,7 @@ class Atom:
 
         Returns:
             list[Transition]: A list of transitions to the given state.
-        
+
         Raises:
             KeyError: If the given state is not in the Atom.
         """
@@ -401,10 +392,10 @@ class Atom:
 
         Args:
             wavelength (str | float | pint.Quantity): The wavelength of the transition to retrieve.
-        
+
         Returns:
             Transition: A Transition object with a wavelength closest to the wavelength argument.
-        
+
         Raises:
             StopIteration: If no matching transition is found.
         """
@@ -412,8 +403,10 @@ class Atom:
 
 
 """Database loading functions"""
+
+
 def load_from_database(name: str, states_data: list[dict], transitions_data: list[dict],
-                    energy_cutoff="inf", remove_isolated=False) -> Atom:
+                       energy_cutoff="inf", remove_isolated=False) -> Atom:
     """
     Returns an atom object given the database input.
 
@@ -428,7 +421,7 @@ def load_from_database(name: str, states_data: list[dict], transitions_data: lis
         transitions_data (list[dict]): List of dictionaries containing the transition data
         energy_cutoff (str, optional): Energy cutoff for states. Defaults to "inf".
         remove_isolated (bool, optional): Remove isolated states. Defaults to False.
-    
+
     Returns:
         Atom: Atom object
     """
@@ -475,13 +468,11 @@ def from_nist(name: str, energy_cutoff="inf", remove_isolated=False, refresh_cac
         energy_cutoff (str, optional): Energy cutoff for states. Defaults to "inf".
         remove_isolated (bool, optional): Remove isolated states. Defaults to False.
         refresh_cache (bool, optional): Refresh the cache. Defaults to False.
-    
+
     Returns:
         Atom: Atom object
 
-    
+
     """
     states_data, transitions_data = nist.load_from_nist(name, refresh_cache)
     return load_from_database(name, states_data, transitions_data, energy_cutoff, remove_isolated)
-
-

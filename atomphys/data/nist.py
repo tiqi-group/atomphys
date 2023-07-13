@@ -18,10 +18,10 @@ def remove_annotations(s: str) -> str:
 
     This function is designed to process strings representing energy levels or
     similar scientific data from the NIST Atomic Spectra Database (ASD). It
-    removes any characters used for annotations and uncertainties, along with 
+    removes any characters used for annotations and uncertainties, along with
     the specific "&dagger;" symbol.
 
-    An alternative approach using regex was considered but discarded in favor of 
+    An alternative approach using regex was considered but discarded in favor of
     the current method due to the significant performance improvement of the latter.
 
     Parameters:
@@ -30,7 +30,7 @@ def remove_annotations(s: str) -> str:
     Returns:
     str: The string with specific annotation characters removed.
     """
-    
+
     # Strip the following characters from both ends of the string: '(', ')', '[', ']', 'a', 'l', 'u', 'x', 'y', 'z', ' ', '+', '?'.
     # These characters are often used for annotations or uncertainties in NIST ASD data.
     stripped_string = s.strip("()[]aluxyz +?")
@@ -40,7 +40,6 @@ def remove_annotations(s: str) -> str:
     cleaned_string = stripped_string.replace("&dagger;", "")
 
     return cleaned_string
-
 
 
 def tokenize_name(name):
