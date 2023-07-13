@@ -14,18 +14,15 @@ from .calc.selection_rules import get_transition_type_LS, TransitionType
 from .calc.matrix_element import reduced_dipole_matrix_element, reduced_quadrupole_matrix_element
 
 
-def make_property(attr_name: str, get_unit: str = None, conversion: str = None, extra_factor: pint.Quantity = 1):
+
+def make_alias(attr_name: str, get_unit: str = None):
     @property
     def prop(self):
         if get_unit is None:
             return getattr(self, attr_name)
-        if conversion is None:
-            return (getattr(self, attr_name) * extra_factor).to(get_unit)
         else:
-            return (getattr(self, attr_name) * extra_factor).to(get_unit, conversion)
+            return getattr(self, attr_name).to(get_unit)
     return prop
-
-
 
 class Transition:
     """
@@ -56,7 +53,10 @@ class Transition:
     def __repr__(self) -> str:
         return f"Transition({self.state_i.name} --> {self.state_f.name} {self.wavelength} ({self.type.value}))"
 
-    A = make_property(attr_name='_A', get_unit='1/s')
+    @property
+    def A(self) -> pint.Quantity:
+        return self._A.to('1/s')
+
     @A.setter
     @default_units('1 / s')
     def A(self, value: pint.Quantity):
@@ -74,32 +74,22 @@ class Transition:
             return self._ureg.Quantity("inf nm")
         
     @property
+    def frequency(self) -> pint.Quantity:
+        return self.energy.to('THz', 'sp')
+
+    @property
+    def angular_frequency(self) -> pint.Quantity:
+        return self.energy.to('1/s', 'sp')*self._ureg('2*pi')
+      
+    @property
     def reduced_matrix_element(self):
         if self.type == TransitionType.E1:
-            return (reduced_dipole_matrix_element(self.A, self.wavelength, self._ureg)).to('e * a0')
+            return (reduced_dipole_matrix_element(self.A, self.wavelength, self.state_f.quantum_numbers.J, self._ureg)).to('e * a0')
         elif self.type == TransitionType.E2:
             return reduced_quadrupole_matrix_element(self.A, self.wavelength, self._ureg)
         else:
             raise NotImplementedError(
                 f"Matrix element calculation is implemented only for type E1/E2, but transition has {self.type}")
-
-
-    Einstein_coefficient = make_property(attr_name='_A', get_unit='1/s')
-    Γ = make_property(attr_name='_A', get_unit='2*pi*MHz')
-    Gamma = make_property(attr_name='_A', get_unit='2*pi*MHz')
-    
-    frequency = make_property(attr_name='energy', get_unit='THz', conversion='sp')
-    ν = make_property(attr_name='energy', get_unit='THz', conversion='sp')
-    nu = make_property(attr_name='energy', get_unit='THz', conversion='sp')
-    
-    ω = make_property(attr_name='energy', get_unit='2*pi*THz', conversion='sp', extra_factor=pi*2)
-    omega = make_property(attr_name='energy', get_unit='2*pi*THz', conversion='sp', extra_factor=pi*2)
-    angular_frequency = make_property(attr_name='energy', get_unit='2*pi*THz', conversion='sp', extra_factor=pi*2)
-    
-    λ = make_property('wavelength', 'nm')
-    
-    d = make_property('reduced_matrix_element')
-
 
     @property
     def saturation_intensity(self):
@@ -107,18 +97,11 @@ class Transition:
         c = self._ureg.c
         return π * h * c * self.Γ / (3 * self.λ ** 3)
     
-
-    I_sat = def make_property(attr_name='saturation_intensity', get_unit='W/cm^2')
-    Isat = def make_property(attr_name='saturation_intensity', get_unit='W/cm^2')
-    I_s = def make_property(attr_name='saturation_intensity', get_unit='W/cm^2')
-        
     @property
     def cross_section(self):
         ħ = self._ureg.ħ
         return ħ * self.ω * self.Γ / (2 * self.Isat)
     
-    σ0 = def make_property(attr_name='cross_section', get_unit='cm^2')
-
     @property
     def type(self) -> TransitionType:
         # TODO: get the correct transition type from quantum numbers
@@ -130,5 +113,19 @@ class Transition:
             # print(
             #     f"Transition type calculation is implemented only between states with LS coupling, but transition has {self.state_i.coupling} --> {self.state_f.coupling}")
             return TransitionType.NONE
+    
+    Einstein_coefficient = make_alias(attr_name='_A', get_unit='1/s')
+    Γ = make_alias(attr_name='_A', get_unit='2*pi*MHz')
+    Gamma = make_alias(attr_name='_A', get_unit='2*pi*MHz')
+    ν = make_alias(attr_name='frequency', get_unit='THz')
+    nu = make_alias(attr_name='frequency', get_unit='THz')
+    ω = make_alias(attr_name='angular_frequency', get_unit='2*pi*1/s')
+    omega = make_alias(attr_name='angular_frequency', get_unit='2*pi*1/s') 
+    λ = make_alias('wavelength', 'nm')
+    d = make_alias('reduced_matrix_element')
+    I_sat = make_alias(attr_name='saturation_intensity', get_unit='W/cm^2')
+    Isat = make_alias(attr_name='saturation_intensity', get_unit='W/cm^2')
+    I_s = make_alias(attr_name='saturation_intensity', get_unit='W/cm^2')
+    σ0 = make_alias(attr_name='cross_section', get_unit='cm^2')
 
     
