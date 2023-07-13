@@ -93,7 +93,7 @@ class State:
 
     @property
     def __key(self):
-        return (self.configuration, self.quantum_numbers)
+        return (self.configuration, self.quantum_numbers, self.energy)
 
     def __eq__(self, other):
         if isinstance(other, State):
@@ -147,18 +147,22 @@ class State:
         return magnetic_sublevels(self.quantum_numbers.J)
 
     @property
-    def transitions_from(self) -> dict:
+    def transitions_from(self) -> list:
         if self._atom is None:
             warnings.warn("State not attached to an Atom: no transitions available")
-            return dict()
+            return list()
         return self._atom.transitions_from(self)
 
     @property
-    def transitions_to(self) -> dict:
+    def transitions_to(self) -> list:
         if self._atom is None:
             warnings.warn("State not attached to an Atom: no transitions available")
-            return dict()
+            return list()
         return self._atom.transitions_to(self)
+    
+    @property
+    def transitions(self) -> list:
+        return self.transitions_from + self.transitions_to
 
     @property
     def Gamma(self) -> pint.Quantity:

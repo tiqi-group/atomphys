@@ -109,39 +109,8 @@ def total_ACshift(
     eps,
     e_z,
     I,
-    u,
 ):
     """Calculate the polarizability of a state for a given field polarization
-
-    Calculates the dynamical polarizability α(ω) by taking the sum of the
-    scalar, vector, and tensor poarts according to
-
-    \\[
-        \\alpha(\\omega) = \\alpha^0(\\omega) +
-        A \\cos(\\theta_k) \\frac{m_J}{J} \\alpha^1(\\omega) +
-        \\frac{1}{2}\\left(3 \\cos^2(\\theta_p) - 1\\right)\\frac{3m_J^2 - J(J+1)}{J(2J-1)}\\alpha^2(\\omega)
-    \\]
-
-    Arguments:
-        state (State): state |Ψ⟩ to calculate the polarizability
-        mJ: Zeeman sublevel to calculate the vector and tensor
-            polarizability. If `None` only calculates the scalar
-            component. Must be an integer if J is an integer, or
-            a half-integer if J is a half integer.
-        omega: angular frequency of the field to calculate
-            the dynamical polarizability. Defaults to zero,
-            in which case it calculates the static polarizability.
-            Must have units of `Hz`.
-        A: degree of circular polarization, with ±1 being circular
-            polarization and 0 being linear polarization
-        theta_k: angle between wave vector and quantization axis
-        theta_p: angle between polarization vector and quantization axis
-
-    Returns:
-        Polarizability. Has units of `C m / (V/m)`, or dipole moment / electric field.
-
-    Raises:
-        ZeroDivisionError
     """
 
     J = state.J

@@ -183,7 +183,8 @@ class Atom:
         for s in states:
             if s.energy > energy:
                 atom.remove_state(s)
-        atom.remove_isolated(copy=False)
+        if remove_isolated:
+            atom.remove_isolated(copy=False)
         print(f"Removed {len(states) - len(atom.states)} states above {energy}")
         return atom
     
@@ -206,7 +207,8 @@ class Atom:
         for s in states:
             if s.energy < energy:
                 atom.remove_state(s)
-        atom.remove_isolated(copy=False)
+        if remove_isolated:
+            atom.remove_isolated(copy=False)
         print(f"Removed {len(states) - len(atom.states)} states below {energy}")
         return atom
     
@@ -483,5 +485,4 @@ def from_nist(name: str, energy_cutoff="inf", remove_isolated=False, refresh_cac
     """
     states_data, transitions_data = nist.load_from_nist(name, refresh_cache)
     return load_from_database(name, states_data, transitions_data, energy_cutoff, remove_isolated)
-
 

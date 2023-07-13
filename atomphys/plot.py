@@ -40,14 +40,14 @@ from collections import defaultdict
 #     ax.tick_params(top=False, right=False, reset=True)
 #     ax.set(xlabel="Angular momentum [L]", ylabel=f"Energy [{energy_units}]", title=atom)
 
-def plot_atom(atom: Atom, ax=None, energy_units='Ry', max_energy=None, min_energy=None, introduce_offset=False, energy_threshold=0.001, x_offset_factor=0.1, y_offset_factor=0.01):
+def plot_atom(atom: Atom, ax=None, energy_units='Ry', max_energy=None, min_energy=None, introduce_offset=False, remove_isolated=False, energy_threshold=0.001, x_offset_factor=0.1, y_offset_factor=0.01):
     if ax is None:
         fig, ax = plt.subplots()
     
     if max_energy is not None:
-        atom = atom.remove_states_above_energy(max_energy, copy=True)
+        atom = atom.remove_states_above_energy(max_energy, remove_isolated=remove_isolated, copy=True)
     if min_energy is not None:
-        atom = atom.remove_states_below_energy(min_energy, copy=True)
+        atom = atom.remove_states_below_energy(min_energy, remove_isolated=remove_isolated, copy=True)
     
     g = atom._graph
     
