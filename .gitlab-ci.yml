@@ -10,24 +10,17 @@ cache:
 
 prepare:
   stage: prepare
-  tags:
-    - py3.10
   script:
     - poetry install
 
 # test:
 #   stage: test
-#   tags:
-#     - py3.10
 #   script:
 #     - poetry run pytest -v
 
 
 lint_autopep8:
   stage: lint
-  tags:
-    - py3.10
-
   script:
     - |
       CHANGES=$(poetry run autopep8 --diff --recursive .)
@@ -40,8 +33,6 @@ lint_autopep8:
 
 lint_flake8:
   stage: lint
-  tags:
-    - py3.10
   script:
     - |
       VIOLATIONS=$(flake8)
