@@ -11,6 +11,7 @@ from .state import State
 from .util import default_units
 from .calc.coupling import Coupling
 from .calc.selection_rules import get_transition_type_LS, TransitionType
+from .calc.matrix_element import reduced_dipole_matrix_element, reduced_quadrupole_matrix_element
 
 
 def make_property(attr_name: str, get_unit: str = None, conversion: str = None, extra_factor: pint.Quantity = 1):
@@ -131,21 +132,3 @@ class Transition:
             return TransitionType.NONE
 
     
-
-    def _reduced_dipole_matrix_element(self):
-        """
-        Calculates the reduced dipole matrix element of the transition.
-        
-        Reference for the calculation is Thesis of Christoph Fisher, page 34.
-
-        Returns:
-            pint.Quantity: The reduced dipole matrix element of the transition.
-        """
-        C = self._ureg('3 * pi * epsilon_0 * hba * c^3')
-        return (C/self.omega**3 * self.A * (2*self.state_f.quantum_numbers.J+1))**(1/2)
-
-
-    def _reduced_quadrupole_matrix_element(self):
-        beta = 1  # TODO: find the correct constant
-        C = 4 * beta * pi * _ureg.epsilon_0 * _ureg.hbar
-        return (C * (wavelength / 2 / pi)**5 * A)**(1 / 2)

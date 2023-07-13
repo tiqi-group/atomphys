@@ -112,8 +112,8 @@ def test_match_states():
 def test_repr():
     assert str(Transition()) == "Transition(None <--> None : λ=inf nm, Γ=2π×0 Hz)"
     assert (
-        str(Transition(State("2S1/2"), State("2P1/2", energy="planck_constant*c/(532 nm)"), d=1))
-        == "Transition(2S1/2 <--> 2P1/2 : λ=532 nm, Γ=2π×1.07 MHz)"
+        str(Transition(State("2S1/2"), State("2P1/2", energy="planck_constant*c/(532 nm)"), d=1)) ==
+        "Transition(2S1/2 <--> 2P1/2 : λ=532 nm, Γ=2π×1.07 MHz)"
     )
 
 
@@ -245,10 +245,10 @@ def test_registry_search():
 def test_registry_repr():
     assert str(TransitionRegistry()) == "0 Transitions ()"
     assert (
-        str(TransitionRegistry([Transition()]))
-        == "1 Transitions (\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz))"
+        str(TransitionRegistry([Transition()])) ==
+        "1 Transitions (\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz))"
     )
     assert (
-        str(TransitionRegistry([Transition()] * 10))
-        == "10 Transitions (\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\n...\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz))"
+        str(TransitionRegistry([Transition()] * 10)) ==
+        "10 Transitions (\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\n...\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz)\nTransition(None <--> None : λ=inf nm, Γ=2π×0 Hz))"
     )

@@ -27,7 +27,8 @@ def scalar(state, omega, mj):
         jd = other_state.quantum_numbers['J']
         ω0 = transition.ω
         w6 = w6j(j, k, j, 1, jd, 1, prec=10)
-        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
+        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * \
+            ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
 
     for transition in state.down:
         # print(transition.matrix_element)
@@ -36,7 +37,8 @@ def scalar(state, omega, mj):
         jd = other_state.quantum_numbers['J']
         ω0 = -transition.ω
         w6 = w6j(j, k, j, 1, jd, 1, prec=10)
-        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
+        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * \
+            ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
 
     return CG(j, mj, k, 0, j, mj).doit() / np.sqrt(2 * j + 1), α.to_base_units()
 
@@ -58,7 +60,8 @@ def vector(state, omega, mj):
         jd = other_state.quantum_numbers['J']
         ω0 = transition.ω
         w6 = w6j(j, k, j, 1, jd, 1, prec=10)
-        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
+        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * \
+            ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
 
     for transition in state.down:
         # print(transition.matrix_element)
@@ -67,7 +70,8 @@ def vector(state, omega, mj):
         jd = other_state.quantum_numbers['J']
         ω0 = -transition.ω
         w6 = w6j(j, k, j, 1, jd, 1, prec=10)
-        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
+        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * \
+            ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
 
     return CG(j, mj, k, 0, j, mj).doit() / np.sqrt(2 * j + 1), α.to_base_units()
 
@@ -88,7 +92,8 @@ def tensor(state, omega, mj):
         jd = other_state.quantum_numbers['J']
         ω0 = transition.ω
         w6 = w6j(j, k, j, 1, jd, 1, prec=10)
-        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
+        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * \
+            ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
 
     for transition in state.down:
         # print(transition.matrix_element)
@@ -97,7 +102,8 @@ def tensor(state, omega, mj):
         jd = other_state.quantum_numbers['J']
         ω0 = -transition.ω
         w6 = w6j(j, k, j, 1, jd, 1, prec=10)
-        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
+        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * \
+            ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
 
     return CG(j, mj, k, 0, j, mj).doit() / np.sqrt(2 * j + 1), α.to_base_units()
 
