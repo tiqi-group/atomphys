@@ -7,6 +7,7 @@
 
 from functools import wraps
 from typing import Callable
+import numpy as np
 
 import pint
 _ureg = pint.get_application_registry()

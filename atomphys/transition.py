@@ -11,8 +11,7 @@ from .state import State
 from .util import default_units
 from .calc.coupling import Coupling
 from .calc.selection_rules import get_transition_type_LS, TransitionType
-from .calc.matrix_element import reduced_dipole_matrix_element, reduced_quadrupole_matrix_element
-
+from .calc.matrix_element import reduced_electric_dipole_matrix_element, reduced_electric_quadrupole_matrix_element
 
 
 def make_alias(attr_name: str, get_unit: str = None):
@@ -74,6 +73,10 @@ class Transition:
             return self._ureg.Quantity("inf nm")
         
     @property
+    def k(self) -> pint.Quantity:
+        return (2*pi/self.wavelength).to('1/m')
+        
+    @property
     def frequency(self) -> pint.Quantity:
         return self.energy.to('THz', 'sp')
 
@@ -84,9 +87,9 @@ class Transition:
     @property
     def reduced_matrix_element(self):
         if self.type == TransitionType.E1:
-            return (reduced_dipole_matrix_element(self.A, self.wavelength, self.state_f.quantum_numbers.J, self._ureg)).to('e * a0')
+            return (reduced_electric_dipole_matrix_element(self.A, self.wavelength, self.state_f.quantum_numbers.J, self._ureg)).to('e * a0')
         elif self.type == TransitionType.E2:
-            return reduced_quadrupole_matrix_element(self.A, self.wavelength, self._ureg)
+            return reduced_electric_quadrupole_matrix_element(self.A, self.wavelength, self._ureg)
         else:
             raise NotImplementedError(
                 f"Matrix element calculation is implemented only for type E1/E2, but transition has {self.type}")
@@ -95,12 +98,11 @@ class Transition:
     def saturation_intensity(self):
         h = self._ureg.planck_constant
         c = self._ureg.c
-        return π * h * c * self.Γ / (3 * self.λ ** 3)
+        return self._ureg('pi*planck_constant*c/3')* self.Γ / (self.λ ** 3)
     
     @property
     def cross_section(self):
-        ħ = self._ureg.ħ
-        return ħ * self.ω * self.Γ / (2 * self.Isat)
+        return self._ureg('hbar/2') * self.ω * self.Γ / (self.Isat)
     
     @property
     def type(self) -> TransitionType:
