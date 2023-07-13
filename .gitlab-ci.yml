@@ -12,7 +12,7 @@ lint_autopep8:
     - poetry install
     - poetry run autopep8 --diff --recursive --exit-code atomphys/
 
-lint_flake88:
+lint_flake8:
   image: $TIQI_PODMAN_IMAGES_URL/python:3.10
   tags:
     - podman-nosid # ISG managed machine, subuid and subgid entries not configured
