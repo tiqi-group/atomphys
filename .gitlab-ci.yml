@@ -1,8 +1,7 @@
 variables:
   GIT_STRATEGY: clone
   GIT_SUBMODULE_STRATEGY: recursive
-  GIT_SUBMODULE_FORCE_HTTPS: "true"  # Force git to clone submodules with HTTPS 
-
+  GIT_SUBMODULE_FORCE_HTTPS: "true" # Force git to clone submodules with HTTPS
 
 lint_autopep8:
   image: $TIQI_PODMAN_IMAGES_URL/python:3.10
@@ -10,7 +9,7 @@ lint_autopep8:
     - podman-nosid # ISG managed machine, subuid and subgid entries not configured
   script:
     - poetry install
-    - poetry run autopep8 --diff --recursive --exit-code atomphys/
+    - poetry run autopep8 --diff --recursive --exclude _*.py --exit-code atomphys/
 
 lint_flake8:
   image: $TIQI_PODMAN_IMAGES_URL/python:3.10
@@ -19,5 +18,3 @@ lint_flake8:
   script:
     - poetry install
     - poetry run flake8 --config setup.cfg atomphys/
-
-

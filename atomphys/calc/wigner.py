@@ -61,10 +61,10 @@ def Δ(a: float, b: float, c: float) -> float:
         $\\Delta$
     """
     return (
-        factorial(a + b - c)
-        * factorial(a - b + c)
-        * factorial(-a + b + c)
-        / factorial(a + b + c + 1)
+        factorial(a + b - c) *
+        factorial(a - b + c) *
+        factorial(-a + b + c) /
+        factorial(a + b + c + 1)
     )
 
 
@@ -105,12 +105,12 @@ def wigner_3j(
         \\right)$
     """
     if (
-        not ishalfint(j1)
-        or not ishalfint(j2)
-        or not ishalfint(j3)
-        or not ishalfint(m1)
-        or not ishalfint(m2)
-        or not ishalfint(m3)
+        not ishalfint(j1) or
+        not ishalfint(j2) or
+        not ishalfint(j3) or
+        not ishalfint(m1) or
+        not ishalfint(m2) or
+        not ishalfint(m3)
     ):
         raise ValueError("All arguments must be integers or half-integers")
 
@@ -128,9 +128,9 @@ def wigner_3j(
         return 0
 
     if (
-        j1 - m1 != floor(j1 - m1)
-        or j2 - m2 != floor(j2 - m2)
-        or j3 - m3 != floor(j3 - m3)
+        j1 - m1 != floor(j1 - m1) or
+        j2 - m2 != floor(j2 - m2) or
+        j3 - m3 != floor(j3 - m3)
     ):
         return 0
 
@@ -143,21 +143,21 @@ def wigner_3j(
         int(min(j1 + j2 - j3, j1 - m1, j2 + m2)) + 1,
     ):
         wigner += (-1) ** t / (
-            factorial(t)
-            * factorial(t - (j2 - m1 - j3))
-            * factorial(t - (j1 + m2 - j3))
-            * factorial(j1 + j2 - j3 - t)
-            * factorial(j1 - m1 - t)
-            * factorial(j2 + m2 - t)
+            factorial(t) *
+            factorial(t - (j2 - m1 - j3)) *
+            factorial(t - (j1 + m2 - j3)) *
+            factorial(j1 + j2 - j3 - t) *
+            factorial(j1 - m1 - t) *
+            factorial(j2 + m2 - t)
         )
     wigner *= (-1) ** (j1 - j2 - m3) * sqrt(
-        Δ(j1, j2, j3)
-        * factorial(j1 + m1)
-        * factorial(j1 - m1)
-        * factorial(j2 + m2)
-        * factorial(j2 - m2)
-        * factorial(j3 + m3)
-        * factorial(j3 - m3)
+        Δ(j1, j2, j3) *
+        factorial(j1 + m1) *
+        factorial(j1 - m1) *
+        factorial(j2 + m2) *
+        factorial(j2 - m2) *
+        factorial(j3 + m3) *
+        factorial(j3 - m3)
     )
 
     return wigner
@@ -198,30 +198,30 @@ def wigner_6j(
         \\right\\}$
     """
     if (
-        not ishalfint(j1)
-        or not ishalfint(j2)
-        or not ishalfint(j3)
-        or not ishalfint(J1)
-        or not ishalfint(J2)
-        or not ishalfint(J3)
+        not ishalfint(j1) or
+        not ishalfint(j2) or
+        not ishalfint(j3) or
+        not ishalfint(J1) or
+        not ishalfint(J2) or
+        not ishalfint(J3)
     ):
         raise ValueError("All arguments must be integers or half-integers")
 
     # triangle inequality for each triad
     if (
-        not istriangle(j1, j2, j3)
-        or not istriangle(j1, J2, J3)
-        or not istriangle(J1, j2, J3)
-        or not istriangle(J1, J2, j3)
+        not istriangle(j1, j2, j3) or
+        not istriangle(j1, J2, J3) or
+        not istriangle(J1, j2, J3) or
+        not istriangle(J1, J2, j3)
     ):
         return 0
 
     # each triad must sum to an integer
     if (
-        not isint(j1 + j2 + j3)
-        or not isint(j1 + J2 + J3)
-        or not isint(J1 + j2 + J3)
-        or not isint(J1 + J2 + j3)
+        not isint(j1 + j2 + j3) or
+        not isint(j1 + J2 + J3) or
+        not isint(J1 + j2 + J3) or
+        not isint(J1 + J2 + j3)
     ):
         return 0
 
@@ -231,16 +231,16 @@ def wigner_6j(
         int(min(j1 + j2 + J1 + J2, j2 + j3 + J2 + J3, j3 + j1 + J3 + J1)) + 1,
     ):
         wigner += (
-            (-1) ** t
-            * factorial(t + 1)
-            / (
-                factorial(t - (j1 + j2 + j3))
-                * factorial(t - (j1 + J2 + J3))
-                * factorial(t - (J1 + j2 + J3))
-                * factorial(t - (J1 + J2 + j3))
-                * factorial((j1 + j2 + J1 + J2) - t)
-                * factorial((j2 + j3 + J2 + J3) - t)
-                * factorial((j3 + j1 + J3 + J1) - t)
+            (-1) ** t *
+            factorial(t + 1) /
+            (
+                factorial(t - (j1 + j2 + j3)) *
+                factorial(t - (j1 + J2 + J3)) *
+                factorial(t - (J1 + j2 + J3)) *
+                factorial(t - (J1 + J2 + j3)) *
+                factorial((j1 + j2 + J1 + J2) - t) *
+                factorial((j2 + j3 + J2 + J3) - t) *
+                factorial((j3 + j1 + J3 + J1) - t)
             )
         )
     wigner *= sqrt(Δ(j1, j2, j3) * Δ(j1, J2, J3) * Δ(J1, j2, J3) * Δ(J1, J2, j3))

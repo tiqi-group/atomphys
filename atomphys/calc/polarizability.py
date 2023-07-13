@@ -153,10 +153,10 @@ def tensor(state, omega: pint.Quantity = 0):
         Jp = state_i.J
         sixJ = wigner_6j(1, 1, 2, J, J, Jp)
         α += (
-            (-1) ** (J + Jp + 1)
-            * sixJ
-            * (1 / (ħ * (ω0 - ω)) + 1 / (ħ * (ω0 + ω)))
-            * d ** 2
+            (-1) ** (J + Jp + 1) *
+            sixJ *
+            (1 / (ħ * (ω0 - ω)) + 1 / (ħ * (ω0 + ω))) *
+            d ** 2
         )
 
     return (α * X).to_base_units()
