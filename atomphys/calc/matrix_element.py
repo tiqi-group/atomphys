@@ -24,7 +24,7 @@ def reduced_dipole_matrix_element(
     _ureg = pint.get_application_registry() if _ureg is None else _ureg
 
     C = _ureg('3/4*c*alpha')
-    return (C*(2*J+1)/k**3 * A)**(1/2)
+    return (C*(2*J_f+1)/k**3 * A)**(1/2)
 
 def reduced_electric_dipole_matrix_element(
         A: pint.Quantity, k: pint.Quantity, J_f: float, _ureg: pint.UnitRegistry | None = None):
@@ -34,7 +34,7 @@ def reduced_electric_dipole_matrix_element(
     return _ureg('e') * reduced_dipole_matrix_element(A, k, 0, _ureg)
 
 def reduced_quadrupole_matrix_element(
-        A: pint.Quantity, k: pint.Quantity, _ureg: pint.UnitRegistry | None = None):
+        A: pint.Quantity, k: pint.Quantity, J_f: float, _ureg: pint.UnitRegistry | None = None):
 
     _ureg = pint.get_application_registry() if _ureg is None else _ureg
 
@@ -42,11 +42,11 @@ def reduced_quadrupole_matrix_element(
     return (C*(2*J+1)/k**5 * A)**(1/2)
 
 def reduced_electric_quadrupole_matrix_element(
-        A: pint.Quantity, k: pint.Quantity, J_f, _ureg: pint.UnitRegistry | None = None):
+        A: pint.Quantity, k: pint.Quantity, J_f: float, _ureg: pint.UnitRegistry | None = None):
     
     _ureg = pint.get_application_registry() if _ureg is None else _ureg
 
-    return _ureg('e') * reduced_quadrupole_matrix_element(A, k, _ureg)
+    return _ureg('e') * reduced_quadrupole_matrix_element(A, k, J_f, _ureg)
 
 def dipole_matrix_element(
         A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry | None = None):

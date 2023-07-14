@@ -13,7 +13,6 @@ from .calc.coupling import Coupling
 from .calc.selection_rules import get_transition_type_LS, TransitionType
 from .calc.matrix_element import reduced_electric_dipole_matrix_element, reduced_electric_quadrupole_matrix_element
 
-
 def make_alias(attr_name: str, get_unit: str = None):
     @property
     def prop(self):
@@ -24,19 +23,6 @@ def make_alias(attr_name: str, get_unit: str = None):
     return prop
 
 class Transition:
-    """
-    This class represents a transition between two states in atomic physics.
-    
-    Properties:
-        state_i (State): The initial state of the transition.
-        state_f (State): The final state of the transition.
-        A (pint.Quantity): The Einstein coefficient of the transition.
-        energy (pint.Quantity): The energy of the transition.
-        frequency (pint.Quantity): The frequency of the transition.
-        wavelength (pint.Quantity): The wavelength of the transition.
-        Gamma (pint.Quantity): The decay rate of the transition.
-        type (TransitionType): The type of the transition.
-    """
     state_i: State
     state_f: State
     _A: pint.Quantity
@@ -85,24 +71,24 @@ class Transition:
         return self.energy.to('1/s', 'sp')*self._ureg('2*pi')
       
     @property
-    def reduced_matrix_element(self):
+    def reduced_electric_matrix_element(self):
         if self.type == TransitionType.E1:
-            return (reduced_electric_dipole_matrix_element(self.A, self.wavelength, self.state_f.quantum_numbers.J, self._ureg)).to('e * a0')
+            J_f = self.state_f.quantum_numbers['J']
+            return (reduced_electric_dipole_matrix_element(self.A, self.k, J_f, self._ureg)).to('e a0')
         elif self.type == TransitionType.E2:
-            return reduced_electric_quadrupole_matrix_element(self.A, self.wavelength, self._ureg)
+            J_f = self.state_f.quantum_numbers['J']
+            return reduced_electric_quadrupole_matrix_element(self.A, self.k, J_f, self._ureg).to('e a0')
         else:
             raise NotImplementedError(
                 f"Matrix element calculation is implemented only for type E1/E2, but transition has {self.type}")
 
     @property
     def saturation_intensity(self):
-        h = self._ureg.planck_constant
-        c = self._ureg.c
-        return self._ureg('pi*planck_constant*c/3')* self.Γ / (self.λ ** 3)
+        return (self._ureg('pi*planck_constant*c/3') * self.A / (self.wavelength ** 3)).to('mW/cm^2')
     
     @property
     def cross_section(self):
-        return self._ureg('hbar/2') * self.ω * self.Γ / (self.Isat)
+        return (self._ureg('hbar/2') * self.ω * self.Γ / (self.Isat)).to('cm^2')
     
     @property
     def type(self) -> TransitionType:
@@ -125,9 +111,9 @@ class Transition:
     omega = make_alias(attr_name='angular_frequency', get_unit='2*pi*1/s') 
     λ = make_alias('wavelength', 'nm')
     d = make_alias('reduced_matrix_element')
-    I_sat = make_alias(attr_name='saturation_intensity', get_unit='W/cm^2')
-    Isat = make_alias(attr_name='saturation_intensity', get_unit='W/cm^2')
-    I_s = make_alias(attr_name='saturation_intensity', get_unit='W/cm^2')
+    I_sat = make_alias(attr_name='saturation_intensity', get_unit='mW/cm^2')
+    Isat = make_alias(attr_name='saturation_intensity', get_unit='mW/cm^2')
+    I_s = make_alias(attr_name='saturation_intensity', get_unit='mW/cm^2')
     σ0 = make_alias(attr_name='cross_section', get_unit='cm^2')
 
     
