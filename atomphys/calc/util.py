@@ -7,7 +7,7 @@ from sympy.physics.quantum.cg import CG
 
 def spherical_basis_vector(q):
     """
-    Function to compute the normalized spherical basis vector c(q).
+    Function to compute the normalized spherical basis vector c(q) in cartesian corrindates..
     
     Args:
     q (int): Quantum number, should be -1, 0, or 1.
@@ -26,7 +26,7 @@ def spherical_basis_vector(q):
     
 def spherical_basis_second_rank_tensor(q):
     """
-    Function to compute the second rank tensor c(q)_ij.
+    Function to compute the second rank tensor c(q)_ij in cartesian coordinates.
 
     Args:
     q (int): Quantum number, should be -1, 0, or 1.
@@ -37,7 +37,7 @@ def spherical_basis_second_rank_tensor(q):
     tensor = np.zeros((3, 3), dtype=complex)
     for m1 in range(-1, 2):
         for m2 in range(-1, 2):
-            wigner_3j_symbol = w3j(1, 1, 1, m1, m2, -q)
+            wigner_3j_symbol = float(w3j(1, 1, 1, m1, m2, -q))
             basis_vector_m1 = spherical_basis_vector(m1)
             basis_vector_m2 = spherical_basis_vector(m2)
             tensor += np.sqrt(10 / 3) * ((-1) ** q) * wigner_3j_symbol * np.outer(basis_vector_m1, basis_vector_m2)

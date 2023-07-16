@@ -9,13 +9,39 @@ import numpy as np
 from math import pi
 from numpy.typing import ArrayLike
 
-from .util import default_units
+from .util import default_units, make_alias, make_alias_with_setter
 
 
 class ElectricField:
-    def __init__(self, wavelength: pint.Quantity, _ureg=None) -> None:
+    def __init__(self, frequency: pint.Quantity, _ureg=None) -> None:
         self._ureg = pint.get_application_registry() if _ureg is None else _ureg
-        self.wavelength = wavelength
+        self._frequency = frequency
+
+    @property
+    def frequency(self) -> pint.Quantity:
+        return self._frequency.to('THz')
+    
+    @frequency.setter
+    @default_units('THz')
+    def frequency(self, value: pint.Quantity):
+        self._frequency = value
+    
+    @property
+    def angular_frequency(self) -> pint.Quantity:
+        return (self.frequency.to('1/s'))*self._ureg('2*pi')
+    
+    @angular_frequency.setter
+    @default_units('2pi/s')
+    def angular_frequency(self, value: pint.Quantity):
+        self.frequency = value / self._ureg('2*pi')
+    
+
+
+    nu = make_alias_with_setter('frequency')
+    ν = make_alias_with_setter('frequency')
+    ω = make_alias_with_setter('angular_frequency')
+    omega = make_alias_with_setter('angular_frequency')
+
 
     def field(self, x, y, z):
         raise NotImplementedError
@@ -23,28 +49,12 @@ class ElectricField:
     def gradient(self, x, y, z):
         raise NotImplementedError
 
-    @property
-    def wavelength(self) -> pint.Quantity:
-        return self._wavelength
-
-    @wavelength.setter
-    @default_units('nm')
-    def wavelength(self, value: pint.Quantity):
-        self._wavelength = value
-
-    @property
-    def frequency(self):
-        return self.wavelength.to('THz', 'sp')
-
-    @property
-    def omega(self):
-        return 2 * pi * self.frequency
 
     def __add__(self, other):
         if not isinstance(other, ElectricField):
             raise TypeError('Both objects must be an instance of ElectricField')
-        if not self.wavelength == other.wavelength:
-            raise ValueError('Can only sum fields at the same wavelength')
+        if not self.frequency == other.frequency:
+            raise ValueError('Can only sum fields at the same frequency')
         return SumElectricField(self, other)
 
     @staticmethod
@@ -70,17 +80,17 @@ class SumElectricField(ElectricField):
 
 
 class PlaneWaveElectricField(ElectricField):
-    def __init__(self, field: float, polarization: ArrayLike, wavevector: ArrayLike,
-                 wavelength: pint.Quantity, _ureg=None) -> None:
-        super().__init__(wavelength, _ureg)
+    def __init__(self, E0: float, polarization: ArrayLike, wavevector: ArrayLike,
+                 frequency: pint.Quantity, _ureg=None) -> None:
+        super().__init__(frequency, _ureg)
         assert np.dot(polarization, wavevector) == 0, "Polarization must be perpendicular to wavevector"
         self._epsilon = np.asarray(polarization) / np.linalg.norm(polarization)
         self._kappa = np.asarray(wavevector) / np.linalg.norm(wavevector)
-        self._field = field * self._ureg('V/m')
+        self._field_amplitude = E0
 
-    @default_units('m')
     def _phase(self, X):
-        return np.exp(1j * np.dot(X, self.k))
+        xk = (np.dot(X, self.k).to('')).magnitude[0]
+        return np.exp(1j * xk)
 
     def phase(self, x, y, z):
         shape, X = self._ravel_coords(x, y, z)
@@ -88,20 +98,39 @@ class PlaneWaveElectricField(ElectricField):
 
     def field(self, x, y, z):
         shape, X = self._ravel_coords(x, y, z)
-        return self._epsilon.reshape((1,) * len(shape) + (-1,)) * self._field * self._phase(X).reshape(shape + (1,))
+        return self._epsilon.reshape((1,) * len(shape) + (-1,)) * self._field_amplitude * self._phase(X).reshape(shape + (1,))
 
     def gradient(self, x, y, z):
         # outer product
         return np.einsum('i,...j->...ij', 1j * self.wavevector, self.field(x, y, z))
 
     @property
+    def wavelength(self):
+        return (self._ureg('c') / self.frequency).to('nm')
+    
+    @wavelength.setter
+    @default_units('nm')
+    def wavelength(self, value):
+        self.frequency = self._ureg('c') / value
+    
+    @property
     def k(self):
-        return self._kappa * (2 * pi / self.wavelength.to('m'))
+        return (self._kappa/self.wavelength).to('1/nm')* self._ureg('2*pi')
 
     @property
     def polarization(self):
         return self._epsilon
+    
+    @polarization.setter
+    def polarization(self, value):
+        self._epsilon = value / np.linalg.norm(value)
+    
+    
+    λ = make_alias_with_setter('wavelength')
+    E0 = make_alias_with_setter('_field_amplitude')
+    wavevector = make_alias('k')
+    epsilon = make_alias_with_setter('polarization')
+    eps = make_alias_with_setter('polarization')
+    ε = make_alias_with_setter('polarization')
 
-    @property
-    def wavevector(self):
-        return self.k  # alias! I should not
+

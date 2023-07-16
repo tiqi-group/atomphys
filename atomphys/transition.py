@@ -8,19 +8,11 @@ import pint
 from math import pi
 
 from .state import State
-from .util import default_units
+from .util import default_units, make_alias
 from .calc.coupling import Coupling
 from .calc.selection_rules import get_transition_type_LS, TransitionType
-from .calc.matrix_element import reduced_electric_dipole_matrix_element, reduced_electric_quadrupole_matrix_element
+from .calc.matrix_element import reduced_electric_dipole_matrix_element, reduced_electric_quadrupole_matrix_element, electric_dipole_matrix_element, electric_quadrupole_matrix_element, dipole_matrix_element, quadrupole_matrix_element
 
-def make_alias(attr_name: str, get_unit: str = None):
-    @property
-    def prop(self):
-        if get_unit is None:
-            return getattr(self, attr_name)
-        else:
-            return getattr(self, attr_name).to(get_unit)
-    return prop
 
 class Transition:
     state_i: State
@@ -77,10 +69,31 @@ class Transition:
             return (reduced_electric_dipole_matrix_element(self.A, self.k, J_f, self._ureg)).to('e a0')
         elif self.type == TransitionType.E2:
             J_f = self.state_f.quantum_numbers['J']
-            return reduced_electric_quadrupole_matrix_element(self.A, self.k, J_f, self._ureg).to('e a0')
+            return reduced_electric_quadrupole_matrix_element(self.A, self.k, J_f, self._ureg).to('e a0**2')
         else:
             raise NotImplementedError(
                 f"Matrix element calculation is implemented only for type E1/E2, but transition has {self.type}")
+
+    def matrix_element(self, mJ_i: int, mJ_f: int):
+        if self.type == TransitionType.E1:
+            J_i = self.state_i.quantum_numbers['J']
+            J_f = self.state_f.quantum_numbers['J']
+            return dipole_matrix_element(self.A, self.k, J_i, J_f, mJ_i, mJ_f, self._ureg).to('a0')
+        elif self.type == TransitionType.E2:
+            J_i = self.state_i.quantum_numbers['J']
+            J_f = self.state_f.quantum_numbers['J']
+            return quadrupole_matrix_element(self.A, self.k, J_i, J_f, mJ_i, mJ_f, self._ureg).to('a0**2')
+
+
+    def electric_matrix_element(self, mJ_i: int, mJ_f: int):
+        if self.type == TransitionType.E1:
+            J_i = self.state_i.quantum_numbers['J']
+            J_f = self.state_f.quantum_numbers['J']
+            return electric_dipole_matrix_element(self.A, self.k, J_i, J_f, mJ_i, mJ_f, self._ureg).to('e a0')
+        elif self.type == TransitionType.E2:
+            J_i = self.state_i.quantum_numbers['J']
+            J_f = self.state_f.quantum_numbers['J']
+            return electric_quadrupole_matrix_element(self.A, self.k, J_i, J_f, mJ_i, mJ_f, self._ureg).to('e a0**2')
 
     @property
     def saturation_intensity(self):

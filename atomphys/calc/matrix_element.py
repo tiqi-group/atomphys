@@ -52,10 +52,11 @@ def quadrupole_matrix_element(
         A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry):
     
     quadrupole_matrix_element = 0
-    reduced_quadrupole_matrix_element = reduced_quadrupole_matrix_element(A, k, J_f, _ureg)
+    red_q = reduced_quadrupole_matrix_element(A, k, J_f, _ureg)
     for q in range(-2, 3):
-        w3j_coeff = w3j(J_i, 2, J_f, -mJ_i, q, mJ_f)
-        quadrupole_matrix_element += w3j_coeff * spherical_basis_second_rank_tensor(q) * reduced_quadrupole_matrix_element
+        w3j_coeff = float(w3j(J_i, 2, J_f, -mJ_i, q, mJ_f))
+        sbt = spherical_basis_second_rank_tensor(q)
+        quadrupole_matrix_element += w3j_coeff * sbt * red_q
     return quadrupole_matrix_element
 
 def electric_dipole_matrix_element(
