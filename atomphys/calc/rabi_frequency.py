@@ -30,7 +30,13 @@ def quadrupole_Rabi_Frequency(E_gradient: pint.Quantity, A: pint.Quantity, k: pi
 
     return 1/2*np.sum(Eg*qme)*_ureg('e/hbar')
 
-        
+def Rabi_Frequency(E_field: ElectricField, transition: Transition):
+    if transition.type == TransitionType.E1:
+        return dipole_Rabi_Frequency(E_field.field, transition.A, transition.k, transition.state_i.quantum_numbers['J'], transition.state_f.quantum_numbers['J'], mJ_i, mJ_f, _ureg=E_field._ureg)
+    elif transition.type == TransitionType.E2:
+        return quadrupole_Rabi_Frequency(E_field.gradient, transition.A, transition.k, transition.state_i.quantum_numbers['J'], transition.state_f.quantum_numbers['J'], mJ_i, mJ_f, _ureg=E_field._ureg)
+    else:
+        raise NotImplementedError(f"Transition type {transition.type} not implemented")
 
 
 
