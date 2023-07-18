@@ -18,17 +18,22 @@ from sympy.physics.wigner import wigner_3j as w3j
 import pint
 from .matrix_element import dipole_matrix_element, quadrupole_matrix_element
 import numpy as np
+from ..electric_field import ElectricField
+from ..transition import Transition, TransitionType
+
 
 def dipole_Rabi_Frequency(
         E: pint.Quantity, A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry | None = None):
+    d = dipole_matrix_element(A, k, J_i, J_f, mJ_i, mJ_f, _ureg)
 
-    return np.dot(E, dipole_matrix_element(A, k, J_i, J_f, mJ_i, mJ_f, _ureg))*_ureg('e/hbar')
+    return np.dot(E, d)*_ureg('e/hbar')
 
 def quadrupole_Rabi_Frequency(E_gradient: pint.Quantity, A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry | None = None):
     qme = quadrupole_matrix_element(A, k, J_i, J_f, mJ_i, mJ_f, _ureg)
     Eg = E_gradient
 
     return 1/2*np.sum(Eg*qme)*_ureg('e/hbar')
+
 
 def Rabi_Frequency(E_field: ElectricField, transition: Transition):
     if transition.type == TransitionType.E1:
