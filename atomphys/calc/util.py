@@ -42,3 +42,75 @@ def spherical_basis_second_rank_tensor(q):
             basis_vector_m2 = spherical_basis_vector(m2)
             tensor += np.sqrt(10 / 3) * ((-1) ** q) * wigner_3j_symbol * np.outer(basis_vector_m1, basis_vector_m2)
     return tensor
+
+
+
+def is_cyclic_util(graph, v, visited, parent):
+    visited[v] = True
+
+    for i in range(len(graph[v])):
+        if graph[v, i] != 0:  # if there is a connection
+            if visited[i] == False:  # if it has not been visited yet
+                if is_cyclic_util(graph, i, visited, v):
+                    return True
+            elif parent != i:  # if an adjacent vertex is visited and not parent of current vertex
+                return True
+
+    return False
+
+
+def is_cyclic(graph):
+    visited = [False] * (len(graph))
+
+    for i in range(len(graph)):
+        if visited[i] == False:  # don't recur for v if it is already visited
+            if is_cyclic_util(graph, i, visited, -1) == True:
+                return True
+
+    return False
+
+import numpy as np
+import heapq
+
+def dijkstra(weighted_adj_matrix):
+    # Number of nodes
+    N = weighted_adj_matrix.shape[0]
+    
+    # Initialize a list to store the shortest distances
+    # Start with all distances as infinity except for the start node
+    shortest_distances = [np.inf] * N
+    shortest_distances[0] = 0
+
+    # Initialize a priority queue and add the start node
+    # Each item in the queue is a tuple of (distance, node)
+    # We start with the distance to the start node being 0
+    queue = [(0, 0)]
+
+    while queue:
+        # Get the node with the smallest distance
+        current_distance, current_node = heapq.heappop(queue)
+
+        # If the current distance is larger than the stored distance, this path is not optimal and we can skip it
+        if current_distance > shortest_distances[current_node]:
+            continue
+
+        # For each neighbor of the current node
+        for neighbor in range(N):
+            # Skip if there is no edge between current node and neighbor
+            if weighted_adj_matrix[current_node, neighbor] == 0:
+                continue
+            
+            # Calculate the distance to this neighbor through the current node
+            distance = current_distance + weighted_adj_matrix[current_node, neighbor]
+
+            # If this distance is shorter than the previously known shortest distance to this neighbor
+            if distance < shortest_distances[neighbor]:
+                # Update the shortest distance to this neighbor
+                shortest_distances[neighbor] = distance
+                # Add the neighbor to the queue
+                heapq.heappush(queue, (distance, neighbor))
+
+    # Replace infinities with -1 to indicate that a node is not reachable
+    shortest_distances = [-1 if d == np.inf else d for d in shortest_distances]
+
+    return shortest_distances
