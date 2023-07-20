@@ -65,18 +65,122 @@ class ElectricField:
         X = np.stack(args, axis=1).astype(float)
         return shape, X
 
+class LaserField(ElectricField):
+    def __init__(self, polarization, direction_of_propagation, frequency=None, wavelength=None, intensity=None, power=None, waist=None, detuning=None, _ureg=None):
+        # Call the ElectricField constructor
+        super().__init__(frequency, _ureg)
 
-class SumElectricField(ElectricField):
-    def __init__(self, field_a: ElectricField, field_b: ElectricField):
-        super().__init__(field_a.wavelength, field_a._ureg)
-        self._field_a = field_a
-        self._field_b = field_b
+        # Make sure the user has specified either intensity or both power and waist
+        if intensity is None and (power is None or waist is None):
+            raise ValueError("Must specify either intensity or both power and waist")
 
-    def field(self, x, y, z):
-        return self._field_a.field(x, y, z) + self._field_b.field(x, y, z)
+        # If the user specified intensity, use it
+        if intensity is not None:
+            self.intensity = intensity
 
-    def gradient(self, x, y, z):
-        return self._field_a.gradient(x, y, z) + self._field_b.gradient(x, y, z)
+        # If the user specified power and waist, calculate the intensity
+        if power is not None and waist is not None:
+            self.intensity = self.calculate_intensity(power, waist)
+
+        if frequency is not None:
+            self.frequency = frequency
+        elif wavelength is not None:
+            self.wavelength = wavelength
+
+        self._power = power
+        self._waist = waist
+        assert np.dot(polarization, direction_of_propagation) == 0, "Polarization must be perpendicular to wavevector"
+        self._epsilon = np.asarray(polarization) / np.linalg.norm(polarization)
+        self._kappa = np.asarray(direction_of_propagation) / np.linalg.norm(direction_of_propagation)
+        self._detuning = detuning
+        #Calculates electric field amplitude from intensity
+
+
+
+
+    @staticmethod
+    def calculate_intensity(power, waist):
+        # Use the formula for the intensity of a Gaussian beam:
+        # I = 2P/(pi*w^2)
+        import numpy as np
+        return 2 * power / (np.pi * waist ** 2)
+    
+    @property
+    def detuning(self):
+        return self._detuning
+    
+    @detuning.setter
+    @default_units('MHz')
+    def detuning(self, value):
+        self._detuning = value
+
+    @property
+    def frequency(self) -> pint.Quantity:
+        return (self._frequency-self._detuning).to('THz')
+    
+    @property
+    def wavelength(self):
+        return self._ureg('c')/self._frequency
+    
+    @wavelength.setter
+    def wavelength(self, value):
+        self._frequency = self._ureg('c')/value
+
+    @property
+    def field_amplitude(self):
+        return (self._field_amplitude).to('V/m')
+
+    @field_amplitude.setter
+    @default_units('V/m')
+    def field_amplitude(self, value):
+        self._field_amplitude = value
+
+    @property
+    def intensity(self):
+        return (self._field_amplitude ** 2 * self._ureg('c*epsilon_0') / 2).to('mW/mm^2')
+    
+    @intensity.setter
+    @default_units('W/cm^2')
+    def intensity(self, value):
+        self._field_amplitude = np.sqrt(2 * value /self._ureg('c*epsilon_0'))
+
+    @property
+    def power(self):
+        return (self._power).to('mW')
+    
+    @power.setter
+    @default_units('W')
+    def power(self, value):
+        self._power = value
+        if self.waist is not None:
+            self.intensity = self.calculate_intensity(value, self.waist)
+    
+    @property
+    def waist(self):
+        return self._waist
+    
+    @waist.setter
+    @default_units('um')
+    def waist(self, value):
+        self._waist = value
+        if self.power is not None:
+            self.intensity = self.calculate_intensity(self.power, value)
+
+    @property
+    def wavevector(self):
+        return self._kappa * self.angular_frequency / self._ureg('c')
+    
+    k = make_alias('wavevector')
+    
+    def field(self):
+        return self._epsilon * self._field_amplitude
+
+    def gradient(self):
+        return np.einsum('i,...j->...ij', 1j * self.wavevector, self.field())
+
+    
+
+    
 
 
 class PlaneWaveElectricField(ElectricField):
@@ -134,3 +238,18 @@ class PlaneWaveElectricField(ElectricField):
     ε = make_alias_with_setter('polarization')
 
 
+
+
+
+
+class SumElectricField(ElectricField):
+    def __init__(self, field_a: ElectricField, field_b: ElectricField):
+        super().__init__(field_a.wavelength, field_a._ureg)
+        self._field_a = field_a
+        self._field_b = field_b
+
+    def field(self, x, y, z):
+        return self._field_a.field(x, y, z) + self._field_b.field(x, y, z)
+
+    def gradient(self, x, y, z):
+        return self._field_a.gradient(x, y, z) + self._field_b.gradient(x, y, z)
