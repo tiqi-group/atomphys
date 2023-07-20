@@ -13,10 +13,7 @@
 
 
 import pint
-from math import pi
-from sympy.physics.wigner import wigner_6j as w6j
 from sympy.physics.wigner import wigner_3j as w3j
-from sympy.physics.quantum.cg import CG
 from .util import spherical_basis_second_rank_tensor, spherical_basis_vector
 
 

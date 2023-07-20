@@ -35,14 +35,19 @@ def spherical_basis_second_rank_tensor(q):
     Returns:
     np.array: Corresponding second rank tensor.
     """
-    tensor = np.zeros((3, 3), dtype=complex)
-    for m1 in range(-1, 2):
-        for m2 in range(-1, 2):
-            wigner_3j_symbol = float(w3j(1, 1, 1, m1, m2, -q))
-            basis_vector_m1 = spherical_basis_vector(m1)
-            basis_vector_m2 = spherical_basis_vector(m2)
-            tensor += np.sqrt(10 / 3) * ((-1) ** q) * wigner_3j_symbol * np.outer(basis_vector_m1, basis_vector_m2)
-    return tensor
+
+    if q == 2:
+        return (1/np.sqrt(6)) * np.array([[1, -1j, 0], [-1j, -1, 0], [0, 0, 0]])
+    elif q == 1:
+        return (1/np.sqrt(6)) * np.array([[0, 0, -1], [0, 0, 1j], [-1, 1j, 0]])
+    elif q == 0:
+        return (1/3) * np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 2]])
+    elif q == -1:
+        return (1/np.sqrt(6)) * np.array([[0, 0, 1], [0, 0, 1j], [1, 1j, 0]])
+    elif q == -2:
+        return (1/np.sqrt(6)) * np.array([[1, 1j, 0], [1j, -1, 0], [0, 0, 0]])
+    else:
+        raise ValueError("Invalid value for q. It must be one of {-2, -1, 0, 1, 2}.")
 
 
 
