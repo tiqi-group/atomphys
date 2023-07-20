@@ -4,10 +4,12 @@
 # Created: 07/2023
 # Author: Carmelo Mordini <cmordini@phys.ethz.ch>
 #
-# # Reference for the calculation is 
-#         - Thesis of Christoph Fisher, page 34.
-#         - Quantum dynamics of cold trappedions, with application to quantum computation by Daniel F. V. James
-#             - eq (5.9.) 
+# Reference for this calculation is James 1998: Quantum dynamics of cold trappedions, with application to quantum computation
+# https://arxiv.org/abs/quant-ph/9702053
+# 
+# Whilst reading it, be careful about the definitions of j' and j. It is not consistent throughout the paper. 
+# I took j' to be the lower level states, as it agrees with other sources and makes sense intuitively 
+# -> it increases spontaneous decay rate the more possibilities of decays to the lower states there are.
 
 
 import pint
