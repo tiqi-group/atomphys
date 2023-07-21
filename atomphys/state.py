@@ -88,6 +88,14 @@ class State:
         self._energy = value
 
     @property
+    def frequency(self) -> pint.Quantity:
+        return (self.energy.to('THz', 'sp'))
+    
+    @property
+    def angular_frequency(self) -> pint.Quantity:
+        return (self.energy.to('1/s', 'sp')*self._ureg('2*pi'))
+
+    @property
     def name(self) -> str:
         return f"{self.configuration} {self.term}"
 

@@ -6,6 +6,7 @@ import pint
 from ..electric_field import ElectricField
 from .util import find_rotating_frame
 from ..transition import Transition
+from .lindblad_operators import sqrt_lindblad_operator
 
 
 
@@ -23,7 +24,6 @@ def H0(atom: Atom, states: list[State], _ureg: pint.UnitRegistry):
             states_with_mJ.append((mJ, state))
     
     total_number_of_states = len(states_with_mJ)
-    truncated_atom = atom.remove_all_but_states(states, copy=True)
     ket = [qutip.basis(total_number_of_states, i) for i in range(total_number_of_states)]
 
     for i, state in enumerate(states_with_mJ):
@@ -96,7 +96,7 @@ def H_int(atom: Atom, states: list[State], fields: dict[ElectricField, list[Tran
     return H
 
 
-def collapse_operators(atom: Atom, states: list[State], fields: dict[ElectricField, list[Transition]], _ureg: pint.UnitRegistry):
+def collapse_operators(atom: Atom, states: list[State], _ureg: pint.UnitRegistry, print_added_operators=False):
     #Technically I am not doing it fully right, as I dont take under account if the photons are exactly the same
     
     """Returns the atomic hamiltonian with no B field"""
@@ -116,7 +116,6 @@ def collapse_operators(atom: Atom, states: list[State], fields: dict[ElectricFie
             acc+=1
     
     total_number_of_states = len(states_with_mJ)
-    truncated_atom = atom.remove_all_but_states(states, copy=True)
     ket = [qutip.basis(total_number_of_states, i) for i in range(total_number_of_states)]
     
     for i in range(len(states_with_mJ)):
@@ -131,6 +130,7 @@ def collapse_operators(atom: Atom, states: list[State], fields: dict[ElectricFie
                     lo = sqrt_lindblad_operator(tr, mJ_i, mJ_f, _ureg)
                     c_ij = complex(lo.magnitude) * (ket[index_i]*ket[index_f].dag())
                     list_all_operators.append(c_ij)
-                    print(f'Added {complex(lo.magnitude)**2} MHz c operator from {(mJ_f, state_f.term)} to {(mJ_i, state_i.term)}')
-    
+                    if print_added_operators:
+                        print(f'Added {complex(lo.magnitude)**2} MHz c operator from {(mJ_f, state_f.term)} to {(mJ_i, state_i.term)}')
+                    
     return list_all_operators

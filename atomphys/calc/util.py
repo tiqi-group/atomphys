@@ -65,7 +65,6 @@ def find_rotating_frame(fields):
     adjacency_matrix_sparse = nx.adjacency_matrix(G)
     adjacency_matrix = adjacency_matrix_sparse.toarray()
     nodes = list(G.nodes())
-    print(nodes)
     array = adjacency_matrix
         
     for i in range(array.shape[0]):

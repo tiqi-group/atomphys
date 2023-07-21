@@ -123,7 +123,7 @@ def _parse_state(state: dict):
     if vaildate_term(term):
         _parsed_data = {
             "configuration": state["Configuration"],
-            "term": term,
+            "term": term.replace('*',''),
             "energy": remove_annotations(state["Level (Ry)"]) + " Ry",
             # "g": None if state["g"] == "" else float(state["g"]),
             # "Lande": None if "Lande" not in state or state["Lande"] == "" else float(state["Lande"])
@@ -182,11 +182,11 @@ def _parse_transition(transition: dict):
             "A": A,
             "state_i": {
                 "energy": remove_annotations(transition["Ei(Ry)"]) + " Ry",
-                "term": term_i,
+                "term": term_i.replace('*',''),
             },
             "state_f": {
                 "energy": remove_annotations(transition["Ek(Ry)"]) + " Ry",
-                "term": term_k,
+                "term": term_k.replace('*',''),
             },
             # **data
         }

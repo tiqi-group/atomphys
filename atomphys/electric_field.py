@@ -92,7 +92,11 @@ class LaserField(ElectricField):
         assert np.dot(polarization, direction_of_propagation) == 0, "Polarization must be perpendicular to wavevector"
         self._epsilon = np.asarray(polarization) / np.linalg.norm(polarization)
         self._kappa = np.asarray(direction_of_propagation) / np.linalg.norm(direction_of_propagation)
-        self._detuning = detuning
+        
+        if detuning is not None:
+            self._detuning = detuning
+        else:
+            self._detuning = 0 * self._ureg('MHz')
         #Calculates electric field amplitude from intensity
 
 
@@ -117,6 +121,11 @@ class LaserField(ElectricField):
     @property
     def frequency(self) -> pint.Quantity:
         return (self._frequency-self._detuning).to('THz')
+    
+    @frequency.setter
+    @default_units('THz')
+    def frequency(self, value: pint.Quantity):
+        self._frequency = value
     
     @property
     def wavelength(self):
