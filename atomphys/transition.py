@@ -23,7 +23,6 @@ class Transition:
     def __init__(self, state_i: State, state_f: State, A: pint.Quantity,
                  _ureg: pint.UnitRegistry | None = None):
         self._ureg = _ureg if _ureg is not None else pint.get_application_registry()
-        self._ureg.define('_2pi = 2 * pi')
         # sort states
         self.state_i, self.state_f = sorted([state_i, state_f])
         self.A = A

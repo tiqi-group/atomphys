@@ -14,6 +14,7 @@ class Atom:
         self.name = name
         self._graph = nx.DiGraph()
         self._ureg = pint.get_application_registry() if _ureg is None else _ureg
+        self._ureg.define('_2pi = 2 * pi')
 
     def __repr__(self) -> str:
         return f"Atom({self.name} {len(self.states)} states {len(self.transitions)} transitions)"
