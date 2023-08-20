@@ -23,7 +23,7 @@ class Transition:
     def __init__(self, state_i: State, state_f: State, A: pint.Quantity,
                  _ureg: pint.UnitRegistry | None = None):
         self._ureg = _ureg if _ureg is not None else pint.get_application_registry()
-        self._ureg.define('2pi = 2 * pi')
+        self._ureg.define('_2pi = 2 * pi')
         # sort states
         self.state_i, self.state_f = sorted([state_i, state_f])
         self.A = A
@@ -61,7 +61,7 @@ class Transition:
 
     @property
     def angular_frequency(self) -> pint.Quantity:
-        return self.energy.to('1/s', 'sp')*self._ureg('2pi')
+        return self.energy.to('1/s', 'sp')*self._ureg('_2pi')
       
     @property
     def reduced_electric_matrix_element(self):
@@ -117,12 +117,12 @@ class Transition:
             return TransitionType.NONE
     
     Einstein_coefficient = make_alias(attr_name='_A', get_unit='1/s')
-    Γ = make_alias(attr_name='_A', get_unit='2pi*MHz')
-    Gamma = make_alias(attr_name='_A', get_unit='2pi*MHz')
+    Γ = make_alias(attr_name='_A', get_unit='_2pi*MHz')
+    Gamma = make_alias(attr_name='_A', get_unit='_2pi*MHz')
     ν = make_alias(attr_name='frequency', get_unit='THz')
     nu = make_alias(attr_name='frequency', get_unit='THz')
-    ω = make_alias(attr_name='angular_frequency', get_unit='2pi*1/s')
-    omega = make_alias(attr_name='angular_frequency', get_unit='2pi*1/s') 
+    ω = make_alias(attr_name='angular_frequency', get_unit='_2pi*1/s')
+    omega = make_alias(attr_name='angular_frequency', get_unit='_2pi*1/s') 
     λ = make_alias('wavelength', 'nm')
     d = make_alias('reduced_matrix_element')
     I_sat = make_alias(attr_name='saturation_intensity', get_unit='mW/cm^2')
