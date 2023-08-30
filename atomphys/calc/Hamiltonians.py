@@ -7,6 +7,7 @@ from ..electric_field import ElectricField
 from .util import find_rotating_frame
 from ..transition import Transition
 from .lindblad_operators import sqrt_lindblad_operator
+import numpy as np
 
 
 
@@ -81,8 +82,8 @@ def H_int(atom: Atom, states: list[State], fields: dict[ElectricField, list[Tran
                     index_f = dict_states_with_mJ[(mJ_f, state_f)]
 
                     Omega_ij = Rabi_Frequency(field, transition, mJ_i=mJ_i, mJ_f=mJ_f).to('MHz')
-                    H += -1/2*complex(Omega_ij.magnitude)*(ket[index_i]*ket[index_f].dag())
-                    H += -1/2*complex(Omega_ij.magnitude)*(ket[index_f]*ket[index_i].dag())
+                    H += 1/2*complex(abs(Omega_ij).magnitude)*(ket[index_i]*ket[index_f].dag())
+                    H += 1/2*np.conj(complex(abs(Omega_ij).magnitude))*(ket[index_f]*ket[index_i].dag())
         transition_graph = H.full()
     
     RWA_shifts, nodes = find_rotating_frame(fields)
