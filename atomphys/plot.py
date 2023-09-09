@@ -41,7 +41,9 @@ from collections import defaultdict
 #     ax.set(xlabel="Angular momentum [L]", ylabel=f"Energy [{energy_units}]", title=atom)
 
 
-def plot_atom(atom: Atom, ax=None, energy_units='Ry', max_energy=None, min_energy=None, introduce_offset=False, remove_isolated=False, energy_threshold=0.001, x_offset_factor=0.1, y_offset_factor=0.01):
+def plot_atom(atom: Atom, ax=None, energy_units='Ry', plot_transitions=True, max_energy=None, min_energy=None,
+              max_J=None,
+              introduce_offset=False, remove_isolated=False, energy_threshold=0.001, x_offset_factor=0.1, y_offset_factor=0.01):
     if ax is None:
         fig, ax = plt.subplots()
 
@@ -49,7 +51,11 @@ def plot_atom(atom: Atom, ax=None, energy_units='Ry', max_energy=None, min_energ
         atom = atom.remove_states_above_energy(max_energy, remove_isolated=remove_isolated, copy=True)
     if min_energy is not None:
         atom = atom.remove_states_below_energy(min_energy, copy=True)
-    
+    if max_J is not None:
+        for s in atom.states:
+            if x_pos_angular_momentum(s) > max_J:
+                atom.remove_state(s)
+
     g = atom._graph
 
     # Get original positions
@@ -68,8 +74,9 @@ def plot_atom(atom: Atom, ax=None, energy_units='Ry', max_energy=None, min_energ
     edge_color = [_wavelength_to_rgb(tr.wavelength.to('nm').m) for tr in atom.transitions]
     nx.draw_networkx_nodes(g, pos, node_shape=node_path, node_color=node_color, node_size=200, linewidths=2, ax=ax)
     nx.draw_networkx_labels(g, pos, node_labels, font_size=9, verticalalignment='bottom', ax=ax, clip_on=False)
-    nx.draw_networkx_edges(g, pos, edge_color=edge_color, node_size=50, ax=ax)
-    nx.draw_networkx_edge_labels(g, pos, edge_labels, font_size=9, clip_on=False, ax=ax,
+    if plot_transitions:
+        nx.draw_networkx_edges(g, pos, edge_color=edge_color, node_size=50, ax=ax)
+        nx.draw_networkx_edge_labels(g, pos, edge_labels, font_size=9, clip_on=False, ax=ax,
                                  bbox=dict(facecolor='none', edgecolor='none', boxstyle='round,pad=0.5'))
     # nx.draw_networkx_edge_labels(g, pos, edge_labels, font_size=9, clip_on=False, ax=ax)
     ax.tick_params(top=False, right=False, reset=True)
