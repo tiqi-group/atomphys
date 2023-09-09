@@ -203,6 +203,20 @@ class Atom:
             atom.remove_isolated(copy=False)
         #print(f"Removed {len(states) - len(atom.states)} states below {energy}")
         return atom
+    
+    def remove_transitions_above_wavelength(self, wavelength: pint.Quantity, copy=True):
+        atom = self.copy() if copy else self
+        for t in atom.transitions:
+            if t.wavelength > wavelength:
+                atom.remove_transition(t)
+        return atom
+    
+    def remove_transitions_below_wavelength(self, wavelength: pint.Quantity, copy=True):
+        atom = self.copy() if copy else self
+        for t in atom.transitions:
+            if t.wavelength < wavelength:
+                atom.remove_transition(t)
+        return atom
 
     """Retrieval functions"""
     @property
