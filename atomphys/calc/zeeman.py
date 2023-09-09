@@ -62,3 +62,15 @@ def zeeman_shift(g, m, B: pint.Quantity, _ureg: pint.UnitRegistry | None = None)
     _ureg = pint.get_application_registry() if _ureg is None else _ureg
     mu = _ureg.bohr_magneton
     return mu * g * m * B.to('tesla', 'Gaussian')
+
+
+def quadratic_clock_shift(gJ, dE_hf, B, _ureg=None):
+    _ureg = pint.get_application_registry() if _ureg is None else _ureg
+    mu = _ureg.bohr_magneton
+    return gJ**2 * mu**2 * B.to('tesla', 'Gaussian')**2 / 2 / dE_hf
+
+
+def field_sensitivity(g, m, _ureg=None):
+    _ureg = pint.get_application_registry() if _ureg is None else _ureg
+    mu = (1 * _ureg.bohr_magneton).to('J/gauss', 'Gaussian')
+    return (mu * g * m / _ureg.planck_constant).to('MHz/gauss')

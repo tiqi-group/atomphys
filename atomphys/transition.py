@@ -12,6 +12,7 @@ from .util import default_units, make_alias
 from .calc.coupling import Coupling
 from .calc.selection_rules import get_transition_type_LS, TransitionType
 from .calc.matrix_element import reduced_electric_dipole_matrix_element, reduced_electric_quadrupole_matrix_element, electric_dipole_matrix_element, electric_quadrupole_matrix_element, dipole_matrix_element, quadrupole_matrix_element
+from .calc.zeeman import field_sensitivity
 
 
 class Transition:
@@ -94,6 +95,32 @@ class Transition:
             J_i = self.state_i.quantum_numbers['J']
             J_f = self.state_f.quantum_numbers['J']
             return electric_quadrupole_matrix_element(self.A, self.k, J_i, J_f, mJ_i, mJ_f, self._ureg).to('e a0**2')
+
+    @property
+    def delta_m(self):
+        if self.type == TransitionType.E1:
+            return 1
+        elif self.type == TransitionType.E2:
+            return 2
+        else:
+            return 0
+            
+
+    @property    
+    def sublevels(self):
+        mis = self.state_i.sublevels
+        mfs = self.state_f.sublevels
+        ss = []
+        for mi in mis:
+            for mf in mfs:
+                if abs(mf - mi) <= self.delta_m:
+                    ss.append((mi, mf))
+        return ss
+    
+    @property
+    def sublevels_field_sentitivity(self):
+        return {(mi, mf): field_sensitivity(self.state_f.g, mf, self._ureg) - field_sensitivity(self.state_i.g, mi, self._ureg)
+                for (mi, mf) in self.sublevels}
 
     @property
     def saturation_intensity(self):

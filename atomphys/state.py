@@ -14,7 +14,7 @@ from .quantum_numbers import QuantumNumbers
 from .util import default_units
 
 from .calc.hyperfine import hyperfine_shift
-from .calc.zeeman import g_lande_fine_LS, g_lande_hyperfine
+from .calc.zeeman import g_lande_fine_LS, g_lande_hyperfine, field_sensitivity
 from .calc.angular_momentum import couple_angular_momenta, magnetic_sublevels
 from .calc.coupling import get_coupling, Coupling
 
@@ -153,6 +153,10 @@ class State:
     @property
     def sublevels(self) -> list[float]:
         return magnetic_sublevels(self.quantum_numbers.J)
+    
+    @property
+    def sublevels_field_sensitivity(self) -> dict[float: pint.Quantity]:
+        return {m: field_sensitivity(self.g, m, self._ureg) for m in self.sublevels}
 
     @property
     def transitions_from(self) -> list:
@@ -208,7 +212,7 @@ class HyperfineState(State):
                  I: float, F: float,
                  atom=None, _ureg=None):
         super().__init__(configuration, term, energy, atom, _ureg)
-        self._quantum_numbers = QuantumNumbers.from_term(term, I=I, F=F)
+        self.quantum_numbers = QuantumNumbers.from_term(term, I=I, F=F)
 
     @property
     def name(self):
@@ -251,6 +255,6 @@ def hyperfine_manifold(state: State, I: float, Ahf: pint.Quantity, Bhf: pint.Qua
     hstates = []
     for F in Fs:
         energy = state.energy + hyperfine_shift(J, I, F, Ahf, Bhf)
-        hs = HyperfineState(state.configuration, state.term, energy, I, F, state._ureg, state._atom)
+        hs = HyperfineState(state.configuration, state.term, energy, I, F, state._atom, state._ureg)
         hstates.append(hs)
     return hstates
