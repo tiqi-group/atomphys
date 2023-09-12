@@ -5,8 +5,9 @@ from .state import State
 from .transition import Transition
 
 
-def load_from_database(name: str, states_data: list[dict], transitions_data: list[dict],
-                       energy_cutoff="inf", remove_isolated=False) -> Atom:
+def load_from_database(
+    name: str, states_data: list[dict], transitions_data: list[dict], energy_cutoff="inf", remove_isolated=False
+) -> Atom:
     """
     Returns an atom object given the database input.
 
@@ -29,8 +30,8 @@ def load_from_database(name: str, states_data: list[dict], transitions_data: lis
     print(f"Loading atom {name}")
 
     # add states
-    energy_cutoff = set_default_units(energy_cutoff, 'Ry', atom._ureg)
-    states = [State(**d) for d in states_data if atom._ureg(d['energy']) < energy_cutoff]
+    energy_cutoff = set_default_units(energy_cutoff, "Ry", atom._ureg)
+    states = [State(**d) for d in states_data if atom._ureg(d["energy"]) < energy_cutoff]
     atom.add_states(states)
     print(f"Added {len(states)} states")
 
@@ -38,10 +39,10 @@ def load_from_database(name: str, states_data: list[dict], transitions_data: lis
     transitions = []
     unmatched = 0
     for d in transitions_data:
-        si = atom._match_term_and_energy(d['state_i']['term'], d['state_i']['energy'])
-        sf = atom._match_term_and_energy(d['state_f']['term'], d['state_f']['energy'])
+        si = atom._match_term_and_energy(d["state_i"]["term"], d["state_i"]["energy"])
+        sf = atom._match_term_and_energy(d["state_f"]["term"], d["state_f"]["energy"])
         if si is not None and sf is not None:
-            tr = Transition(si, sf, d['A'])
+            tr = Transition(si, sf, d["A"])
             transitions.append(tr)
         else:
             unmatched += 1
