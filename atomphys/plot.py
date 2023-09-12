@@ -13,6 +13,7 @@ from math import nan
 
 from .state import State
 from .atom import Atom
+from .util import set_default_units
 from collections import defaultdict
 
 # def plot_atom(atom: Atom, ax=None, energy_units='Ry', max_energy=nan, min_energy=nan):
@@ -48,8 +49,10 @@ def plot_atom(atom: Atom, ax=None, energy_units='Ry', plot_transitions=True, max
         fig, ax = plt.subplots()
 
     if max_energy is not None:
+        max_energy = set_default_units(max_energy, energy_units)
         atom = atom.remove_states_above_energy(max_energy, remove_isolated=remove_isolated, copy=True)
     if min_energy is not None:
+        min_energy = set_default_units(min_energy, energy_units)
         atom = atom.remove_states_below_energy(min_energy, copy=True)
     if max_J is not None:
         for s in atom.states:
@@ -66,7 +69,7 @@ def plot_atom(atom: Atom, ax=None, energy_units='Ry', plot_transitions=True, max
         pos = offset_similar_nodes(pos, energy_threshold, x_offset_factor, y_offset_factor)
 
     node_labels = {k: k.term for k in g.nodes}
-    edge_labels = {edge: f"{tr.wavelength}" for edge, tr in nx.get_edge_attributes(g, 'transition').items()}
+    edge_labels = {edge: f"{tr.wavelength:~0.1fP}" for edge, tr in nx.get_edge_attributes(g, 'transition').items()}
 
     # https://petercbsmith.github.io/marker-tutorial.html
     node_path = Path([(-1, 0), (1, 0)], [Path.MOVETO, Path.LINETO])  # just a simple horizontal line
@@ -77,7 +80,7 @@ def plot_atom(atom: Atom, ax=None, energy_units='Ry', plot_transitions=True, max
     if plot_transitions:
         nx.draw_networkx_edges(g, pos, edge_color=edge_color, node_size=50, ax=ax)
         nx.draw_networkx_edge_labels(g, pos, edge_labels, font_size=9, clip_on=False, ax=ax,
-                                 bbox=dict(facecolor='none', edgecolor='none', boxstyle='round,pad=0.5'))
+                                     bbox=dict(facecolor='none', edgecolor='none', boxstyle='round,pad=0.5'))
     # nx.draw_networkx_edge_labels(g, pos, edge_labels, font_size=9, clip_on=False, ax=ax)
     ax.tick_params(top=False, right=False, reset=True)
     ax.set(xlabel="Angular momentum [L]", ylabel=f"Energy [{energy_units}]", title=atom)

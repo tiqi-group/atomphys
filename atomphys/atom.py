@@ -7,20 +7,19 @@ from .transition import Transition
 from .util import default_units, set_default_units
 
 
-
-
 class Atom:
     def __init__(self, name: str, _ureg=None) -> None:
         self.name = name
         self._graph = nx.DiGraph()
         self._ureg = pint.get_application_registry() if _ureg is None else _ureg
-        self._ureg.define('_2pi = 2 * pi')
 
     def __repr__(self) -> str:
         return f"Atom({self.name} {len(self.states)} states {len(self.transitions)} transitions)"
 
     def copy(self):
-        return deepcopy(self)
+        _copy = deepcopy(self)
+        _copy._reset_unit_registry(self._ureg)
+        return _copy
 
     def add_state(self, s: State):
         """
@@ -155,7 +154,7 @@ class Atom:
         g = atom._graph
         isolated = list(nx.isolates(g))
         g.remove_nodes_from(isolated)
-        #print(f"Removed {len(isolated)} states without transitions")
+        # print(f"Removed {len(isolated)} states without transitions")
         return atom
 
     def remove_states_above_energy(self, energy: pint.Quantity, copy=True, remove_isolated=False):
@@ -177,7 +176,7 @@ class Atom:
                 atom.remove_state(s)
         if remove_isolated:
             atom.remove_isolated(copy=False)
-        #print(f"Removed {len(states) - len(atom.states)} states above {energy}")
+        # print(f"Removed {len(states) - len(atom.states)} states above {energy}")
         return atom
 
     """Graph Truncation functions"""
@@ -201,16 +200,16 @@ class Atom:
                 atom.remove_state(s)
         if remove_isolated:
             atom.remove_isolated(copy=False)
-        #print(f"Removed {len(states) - len(atom.states)} states below {energy}")
+        # print(f"Removed {len(states) - len(atom.states)} states below {energy}")
         return atom
-    
+
     def remove_transitions_above_wavelength(self, wavelength: pint.Quantity, copy=True):
         atom = self.copy() if copy else self
         for t in atom.transitions:
             if t.wavelength > wavelength:
                 atom.remove_transition(t)
         return atom
-    
+
     def remove_transitions_below_wavelength(self, wavelength: pint.Quantity, copy=True):
         atom = self.copy() if copy else self
         for t in atom.transitions:
@@ -393,7 +392,7 @@ class Atom:
         """
 
         return [edge['transition'] for node, edge in self._graph.pred[state].items()]
-    
+
     def transition_between(self, state_i: State, state_f: State) -> Transition:
         """
         Retrieve a transition between two states
@@ -411,7 +410,7 @@ class Atom:
         Raises:
             KeyError: If the given state is not in the Atom.
         """
-        #check if the transition exists
+        # check if the transition exists
         if state_f not in self._graph.succ[state_i]:
             return None
         return self._graph.get_edge_data(state_i, state_f)['transition']
@@ -421,10 +420,22 @@ class Atom:
         """
         Args:
             wavelength (str | float | pint.Quantity): The wavelength of the transition to retrieve. [m]
-        
+
         Returns:
             Transition: A Transition object with a wavelength closest to the given wavelength.
         """
         return min(self.transitions, key=lambda tr: abs(tr.wavelength - wavelength))
 
+    def _reset_unit_registry(self, _ureg=None):
+        self._ureg = pint.get_application_registry() if _ureg is None else _ureg
+        for s in self.states:
+            s._ureg = self._ureg
+        for tr in self.transitions:
+            tr._ureg = self._ureg
 
+    def to_json(self):
+        return {
+            'name': self.name,
+            'states': [s.to_json() for s in self.states],
+            'transitions': [tr.to_json() for tr in self.transitions]
+        }

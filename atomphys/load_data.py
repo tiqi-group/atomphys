@@ -1,6 +1,6 @@
 from .atom import Atom
-from .util import default_units, set_default_units
-from .data import nist
+from .util import set_default_units
+from .data import nist, json
 from .state import State
 from .transition import Transition
 
@@ -74,7 +74,24 @@ def from_nist(name: str, energy_cutoff="inf", remove_isolated=False, refresh_cac
 
 
     """
-    states_data, transitions_data = nist.load_from_nist(name, refresh_cache)
+    name, states_data, transitions_data = nist.load_from_nist(name, refresh_cache)
     return load_from_database(name, states_data, transitions_data, energy_cutoff, remove_isolated)
 
 
+def from_json(filename: str, energy_cutoff="inf", remove_isolated=False) -> Atom:
+    """
+    Returns an atom from data in JSON format
+
+    Args:
+        filename (str): Path of the data file. The filename without extension (stem) must be a valid atom name.
+        energy_cutoff (str, optional): Energy cutoff for states. Defaults to "inf".
+        remove_isolated (bool, optional): Remove isolated states. Defaults to False.
+        refresh_cache (bool, optional): Refresh the cache. Defaults to False.
+
+    Returns:
+        Atom: Atom object
+
+
+    """
+    name, states_data, transitions_data = json.load_from_json(filename)
+    return load_from_database(name, states_data, transitions_data, energy_cutoff, remove_isolated)
