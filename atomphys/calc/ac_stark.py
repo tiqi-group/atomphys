@@ -29,9 +29,9 @@ def AC_stark_shift(
         state_i = state
         state_f = transition.state_f
 
-        mJ_i = mJ
-
         for mJ_f in range(int(state_f.quantum_numbers['J']*2+1)):
+            mJ_i = mJ
+
             Ω = Rabi_Frequency(E_field=El_field, transition=transition, mJ_i=mJ_i, mJ_f=mJ_f, _ureg=_ureg)
             ΔE += _ureg('hbar')/4*((Ω*np.conj(Ω))/(-transition.ω - omega_field)+(Ω*np.conj(Ω))/(-transition.ω + omega_field))
 
@@ -40,6 +40,8 @@ def AC_stark_shift(
         state_f = state
         
         for mJ_i in range(int(state_i.quantum_numbers['J']*2+1)):
+            mJ_f = mJ
+
             Ω = Rabi_Frequency(E_field=El_field, transition=transition, mJ_i=mJ_i, mJ_f=mJ_f, _ureg=_ureg)
             ΔE += _ureg('hbar')/4*((Ω*np.conj(Ω))/(transition.ω - omega_field) + (Ω*np.conj(Ω))/(transition.ω + omega_field))
-    return ΔE
+    return ΔE.to('k*mK').magnitude
