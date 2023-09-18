@@ -6,139 +6,42 @@ import pint
 from atomphys.calc.wigner import ishalfint, isint
 from sympy.physics.wigner import wigner_6j as w6j
 from sympy.physics.quantum.cg import CG
-from sympy import S
 import numpy as np
+from atomphys.calc.rabi_frequency import Rabi_Frequency
+from atomphys.electric_field import ElectricField
+from atomphys.transition import Transition, TransitionType
+from atomphys.state import State
 
 
-def scalar(state, omega, mj):
-    """Calculate the scalar polarizability of a state |Ψ⟩
-
-    """
-    ω = omega
-    ħ = state._ureg.ħ
-    j = state.J
-    α = 0
-    k = 0
-
-    for transition in state.up:
-        # print(transition.matrix_element)
-        d = transition.matrix_element
-        other_state = transition.state_f
-        jd = other_state.quantum_numbers['J']
-        ω0 = transition.ω
-        w6 = w6j(j, k, j, 1, jd, 1, prec=10)
-        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * \
-            ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
-
-    for transition in state.down:
-        # print(transition.matrix_element)
-        d = transition.matrix_element
-        other_state = transition.state_f
-        jd = other_state.quantum_numbers['J']
-        ω0 = -transition.ω
-        w6 = w6j(j, k, j, 1, jd, 1, prec=10)
-        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * \
-            ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
-
-    return CG(j, mj, k, 0, j, mj).doit() / np.sqrt(2 * j + 1), α.to_base_units()
-
-
-def vector(state, omega, mj):
-    """Calculate the scalar polarizability of a state |Ψ⟩
-
-    """
-    ω = omega
-    ħ = state._ureg.ħ
-    j = state.J
-    α = 0
-    k = 1
-
-    for transition in state.up:
-        # print(transition.matrix_element)
-        d = transition.matrix_element
-        other_state = transition.state_f
-        jd = other_state.quantum_numbers['J']
-        ω0 = transition.ω
-        w6 = w6j(j, k, j, 1, jd, 1, prec=10)
-        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * \
-            ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
-
-    for transition in state.down:
-        # print(transition.matrix_element)
-        d = transition.matrix_element
-        other_state = transition.state_f
-        jd = other_state.quantum_numbers['J']
-        ω0 = -transition.ω
-        w6 = w6j(j, k, j, 1, jd, 1, prec=10)
-        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * \
-            ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
-
-    return CG(j, mj, k, 0, j, mj).doit() / np.sqrt(2 * j + 1), α.to_base_units()
-
-
-def tensor(state, omega, mj):
-    """Calculate the scalar polarizability of a state |Ψ⟩
-    """
-    ω = omega
-    ħ = state._ureg.ħ
-    j = state.J
-    α = 0
-    k = 2
-
-    for transition in state.up:
-        # print(transition.matrix_element)
-        d = transition.matrix_element
-        other_state = transition.state_f
-        jd = other_state.quantum_numbers['J']
-        ω0 = transition.ω
-        w6 = w6j(j, k, j, 1, jd, 1, prec=10)
-        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * \
-            ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
-
-    for transition in state.down:
-        # print(transition.matrix_element)
-        d = transition.matrix_element
-        other_state = transition.state_f
-        jd = other_state.quantum_numbers['J']
-        ω0 = -transition.ω
-        w6 = w6j(j, k, j, 1, jd, 1, prec=10)
-        α = α + np.sqrt(2 * k + 1) * (-1)**(1 + j + jd) * w6 * d**2 * \
-            ((-1)**(k) / (ω0 * ħ + ω * ħ) + 1 / (ω0 * ħ - ω * ħ))
-
-    return CG(j, mj, k, 0, j, mj).doit() / np.sqrt(2 * j + 1), α.to_base_units()
-
-
-def total_ACshift(
-    state,
-    mJ,
-    omega,
-    eps,
-    e_z,
-    I,
+def AC_stark_shift(
+    state: State,
+    mJ: float, 
+    El_field: ElectricField,
+    _ureg: pint.UnitRegistry | None = None,
 ):
-    """Calculate the polarizability of a state for a given field polarization
-    """
 
-    J = state.J
-    if not (isint(mJ) or (ishalfint(mJ) and ishalfint(J) and not isint(J))):
-        raise ValueError(
-            "mJ must be an integer, or a half-integer if J is a half-integer"
-        )
+    ΔE = 0
 
-    prefix0, α0 = scalar(state, omega, mJ)
-    prefix1, α1 = vector(state, omega, mJ)
-    prefix2, α2 = tensor(state, omega, mJ)
+    omega_field = El_field.ω
+    
 
-    aeps = np.sqrt(abs(eps[0])**2 + abs(eps[1])**2 + abs(eps[2])**2)
-    eps_n = (eps[0] / aeps, eps[1] / aeps, eps[2] / aeps)
+    for transition in state.transitions_from:
+        state_i = state
+        state_f = transition.state_f
 
-    ae_z = np.sqrt(abs(e_z[0])**2 + abs(e_z[1])**2 + abs(e_z[2])**2)
-    e_z_n = (e_z[0] / ae_z, e_z[1] / ae_z, e_z[2] / ae_z)
+        for mJ_f in range(int(state_f.quantum_numbers['J']*2+1)):
+            mJ_i = mJ
 
-    c0 = -1 / np.sqrt(3)
-    c1 = 1j / np.sqrt(2) * np.dot(np.cross(eps_n, np.conjugate(eps_n)), e_z_n)
-    c2 = 1 / np.sqrt(6) * (3 * abs(np.dot(eps_n, e_z_n))**2 - 1)
+            Ω = Rabi_Frequency(E_field=El_field, transition=transition, mJ_i=mJ_i, mJ_f=mJ_f, _ureg=_ureg)
+            ΔE += _ureg('hbar')/4*((Ω*np.conj(Ω))/(-transition.ω - omega_field)+(Ω*np.conj(Ω))/(-transition.ω + omega_field))
 
-    E_square = 2 * I / (u.ε_0 * u.c)
+    for transition in state.transitions_to:
+        state_i = transition.state_i
+        state_f = state
+        
+        for mJ_i in range(int(state_i.quantum_numbers['J']*2+1)):
+            mJ_f = mJ
 
-    return E_square / 4 * (c0 * prefix0 * α0 + c1 * prefix1 * α1 + c2 * prefix2 * α2).to_base_units()
+            Ω = Rabi_Frequency(E_field=El_field, transition=transition, mJ_i=mJ_i, mJ_f=mJ_f, _ureg=_ureg)
+            ΔE += _ureg('hbar')/4*((Ω*np.conj(Ω))/(transition.ω - omega_field) + (Ω*np.conj(Ω))/(transition.ω + omega_field))
+    return ΔE.to('k*mK').magnitude
