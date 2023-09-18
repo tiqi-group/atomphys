@@ -50,6 +50,7 @@ def plot_atom(
     max_energy=None,
     min_energy=None,
     max_J=None,
+    state_label="name",
     introduce_offset=False,
     remove_isolated=False,
     energy_threshold=0.001,
@@ -79,7 +80,7 @@ def plot_atom(
     if introduce_offset:
         pos = offset_similar_nodes(pos, energy_threshold, x_offset_factor, y_offset_factor)
 
-    node_labels = {k: k.term for k in g.nodes}
+    node_labels = {k: getattr(k, state_label) for k in g.nodes}
     edge_labels = {edge: f"{tr.wavelength:~0.1fP}" for edge, tr in nx.get_edge_attributes(g, "transition").items()}
 
     # https://petercbsmith.github.io/marker-tutorial.html

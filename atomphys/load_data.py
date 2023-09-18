@@ -41,7 +41,7 @@ def load_from_database(
     for d in transitions_data:
         si = atom._match_term_and_energy(d["state_i"]["term"], d["state_i"]["energy"])
         sf = atom._match_term_and_energy(d["state_f"]["term"], d["state_f"]["energy"])
-        if si is not None and sf is not None:
+        if si is not None and sf is not None and sf.energy > si.energy:
             tr = Transition(si, sf, d["A"])
             transitions.append(tr)
         else:
