@@ -50,8 +50,6 @@ def spherical_basis_second_rank_tensor(q):
         raise ValueError("Invalid value for q. It must be one of {-2, -1, 0, 1, 2}.")
 
 
-
-
 def find_rotating_frame(fields):
 
     G = nx.Graph() # create a new graph
