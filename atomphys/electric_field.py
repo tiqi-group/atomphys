@@ -111,8 +111,6 @@ class LaserField(ElectricField):
     def calculate_intensity(power, waist):
         # Use the formula for the intensity of a Gaussian beam:
         # I = 2P/(pi*w^2)
-        import numpy as np
-
         return 2 * power / (np.pi * waist**2)
 
     @property
@@ -152,7 +150,7 @@ class LaserField(ElectricField):
 
     @property
     def intensity(self):
-        return (self._field_amplitude**2 * self._ureg("c*epsilon_0") / 2).to("mW/mm^2")
+        return (self._field_amplitude**2 * self._ureg("c*epsilon_0") / 2).to("mW/cm^2")
 
     @intensity.setter
     @default_units("W/cm^2")
@@ -187,11 +185,11 @@ class LaserField(ElectricField):
 
     k = make_alias("wavevector")
 
-    def field(self):
+    def field(self, x=0, y=0, z=0):
         return self._epsilon * self._field_amplitude
 
-    def gradient(self):
-        return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field())
+    def gradient(self, x=0, y=0, z=0):
+        return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field(x, y, z))
 
 
 class PlaneWaveElectricField(ElectricField):
@@ -208,19 +206,19 @@ class PlaneWaveElectricField(ElectricField):
         xk = (np.dot(X, self.k).to("")).magnitude[0]
         return np.exp(1j * xk)
 
-    def phase(self, x, y, z):
+    def phase(self, x=0, y=0, z=0):
         shape, X = self._ravel_coords(x, y, z)
         return self._phase(X).reshape(shape)
 
-    def field(self, x, y, z):
+    def field(self, x=0, y=0, z=0):
         shape, X = self._ravel_coords(x, y, z)
         return (
-            self._epsilon.reshape((1,) * len(shape) + (-1,))
-            * self._field_amplitude
-            * self._phase(X).reshape(shape + (1,))
+            self._epsilon.reshape((1,) * len(shape) + (-1,)) *
+            self._field_amplitude.to_base_units().m *
+            self._phase(X).reshape(shape + (1,))
         )
 
-    def gradient(self, x, y, z):
+    def gradient(self, x=0, y=0, z=0):
         # outer product
         return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field(x, y, z))
 
@@ -259,8 +257,8 @@ class SumElectricField(ElectricField):
         self._field_a = field_a
         self._field_b = field_b
 
-    def field(self, x, y, z):
+    def field(self, x=0, y=0, z=0):
         return self._field_a.field(x, y, z) + self._field_b.field(x, y, z)
 
-    def gradient(self, x, y, z):
+    def gradient(self, x=0, y=0, z=0):
         return self._field_a.gradient(x, y, z) + self._field_b.gradient(x, y, z)
