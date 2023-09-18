@@ -15,7 +15,7 @@ from .quantum_numbers import QuantumNumbers
 from .util import default_units
 
 from .calc.hyperfine import hyperfine_shift
-from .calc.zeeman import g_lande_fine_LS, g_lande_hyperfine, field_sensitivity
+from .calc.zeeman import g_lande_fine_LS, g_lande_hyperfine, field_sensitivity, zeeman_shift
 from .calc.angular_momentum import couple_angular_momenta, magnetic_sublevels
 from .calc.coupling import get_coupling, Coupling
 
@@ -156,12 +156,24 @@ class State:
         return self.gJ
 
     @property
+    def spin(self) -> float:
+        """Total spin quantum number.
+
+        Return
+            J for Fine structure States, F for Hyperfine states
+        """
+        return self.quantum_numbers.J
+
+    @property
     def sublevels(self) -> list[float]:
-        return magnetic_sublevels(self.quantum_numbers.J)
+        return magnetic_sublevels(self.spin)
 
     @property
     def sublevels_field_sensitivity(self) -> dict[float : pint.Quantity]:
         return {m: field_sensitivity(self.g, m, self._ureg) for m in self.sublevels}
+
+    def sublevels_zeeman_shift(self, B: pint.Quantity) -> dict[float : pint.Quantity]:
+        return {m: zeeman_shift(self.g, m, B, self._ureg) for m in self.sublevels}
 
     @property
     def transitions_from(self) -> list:
@@ -248,8 +260,12 @@ class HyperfineState(State):
         return self.gF
 
     @property
-    def sublevels(self) -> list[float]:
-        return magnetic_sublevels(self.quantum_numbers.F)
+    def spin(self) -> float:
+        """Total spin
+        J for Fine structure States
+        F for Hyperfine states
+        """
+        return self.quantum_numbers.F
 
 
 def hyperfine_manifold(
