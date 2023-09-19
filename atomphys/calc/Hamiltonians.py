@@ -8,7 +8,6 @@ from ..electric_field import ElectricField
 from .util import find_rotating_frame
 from ..transition import Transition
 from .lindblad_operators import sqrt_lindblad_operator
-import numpy as np
 
 from itertools import combinations
 
@@ -90,7 +89,6 @@ def H_int(atom: Atom, states: list[State], fields: dict[ElectricField, list[Tran
 
 def collapse_operators(atom: Atom, states: list[State], _ureg: pint.UnitRegistry, print_added_operators=False):
     # Technically I am not doing it fully right, as I dont take under account if the photons are exactly the same
-
     """Returns the atomic hamiltonian with no B field"""
 
     list_all_operators = []
@@ -100,7 +98,7 @@ def collapse_operators(atom: Atom, states: list[State], _ureg: pint.UnitRegistry
 
     for (mJ_i, state_i), (mJ_f, state_f) in combinations(states_mJ, 2):
         tr = atom.transition_between(state_i, state_f)
-        if tr != None:
+        if tr is not None:
             ket_i = kets_dict[(mJ_i, state_i)]
             ket_f = kets_dict[(mJ_f, state_f)]
             lo = sqrt_lindblad_operator(tr, mJ_i, mJ_f, _ureg)
