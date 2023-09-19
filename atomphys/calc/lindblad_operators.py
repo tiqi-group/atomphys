@@ -37,7 +37,7 @@ def sqrt_lindblad_operator(transition: Transition, mJ_i: float, mJ_f: float, _ur
     k = transition.k
 
     if transition.type == TransitionType.E1:
-        rd_sq = reduced_dipole_matrix_element(A=transition.A, k=k, J_i=J_i, _ureg=_ureg) ** 2
+        rd_sq = reduced_dipole_matrix_element(transition.A, k, J_f, _ureg) ** 2
         pre = _ureg("4*c*alpha/3") * k**3
         lo = 0 * _ureg("MHz")
         for q in [-1, 0, 1]:
