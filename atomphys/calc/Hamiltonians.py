@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+#
+# Created: 09/2023
+# Authors:
+#   Wojciech Adamczyk <wadamczyk@phys.ethz.ch>
+#   Carmelo Mordini <cmordini@phys.ethz.ch>
+#
+# TODO: rename module to lowercase
+# TODO: remove unused arguments from functions
+
 from .rabi_frequency import Rabi_Frequency
 from .zeeman import zeeman_shift
 import qutip
@@ -14,13 +25,13 @@ from itertools import combinations
 
 def kets(atom: Atom, states: list[State]):
     states.sort(key=lambda state: state.energy)
-    states_with_mJ = []
+    states_m = []
     for state in states:
         for m in state.sublevels:
-            states_with_mJ.append((m, state))
+            states_m.append((state, m))
 
-    total_number_of_states = len(states_with_mJ)
-    kets_dict = {states_with_mJ[i]: qutip.basis(total_number_of_states, i) for i in range(total_number_of_states)}
+    total_number_of_states = len(states_m)
+    kets_dict = {states_m[i]: qutip.basis(total_number_of_states, i) for i in range(total_number_of_states)}
     return kets_dict
 
 
@@ -28,8 +39,8 @@ def H0(atom: Atom, states: list[State], _ureg: pint.UnitRegistry):
     """Returns the atomic hamiltonian with no B field"""
     H = 0
     kets_dict = kets(atom, states)
-    for state_mJ, ket in kets_dict.items():
-        H += (state_mJ[1].angular_frequency.to("MHz")).magnitude * ket * ket.dag()
+    for (state, m), ket in kets_dict.items():
+        H += (state.angular_frequency.to("MHz")).magnitude * ket * ket.dag()
     return H
 
 
@@ -37,10 +48,8 @@ def H_zeeman(atom: Atom, states: list[State], B_field: pint.Quantity):
     """Returns the atomic hamiltonian with no B field"""
     H = 0
     kets_dict = kets(atom, states)
-    for state_mJ, ket in kets_dict.items():
-        m, s = state_mJ
-        H += (zeeman_shift(s.g, m, B_field, s._ureg).to("MHz")).magnitude * ket * ket.dag()
-
+    for (state, m), ket in kets_dict.items():
+        H += (zeeman_shift(state.g, m, B_field, state._ureg).to("MHz")).magnitude * ket * ket.dag()
     return H
 
 
@@ -70,18 +79,19 @@ def H_int(atom: Atom, states: list[State], fields: dict[ElectricField, list[Tran
             state_f = transition.state_f
             for mJ_i in state_i.sublevels:
                 for mJ_f in state_f.sublevels:
-                    ket_i = kets_dict[(mJ_i, state_i)]
-                    ket_f = kets_dict[(mJ_f, state_f)]
+                    ket_i = kets_dict[(state_i, mJ_i)]
+                    ket_f = kets_dict[(state_f, mJ_f)]
 
                     Omega_ij = Rabi_Frequency(field, transition, mJ_i=mJ_i, mJ_f=mJ_f).to("MHz")
                     h = 1 / 2 * complex(abs(Omega_ij).magnitude) * (ket_i * ket_f.dag())
                     H += h + h.dag()
         # transition_graph = H.full()
 
+    # TODO: perhaps this could be another dedicated function?
     RWA_shifts, nodes = find_rotating_frame(fields)
     for i, state in enumerate(nodes):
-        for mJ in state.sublevels:
-            ket = kets_dict[(mJ, state)]
+        for m in state.sublevels:
+            ket = kets_dict[(state, m)]
             H += complex(RWA_shifts[i]) * ket * ket.dag()
 
     return H
@@ -96,18 +106,18 @@ def collapse_operators(atom: Atom, states: list[State], _ureg: pint.UnitRegistry
 
     states_mJ = list(kets_dict.keys())
 
-    for (mJ_i, state_i), (mJ_f, state_f) in combinations(states_mJ, 2):
+    for (state_i, mJ_i), (state_f, mJ_f) in combinations(states_mJ, 2):
         tr = atom.transition_between(state_i, state_f)
         if tr is not None:
-            ket_i = kets_dict[(mJ_i, state_i)]
-            ket_f = kets_dict[(mJ_f, state_f)]
+            ket_i = kets_dict[(state_i, mJ_i)]
+            ket_f = kets_dict[(state_f, mJ_f)]
             lo = sqrt_lindblad_operator(tr, mJ_i, mJ_f, _ureg)
             c_ij = complex(lo.magnitude) * (ket_i * ket_f.dag())
             # c_ij = np.sqrt(tr.Gamma.to("MHz").m) * (ket_i * ket_f.dag())
             list_all_operators.append(c_ij)
             if print_added_operators:
                 print(
-                    f"Added {complex(lo.magnitude)**2} MHz c operator from {(mJ_f, state_f.term)} to {(mJ_i, state_i.term)}"
+                    f"Added {(lo**2).to('MHz'):.3g~P} c operator from {(state_f.term, mJ_f)} to {(state_i.term, mJ_i)}"
                 )
 
     return list_all_operators

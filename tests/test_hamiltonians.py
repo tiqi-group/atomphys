@@ -21,13 +21,13 @@ def test_three_levels_decay(three_levels_atom):
     c_ops = hat.collapse_operators(atom, atom.states, atom._ureg)
     projectors = {}
     for s in atom.states:
-        proj = sum([ket * ket.dag() for (_, _s), ket in kets.items() if _s == s])
+        proj = sum([ket * ket.dag() for (_s, _), ket in kets.items() if _s == s])
         projectors[s] = proj
 
     e_ops = list(projectors.values())
-    psi0 = kets[(-1, atom.get_state("P"))]
+    psi0 = kets[(atom.get_state("P"), -1)]
 
-    t = np.arange(0, 0.4, 0.001)
+    t = np.arange(0, 0.1, 0.0005)
     sol = qutip.mesolve(H0, psi0, t, c_ops, e_ops)
     populations = np.asarray(sol.expect)
 
