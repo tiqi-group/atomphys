@@ -35,6 +35,11 @@ def kets(atom: Atom, states: list[State]):
     return kets_dict
 
 
+def zero_hamiltonian(states):
+    n_states = sum(len(s.sublevels) for s in states)
+    return qutip.qzero(n_states)
+
+
 def H0(atom: Atom, states: list[State], _ureg: pint.UnitRegistry):
     """Returns the atomic hamiltonian with no B field"""
     H = 0
