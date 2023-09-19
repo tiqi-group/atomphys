@@ -18,3 +18,11 @@ lint_flake8:
   script:
     - poetry install
     - poetry run flake8 --config setup.cfg atomphys/
+
+test:
+  image: $TIQI_PODMAN_IMAGES_URL/python:3.10
+  tags:
+    - podman-nosid # ISG managed machine, subuid and subgid entries not configured
+  script:
+    - poetry install
+    - poetry run pytest tests/

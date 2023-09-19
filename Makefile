@@ -1,4 +1,4 @@
-.PHONY: format format_inplace lint
+.PHONY: format format_inplace lint test
 
 format:
 	poetry run autopep8 --diff --recursive --exclude _*.py --exit-code atomphys/
@@ -8,3 +8,6 @@ format_inplace:
 
 lint:
 	poetry run flake8 --config setup.cfg atomphys/
+
+test:
+	poetry run pytest tests/
