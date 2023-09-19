@@ -88,7 +88,7 @@ def H_int(atom: Atom, states: list[State], fields: dict[ElectricField, list[Tran
                     ket_f = kets_dict[(state_f, mJ_f)]
 
                     Omega_ij = Rabi_Frequency(field, transition, mJ_i=mJ_i, mJ_f=mJ_f).to("MHz")
-                    h = 1 / 2 * complex(abs(Omega_ij).magnitude) * (ket_i * ket_f.dag())
+                    h = 1 / 2 * Omega_ij.magnitude * (ket_i * ket_f.dag())
                     H += h + h.dag()
         # transition_graph = H.full()
 
@@ -116,7 +116,7 @@ def collapse_operators(atom: Atom, states: list[State], _ureg: pint.UnitRegistry
         if tr is not None:
             ket_i = kets_dict[(state_i, mJ_i)]
             ket_f = kets_dict[(state_f, mJ_f)]
-            lo = sqrt_lindblad_operator(tr, mJ_i, mJ_f, _ureg)
+            lo = sqrt_lindblad_operator(tr, mJ_i, mJ_f, _ureg).to("MHz**0.5")
             c_ij = complex(lo.magnitude) * (ket_i * ket_f.dag())
             # c_ij = np.sqrt(tr.Gamma.to("MHz").m) * (ket_i * ket_f.dag())
             list_all_operators.append(c_ij)

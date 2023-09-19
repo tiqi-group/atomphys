@@ -11,7 +11,7 @@
 # I took j' to be the lower level states, as it agrees with other sources and makes sense intuitively
 # -> it increases spontaneous decay rate the more possibilities of decays to the lower states there are.
 
-
+import numpy as np
 import pint
 from sympy.physics.wigner import wigner_3j as w3j
 from .util import spherical_basis_second_rank_tensor, spherical_basis_vector
@@ -103,7 +103,7 @@ def dipole_matrix_element(
     d = reduced_dipole_matrix_element(A, k, J_f, _ureg)
     q = mJ_f - mJ_i
     if abs(q) > 1:
-        return 0 * _ureg('a0')
+        return np.zeros((3,)) * _ureg('a0')
     w3j_coeff = float(w3j(J_f, 1, J_i, -mJ_f, q, mJ_i))
     _dipole_matrix_element = w3j_coeff * spherical_basis_vector(q) * d
     return _dipole_matrix_element.to('a0')
@@ -131,7 +131,7 @@ def quadrupole_matrix_element(
     red_q = reduced_quadrupole_matrix_element(A, k, J_f, _ureg)
     q = mJ_f - mJ_i
     if abs(q) > 2:
-        return 0 * _ureg('a0**2')
+        return np.zeros((3, 3)) * _ureg('a0**2')
     w3j_coeff = float(w3j(J_f, 2, J_i, -mJ_f, q, mJ_i))
     sbt = spherical_basis_second_rank_tensor(q)
     _quadrupole_matrix_element = w3j_coeff * sbt * red_q
