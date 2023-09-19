@@ -19,7 +19,7 @@ def spherical_basis_vector(q):
     elif q == -1:
         return np.array([1, 1j, 0]) / np.sqrt(2)
     else:
-        raise ValueError("q should be -1, 0, or 1.")
+        raise ValueError(f"Invalid value {q} for q. It must be one of (-1, 0, 1).")
 
 
 def spherical_basis_second_rank_tensor(q):
@@ -44,7 +44,7 @@ def spherical_basis_second_rank_tensor(q):
     elif q == -2:
         return (1 / np.sqrt(6)) * np.array([[1, 1j, 0], [1j, -1, 0], [0, 0, 0]])
     else:
-        raise ValueError("Invalid value for q. It must be one of {-2, -1, 0, 1, 2}.")
+        raise ValueError(f"Invalid value {q} for q. It must be one of (-2, -1, 0, 1, 2).")
 
 
 def find_rotating_frame(fields):

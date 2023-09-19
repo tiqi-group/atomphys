@@ -100,12 +100,13 @@ def dipole_matrix_element(
         Dipole matrix element [a0]
     """
 
-    dipole_matrix_element = 0
     d = reduced_dipole_matrix_element(A, k, J_f, _ureg)
-    for q in range(-1, 2):
-        w3j_coeff = w3j(J_f, 1, J_i, -mJ_f, q, mJ_i)
-        dipole_matrix_element += w3j_coeff * spherical_basis_vector(q) * d
-    return dipole_matrix_element.to('a0').magnitude * _ureg('a0')
+    q = mJ_f - mJ_i
+    if abs(q) > 1:
+        return 0 * _ureg('a0')
+    w3j_coeff = float(w3j(J_f, 1, J_i, -mJ_f, q, mJ_i))
+    _dipole_matrix_element = w3j_coeff * spherical_basis_vector(q) * d
+    return _dipole_matrix_element.to('a0')
 
 
 def quadrupole_matrix_element(
@@ -127,13 +128,14 @@ def quadrupole_matrix_element(
         Quadrupole matrix element [a0**2]
     """
 
-    quadrupole_matrix_element = 0
     red_q = reduced_quadrupole_matrix_element(A, k, J_f, _ureg)
-    for q in range(-2, 3):
-        w3j_coeff = float(w3j(J_f, 2, J_i, -mJ_f, q, mJ_i))
-        sbt = spherical_basis_second_rank_tensor(q)
-        quadrupole_matrix_element += w3j_coeff * sbt * red_q
-    return abs(quadrupole_matrix_element.to('a0**2').magnitude) * _ureg('a0**2')
+    q = mJ_f - mJ_i
+    if abs(q) > 2:
+        return 0 * _ureg('a0**2')
+    w3j_coeff = float(w3j(J_f, 2, J_i, -mJ_f, q, mJ_i))
+    sbt = spherical_basis_second_rank_tensor(q)
+    _quadrupole_matrix_element = w3j_coeff * sbt * red_q
+    return _quadrupole_matrix_element.to('a0**2')
 
 
 def electric_dipole_matrix_element(

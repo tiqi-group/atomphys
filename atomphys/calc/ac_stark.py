@@ -45,4 +45,4 @@ def AC_stark_shift(
             Ω = Rabi_Frequency(E_field=El_field, transition=transition, mJ_i=mJ_i, mJ_f=mJ_f, _ureg=_ureg)
             ΔE += _ureg('hbar') / 4 * ((Ω * np.conj(Ω)) / (transition.ω - omega_field) +
                                        (Ω * np.conj(Ω)) / (transition.ω + omega_field))
-    return ΔE.to('k*mK').magnitude
+    return ΔE  # .to('k*mK').magnitude

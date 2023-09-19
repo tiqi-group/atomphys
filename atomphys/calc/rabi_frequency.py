@@ -12,13 +12,16 @@
 
 
 import pint
-from .matrix_element import dipole_matrix_element, quadrupole_matrix_element
+from .matrix_element import (
+    dipole_matrix_element, quadrupole_matrix_element,
+    reduced_dipole_matrix_element, w3j
+)
 import numpy as np
 from ..electric_field import ElectricField
 from ..transition import Transition, TransitionType
 
 
-def dipole_Rabi_Frequency(E_field: pint.Quantity, A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry | None = None):
+def dipole_Rabi_Frequency(E_field: pint.Quantity, A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry):
     """
     Function will only work for a dipole transitions
 
@@ -39,7 +42,33 @@ def dipole_Rabi_Frequency(E_field: pint.Quantity, A: pint.Quantity, k: pint.Quan
     return (np.dot(E_field, d) * _ureg('e/hbar')).to('MHz')
 
 
-def quadrupole_Rabi_Frequency(E_gradient: pint.Quantity, A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry | None = None):
+def electric_field_from_pi_dipole_rabi_frequency(
+        rabi_frequency: pint.Quantity,
+        A: pint.Quantity, k: pint.Quantity,
+        J_i: float, _ureg: pint.UnitRegistry):
+    """electric_field_from_pi_dipole_rabi_frequency
+
+    Return the electric field giving a requested rabi frequency on a pi transition
+    (J_i, 0) -> (J_i + 1, 0)
+    Don't forget to include 2*pi in the rabi_frequency!
+
+    Args:
+        rabi_frequency: Rabi frequency [2pi * MHz]
+        A: Einstein coefficient [1/s]
+        k: Transition wavenumber [1/m]
+        J_i: Angular momentum of the lower state
+        _ureg: Unit registry. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
+    J_f = J_i + 1
+    d = reduced_dipole_matrix_element(A=A, k=k, J_f=J_f, _ureg=_ureg)
+    w = float(w3j(J_f, 1, J_i, 0, 0, 0))
+    return (rabi_frequency / abs(d * w) * _ureg('hbar / e')).to('V/m')
+
+
+def quadrupole_Rabi_Frequency(E_gradient: pint.Quantity, A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry):
     """
     Funciton will only work for a quadrupole transitions
 
@@ -72,11 +101,14 @@ def Rabi_Frequency(E_field: ElectricField, transition: Transition, mJ_i: float, 
     Returns:
         Rabi frequency for a transition [2pi*MHz]
     """
-
+    _ureg = E_field._ureg if _ureg is None else _ureg
+    A = transition.A
+    k = transition.k
+    J_i = transition.state_i.quantum_numbers['J']
+    J_f = transition.state_f.quantum_numbers['J']
     if transition.type == TransitionType.E1:
-        return dipole_Rabi_Frequency(E_field.field(), transition.A, transition.k, transition.state_i.quantum_numbers['J'], transition.state_f.quantum_numbers['J'], mJ_i, mJ_f, _ureg=E_field._ureg)
+        return dipole_Rabi_Frequency(E_field.field(), A, k, J_i, J_f, mJ_i, mJ_f, _ureg)
     elif transition.type == TransitionType.E2:
-        E_gradient = E_field.gradient()
-        return quadrupole_Rabi_Frequency(E_gradient, transition.A, transition.k, transition.state_i.quantum_numbers['J'], transition.state_f.quantum_numbers['J'], mJ_i, mJ_f, _ureg=E_field._ureg)
+        return quadrupole_Rabi_Frequency(E_field.gradient(), A, k, J_i, J_f, mJ_i, mJ_f, _ureg)
     else:
         raise NotImplementedError(f"Transition type {transition.type} not implemented")

@@ -8,13 +8,14 @@ import pint
 import numpy as np
 from numpy.typing import ArrayLike
 
-from .util import default_units, make_alias, make_alias_with_setter
+from .util import default_units, set_default_units, make_alias, make_alias_with_setter
 
 
 class ElectricField:
-    def __init__(self, frequency: pint.Quantity, _ureg=None) -> None:
+    def __init__(self, frequency: pint.Quantity, E0: pint.Quantity, _ureg=None) -> None:
         self._ureg = pint.get_application_registry() if _ureg is None else _ureg
         self._frequency = frequency
+        self._field_amplitude = set_default_units(E0, "V/m", self._ureg)
 
     @property
     def frequency(self) -> pint.Quantity:
@@ -34,6 +35,25 @@ class ElectricField:
     def angular_frequency(self, value: pint.Quantity):
         self.frequency = value / self._ureg("2*pi")
 
+    @property
+    def field_amplitude(self):
+        return (self._field_amplitude).to("V/m")
+
+    @field_amplitude.setter
+    @default_units("V/m")
+    def field_amplitude(self, value):
+        self._field_amplitude = value
+
+    @property
+    def intensity(self):
+        return (self._field_amplitude**2 * self._ureg("c*epsilon_0") / 2).to("mW/cm^2")
+
+    @intensity.setter
+    @default_units("W/cm^2")
+    def intensity(self, value):
+        self._field_amplitude = np.sqrt(2 * value / self._ureg("c*epsilon_0"))
+
+    E0 = make_alias_with_setter("_field_amplitude")
     nu = make_alias_with_setter("frequency")
     ν = make_alias_with_setter("frequency")
     ω = make_alias_with_setter("angular_frequency")
@@ -52,8 +72,8 @@ class ElectricField:
             raise ValueError("Can only sum fields at the same frequency")
         return SumElectricField(self, other)
 
-    @staticmethod
-    def _ravel_coords(*args):
+    def _ravel_coords(self, *args):
+        args = tuple(map(lambda _x: set_default_units(_x, "m", self._ureg), args))
         args = np.broadcast_arrays(*args)
         shape = args[0].shape
         args = list(map(np.ravel, args))
@@ -75,7 +95,7 @@ class LaserField(ElectricField):
         _ureg=None,
     ):
         # Call the ElectricField constructor
-        super().__init__(frequency, _ureg)
+        super().__init__(frequency, E0=0, _ureg=_ureg)
 
         # Make sure the user has specified either intensity or both power and waist
         if intensity is None and (power is None or waist is None):
@@ -139,24 +159,6 @@ class LaserField(ElectricField):
         self._frequency = self._ureg("c") / value
 
     @property
-    def field_amplitude(self):
-        return (self._field_amplitude).to("V/m")
-
-    @field_amplitude.setter
-    @default_units("V/m")
-    def field_amplitude(self, value):
-        self._field_amplitude = value
-
-    @property
-    def intensity(self):
-        return (self._field_amplitude**2 * self._ureg("c*epsilon_0") / 2).to("mW/cm^2")
-
-    @intensity.setter
-    @default_units("W/cm^2")
-    def intensity(self, value):
-        self._field_amplitude = np.sqrt(2 * value / self._ureg("c*epsilon_0"))
-
-    @property
     def power(self):
         return (self._power).to("mW")
 
@@ -195,7 +197,7 @@ class PlaneWaveElectricField(ElectricField):
     def __init__(
         self, E0: float, polarization: ArrayLike, wavevector: ArrayLike, frequency: pint.Quantity, _ureg=None
     ) -> None:
-        super().__init__(frequency, _ureg)
+        super().__init__(frequency, E0, _ureg)
         assert np.dot(polarization, wavevector) == 0, "Polarization must be perpendicular to wavevector"
         self._epsilon = np.asarray(polarization) / np.linalg.norm(polarization)
         self._kappa = np.asarray(wavevector) / np.linalg.norm(wavevector)
@@ -213,7 +215,7 @@ class PlaneWaveElectricField(ElectricField):
         shape, X = self._ravel_coords(x, y, z)
         return (
             self._epsilon.reshape((1,) * len(shape) + (-1,)) *
-            self._field_amplitude.to_base_units().m *
+            self.field_amplitude *
             self._phase(X).reshape(shape + (1,))
         )
 
@@ -243,7 +245,6 @@ class PlaneWaveElectricField(ElectricField):
         self._epsilon = value / np.linalg.norm(value)
 
     λ = make_alias_with_setter("wavelength")
-    E0 = make_alias_with_setter("_field_amplitude")
     wavevector = make_alias("k")
     epsilon = make_alias_with_setter("polarization")
     eps = make_alias_with_setter("polarization")
