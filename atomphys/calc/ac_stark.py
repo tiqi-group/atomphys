@@ -1,14 +1,15 @@
-from math import cos
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+#
+# Created: 07/2023
+# Authors: Carmelo Mordini <cmordini@phys.ethz.ch> & Wojciech Adamczyk <wadamczyk@phys.ethz.ch>
 
+
+import numpy as np
 import pint
 
-from atomphys.calc.wigner import ishalfint, isint
-from sympy.physics.wigner import wigner_6j as w6j
-from sympy.physics.quantum.cg import CG
-import numpy as np
 from atomphys.calc.rabi_frequency import Rabi_Frequency
 from atomphys.electric_field import ElectricField
-from atomphys.transition import Transition, TransitionType
 from atomphys.state import State
 
 

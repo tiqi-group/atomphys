@@ -169,10 +169,10 @@ class State:
         return magnetic_sublevels(self.spin)
 
     @property
-    def sublevels_field_sensitivity(self) -> dict[float : pint.Quantity]:
+    def sublevels_field_sensitivity(self) -> dict[float: pint.Quantity]:
         return {m: field_sensitivity(self.g, m, self._ureg) for m in self.sublevels}
 
-    def sublevels_zeeman_shift(self, B: pint.Quantity) -> dict[float : pint.Quantity]:
+    def sublevels_zeeman_shift(self, B: pint.Quantity) -> dict[float: pint.Quantity]:
         return {m: zeeman_shift(self.g, m, B, self._ureg) for m in self.sublevels}
 
     @property

@@ -2,11 +2,11 @@
 # -*- coding:utf-8 -*-
 #
 # Created: 13/2023
-# Author: Carmelo Mordini <cmordini@phys.ethz.ch> & Wojciech Adamczyk <wadamczyk@phys.ethz.ch> 
+# Author: Carmelo Mordini <cmordini@phys.ethz.ch> & Wojciech Adamczyk <wadamczyk@phys.ethz.ch>
 #
 # Reference for this calculation is James 1998: Quantum dynamics of cold trappedions, with application to quantum computation
 # https://arxiv.org/abs/quant-ph/9702053
-# Also very usefull whilst coding this up was 
+# Also very usefull whilst coding this up was
 # -> PhD Thesis of Lindenfelser, Frieder from 2017 (ETH Zürich) - Trapped Ion Quantum Informaiton Group
 # -> Master Thesis of Beck, Gillenhall from 2020 (ETH Zürich) - Trapped Ion Quantum Informaiton Group
 
@@ -31,12 +31,13 @@ def dipole_Rabi_Frequency(E_field: pint.Quantity, A: pint.Quantity, k: pint.Quan
         mJ_i: Magnetic quantum number of the lower state
         mJ_f: Magnetic quantum number of the upper state
         _ureg: Unit registry
-    
+
     Returns:
         Rabi frequency for a dipole transition [2pi*MHz]
     """
     d = dipole_matrix_element(A=A, k=k, J_i=J_i, J_f=J_f, mJ_i=mJ_i, mJ_f=mJ_f, _ureg=_ureg)
-    return (np.dot(E_field, d)*_ureg('e/hbar')).to('MHz')
+    return (np.dot(E_field, d) * _ureg('e/hbar')).to('MHz')
+
 
 def quadrupole_Rabi_Frequency(E_gradient: pint.Quantity, A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry | None = None):
     """
@@ -56,7 +57,7 @@ def quadrupole_Rabi_Frequency(E_gradient: pint.Quantity, A: pint.Quantity, k: pi
         Rabi frequency for a quadrupole transition [2pi*Hz]
     """
     qme = quadrupole_matrix_element(A=A, k=k, J_i=J_i, J_f=J_f, mJ_i=mJ_i, mJ_f=mJ_f, _ureg=_ureg)
-    return (1/2*np.sum(E_gradient*qme)*_ureg('e/hbar')).to('MHz')
+    return (1 / 2 * np.sum(E_gradient * qme) * _ureg('e/hbar')).to('MHz')
 
 
 def Rabi_Frequency(E_field: ElectricField, transition: Transition, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry | None = None):
@@ -69,7 +70,7 @@ def Rabi_Frequency(E_field: ElectricField, transition: Transition, mJ_i: float, 
         _ureg: Unit registry
 
     Returns:
-        Rabi frequency for a transition [2pi*MHz] 
+        Rabi frequency for a transition [2pi*MHz]
     """
 
     if transition.type == TransitionType.E1:
@@ -79,8 +80,3 @@ def Rabi_Frequency(E_field: ElectricField, transition: Transition, mJ_i: float, 
         return quadrupole_Rabi_Frequency(E_gradient, transition.A, transition.k, transition.state_i.quantum_numbers['J'], transition.state_f.quantum_numbers['J'], mJ_i, mJ_f, _ureg=E_field._ureg)
     else:
         raise NotImplementedError(f"Transition type {transition.type} not implemented")
-
-
-
-
-

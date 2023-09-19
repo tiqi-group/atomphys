@@ -21,4 +21,5 @@ __all__ = [
     "Atom",
     "State",
     "Transition",
+    "plot_atom"
 ]

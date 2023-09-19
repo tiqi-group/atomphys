@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 #
 # Created: 13/2023
-# Author: Carmelo Mordini <cmordini@phys.ethz.ch> & Wojciech Adamczyk <wadamczyk@phys.ethz.ch>
+# Authors: Carmelo Mordini <cmordini@phys.ethz.ch> & Wojciech Adamczyk <wadamczyk@phys.ethz.ch>
 #
 
 # Reference for this calculation is James 1998: Quantum dynamics of cold trappedions, with application to quantum computation

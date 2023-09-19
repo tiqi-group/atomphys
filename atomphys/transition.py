@@ -125,8 +125,8 @@ class Transition:
     @property
     def sublevels_field_sentitivity(self):
         return {
-            (mi, mf): field_sensitivity(self.state_f.g, mf, self._ureg)
-            - field_sensitivity(self.state_i.g, mi, self._ureg)
+            (mi, mf): field_sensitivity(self.state_f.g, mf, self._ureg) -
+            field_sensitivity(self.state_i.g, mi, self._ureg)
             for (mi, mf) in self.sublevels
         }
 

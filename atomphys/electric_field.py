@@ -6,7 +6,6 @@
 
 import pint
 import numpy as np
-from math import pi
 from numpy.typing import ArrayLike
 
 from .util import default_units, make_alias, make_alias_with_setter
