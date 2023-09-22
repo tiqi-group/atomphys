@@ -20,6 +20,7 @@ from .util import find_rotating_frame
 from ..transition import Transition
 from .lindblad_operators import sqrt_lindblad_operator
 
+import numpy as np
 from itertools import combinations
 
 
@@ -126,3 +127,33 @@ def collapse_operators(atom: Atom, states: list[State], _ureg: pint.UnitRegistry
                 )
 
     return list_all_operators
+
+
+def adiabatic_elimination(relevant_states, irrelevant_states, kets, H):
+    """adiabatic_elimination
+
+    refs:
+    https://www.quantuminfo.physik.rwth-aachen.de/global/show_document.asp?id=aaaaaaaaaajiobd pag 22
+    https://link.springer.com/article/10.1140/epjp/i2014-14012-8
+
+    Args:
+        relevant_states (_type_): _description_
+        irrelevant_states (_type_): _description_
+        kets (_type_): _description_
+        H (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    _states = list(kets.keys())
+    r_ix = [_states.index(s) for s in relevant_states]
+    ir_ix = [_states.index(s) for s in irrelevant_states]
+    nr = len(r_ix)
+
+    w = qutip.Qobj(H[np.ix_(r_ix, r_ix)])
+    omega = qutip.Qobj(H[np.ix_(r_ix, ir_ix)])
+    delta = qutip.Qobj(H[np.ix_(ir_ix, ir_ix)])
+
+    H_eff = w - omega * delta.inv() * omega.dag()
+    rkets = {s: qutip.basis(nr, j) for j, s in enumerate(relevant_states)}
+    return rkets, H_eff
