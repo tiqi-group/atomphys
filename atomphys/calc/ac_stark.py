@@ -1,15 +1,13 @@
-from math import cos
-from math import pi as π
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+#
+# Created: 09/2023
+# Author: Wojciech Adamczyk <wadamczyk@phys.ethz.ch>
 
 import pint
-
-from atomphys.calc.wigner import ishalfint, isint
-from sympy.physics.wigner import wigner_6j as w6j
-from sympy.physics.quantum.cg import CG
 import numpy as np
 from atomphys.calc.rabi_frequency import Rabi_Frequency
 from atomphys.electric_field import ElectricField
-from atomphys.transition import Transition, TransitionType
 from atomphys.state import State
 
 
@@ -17,12 +15,12 @@ def AC_stark_shift(
     state: State,
     mJ: float, 
     El_field: ElectricField,
-    _ureg: pint.UnitRegistry | None = None,
+    _ureg: pint.UnitRegistry,
 ):
 
-    ΔE = 0
+    delta_E = 0 * _ureg('k*mK')
 
-    omega_field = El_field.ω
+    omega_field = El_field.angular_frequency
     
 
     for transition in state.transitions_from:
@@ -32,8 +30,8 @@ def AC_stark_shift(
         for mJ_f in range(int(state_f.quantum_numbers['J']*2+1)):
             mJ_i = mJ
 
-            Ω = Rabi_Frequency(E_field=El_field, transition=transition, mJ_i=mJ_i, mJ_f=mJ_f, _ureg=_ureg)
-            ΔE += _ureg('hbar')/4*((Ω*np.conj(Ω))/(-transition.ω - omega_field)+(Ω*np.conj(Ω))/(-transition.ω + omega_field))
+            Omega = Rabi_Frequency(E_field=ElectricField, transition=transition, mJ_i=mJ_i, mJ_f=mJ_f, _ureg=_ureg)
+            delta_E += _ureg('hbar')/4*((Omega*np.conj(Omega))/(-transition.angular_frequency - omega_field)+(Omega*np.conj(Omega))/(-transition.angular_frequency + omega_field))
 
     for transition in state.transitions_to:
         state_i = transition.state_i
@@ -42,6 +40,16 @@ def AC_stark_shift(
         for mJ_i in range(int(state_i.quantum_numbers['J']*2+1)):
             mJ_f = mJ
 
-            Ω = Rabi_Frequency(E_field=El_field, transition=transition, mJ_i=mJ_i, mJ_f=mJ_f, _ureg=_ureg)
-            ΔE += _ureg('hbar')/4*((Ω*np.conj(Ω))/(transition.ω - omega_field) + (Ω*np.conj(Ω))/(transition.ω + omega_field))
-    return ΔE.to('k*mK').magnitude
+            Omega = Rabi_Frequency(E_field=ElectricField, transition=transition, mJ_i=mJ_i, mJ_f=mJ_f, _ureg=_ureg)
+            delta_E += _ureg('hbar')/4*((Omega*np.conj(Omega))/(transition.ω - omega_field) + (Omega*np.conj(Omega))/(transition.angular_frequency + omega_field))
+    return delta_E.to('k*mK')
+
+def polarizability(
+    state: State,
+    mJ: float, 
+    El_field: ElectricField,
+    _ureg: pint.UnitRegistry,
+):
+    AC_stark = AC_stark_shift(state=state, mJ=mJ, El_field=El_field, _ureg=_ureg)
+    E0 = El_field.amplitude
+    return -4*AC_stark/E0**2
