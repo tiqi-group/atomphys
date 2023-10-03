@@ -13,6 +13,8 @@ from .atom import Atom  # noqa: E402
 from .state import State  # noqa: E402
 from .transition import Transition  # noqa: E402
 from .plot import plot_atom  # noqa: E402
+from . import electric_field
+from .load_data import from_nist
 
 __version__ = pkg_resources.get_distribution("atomphys").version
 

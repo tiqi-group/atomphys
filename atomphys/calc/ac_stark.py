@@ -52,4 +52,4 @@ def polarizability(
 ):
     AC_stark = AC_stark_shift(state=state, mJ=mJ, El_field=El_field, _ureg=_ureg)
     E0 = El_field.amplitude
-    return -4*AC_stark/E0**2
+    return (-4*AC_stark/E0**2).to('e^2*a_0^2/E_h')
