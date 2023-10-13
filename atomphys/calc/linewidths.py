@@ -42,4 +42,4 @@ def transition_specific_linewidth(transition: Transition, mJ_i: float, mJ_f: flo
     else:
         raise NotImplementedError(f"Transition type {transition.type} not implemented")
     
-    return lo.to('MHz')
+    return lo.to('_2pi*MHz')

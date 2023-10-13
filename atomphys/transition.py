@@ -13,6 +13,7 @@ from .calc.coupling import Coupling
 from .calc.selection_rules import get_transition_type_LS, TransitionType
 from .calc.matrix_element import reduced_electric_dipole_matrix_element, reduced_electric_quadrupole_matrix_element, electric_dipole_matrix_element, electric_quadrupole_matrix_element, dipole_matrix_element, quadrupole_matrix_element
 from .calc.zeeman import field_sensitivity
+from .calc.linewidths import transition_specific_linewidth
 
 
 class Transition:
@@ -147,7 +148,6 @@ class Transition:
             # print(
             #     f"Transition type calculation is implemented only between states with LS coupling, but transition has {self.state_i.coupling} --> {self.state_f.coupling}")
             return TransitionType.NONE
-    
-    Gamma = make_alias(attr_name='_A', get_unit='_2pi*MHz')
 
     
+    Gamma = make_alias(attr_name='_A', get_unit='_2pi*MHz')
