@@ -1,7 +1,6 @@
+from copy import deepcopy
 import networkx as nx
 import pint
-from copy import deepcopy
-
 from .state import State
 from .transition import Transition
 from .util import default_units, set_default_units
@@ -155,7 +154,6 @@ class Atom:
         g = atom._graph
         isolated = list(nx.isolates(g))
         g.remove_nodes_from(isolated)
-        #print(f"Removed {len(isolated)} states without transitions")
         return atom
 
     def remove_states_above_energy(self, energy: pint.Quantity, copy=True, remove_isolated=False):
@@ -177,7 +175,6 @@ class Atom:
                 atom.remove_state(s)
         if remove_isolated:
             atom.remove_isolated(copy=False)
-        #print(f"Removed {len(states) - len(atom.states)} states above {energy}")
         return atom
 
     """Graph Truncation functions"""
@@ -201,7 +198,6 @@ class Atom:
                 atom.remove_state(s)
         if remove_isolated:
             atom.remove_isolated(copy=False)
-        #print(f"Removed {len(states) - len(atom.states)} states below {energy}")
         return atom
     
     def remove_transitions_above_wavelength(self, wavelength: pint.Quantity, copy=True):
@@ -290,7 +286,8 @@ class Atom:
         """
         Retrieves a state from the Atom by parsing energy.
 
-        This method iterates through the states of an Atom and returns the state that is the closest match to the given energy.
+        This method iterates through the states of an Atom and returns 
+        the state that is the closest match to the given energy.
 
         Args:
             energy (pint.Quantity): The energy of the state to retrieve.
@@ -308,14 +305,17 @@ class Atom:
         """
         Returns a list of states matching term-key
 
-        This method returns a list of states matching the given term-key. The term-key is the name of the state to retrieve,
-        which follows the format (configuration, quantum_numbers). If no matching state is found, it returns None.
+        This method returns a list of states matching the given term-key 
+        The term-key is the name of the state to retrieve, 
+        which follows the format (configuration, quantum_numbers).
+        If no matching state is found, it returns None.
 
         Args:
             key (str): The name of the state to retrieve.
 
         Returns:
-            list[State]: A list of State objects with a name matching the key. Returns None if no match is found.
+            list[State]: A list of State objects with a name matching the key. 
+            Returns None if no match is found.
 
         Raises:
             StopIteration: If no matching state is found.
@@ -326,16 +326,19 @@ class Atom:
         """
         Returns a state matching term and energy
 
-        This method returns a state matching the given term and energy. The term is the name of the state to retrieve,
-        which follows the format (configuration, quantum_numbers). The energy is the energy of the state to retrieve.
+        This method returns a state matching the given term and energy.
+        The term is the name of the state to retrieve, which follows the format 
+        (configuration, quantum_numbers). The energy is the energy of the state to retrieve.
         If no matching state is found, it returns None.
 
         Args:
-            key (str): The name of the state to retrieve.
-            energy (pint.Quantity): The energy of the state to retrieve. It should be in units of energy.
+            key (str):              The name of the state to retrieve.
+            energy (pint.Quantity): The energy of the state to retrieve. 
+                                    It should be in units of energy.
 
         Returns:
-            State: A State object with a name matching the key and energy closest to the energy argument. Returns None if no match is found.
+            State:  A State object with a name matching the key and energy closest to the energy argument.
+                    Returns None if no match is found.
         """
 
         matching_states = self._match_term(key)
@@ -379,8 +382,8 @@ class Atom:
         """
         Retrieve all transitions to a given state
 
-        This method returns a list of all transitions to a given state. The transitions are returned in the order they are
-        stored in the Atom.
+        This method returns a list of all transitions to a given state. 
+        The transitions are returned in the order they are stored in the Atom.
 
         Args:
             state (State): The state to retrieve transitions to.
@@ -393,13 +396,13 @@ class Atom:
         """
 
         return [edge['transition'] for node, edge in self._graph.pred[state].items()]
-    
+
     def transition_between(self, state_i: State, state_f: State) -> Transition:
         """
         Retrieve a transition between two states
 
-        This method returns a transition between two states. The transition is returned in the order it is
-        stored in the Atom.
+        This method returns a transition between two states.
+        The transition is returned in the order it is stored in the Atom.
 
         Args:
             state_i (State): The initial state of the transition.
@@ -411,7 +414,6 @@ class Atom:
         Raises:
             KeyError: If the given state is not in the Atom.
         """
-        #check if the transition exists
         if state_f not in self._graph.succ[state_i]:
             return None
         return self._graph.get_edge_data(state_i, state_f)['transition']
@@ -420,11 +422,10 @@ class Atom:
     def get_transition_by_wavelength(self, wavelength: str | float | pint.Quantity):
         """
         Args:
-            wavelength (str | float | pint.Quantity): The wavelength of the transition to retrieve. [m]
-        
+            wavelength (str | float | pint.Quantity):
+                The wavelength of the transition to retrieve. [m]
+
         Returns:
             Transition: A Transition object with a wavelength closest to the given wavelength.
         """
         return min(self.transitions, key=lambda tr: abs(tr.wavelength - wavelength))
-
-

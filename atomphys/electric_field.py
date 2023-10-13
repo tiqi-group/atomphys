@@ -34,14 +34,6 @@ class ElectricField:
     @default_units('2pi/s')
     def angular_frequency(self, value: pint.Quantity):
         self.frequency = value / self._ureg('2*pi')
-    
-
-
-    nu = make_alias_with_setter('frequency')
-    ν = make_alias_with_setter('frequency')
-    ω = make_alias_with_setter('angular_frequency')
-    omega = make_alias_with_setter('angular_frequency')
-
 
     def field(self, x, y, z):
         raise NotImplementedError
@@ -67,6 +59,19 @@ class ElectricField:
 
 class LaserField(ElectricField):
     def __init__(self, polarization, direction_of_propagation, frequency=None, wavelength=None, intensity=None, power=None, waist=None, detuning=None, _ureg=None):
+        """
+        Args:
+            polarization (array-like): Polarization vector
+            direction_of_propagation (array-like): Direction of propagation of the laser beam
+            frequency (pint.Quantity): Frequency of the laser (NOT ANGULAR FREQUENCY) - One can provide instead wavelength
+            wavelength (pint.Quantity): Wavelength of the laser - One can provide instead frequency
+            intensity (pint.Quantity): Intensity of the laser - One can provide instead power and waist
+            power (pint.Quantity): Power of the laser - One can provide instead intensity
+            waist (pint.Quantity): Waist of the laser - One can provide instead intensity
+            detuning (pint.Quantity): Detuning of the laser: (its detuning in MHz not in 2*pi*MHz) - i.e. Δ = ν-ν0
+            _ureg (pint.UnitRegistry): Unit registry
+        """
+
         # Call the ElectricField constructor
         super().__init__(frequency, _ureg)
 
@@ -106,7 +111,6 @@ class LaserField(ElectricField):
     def calculate_intensity(power, waist):
         # Use the formula for the intensity of a Gaussian beam:
         # I = 2P/(pi*w^2)
-        import numpy as np
         return 2 * power / (np.pi * waist ** 2)
     
     @property
@@ -177,15 +181,20 @@ class LaserField(ElectricField):
 
     @property
     def wavevector(self):
-        return self._kappa * self.angular_frequency / self._ureg('c')
+        wavevector = self._kappa* self.angular_frequency / self._ureg('c')
+        return wavevector
     
     k = make_alias('wavevector')
     
     def field(self):
         return self._epsilon * self._field_amplitude
 
+    # def gradient(self):
+    #     return np.einsum('i,...j->...ij', 1j * self.wavevector, self.field())
+
     def gradient(self):
         return np.einsum('i,...j->...ij', 1j * self.wavevector, self.field())
+
 
     
 

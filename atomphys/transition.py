@@ -65,6 +65,12 @@ class Transition:
       
     @property
     def reduced_electric_matrix_element(self):
+        """
+        Reduced electric matrix element in units of e a0
+        
+        Returns:
+            pint.Quantity: reduced electric matrix element
+        """
         if self.type == TransitionType.E1:
             J_f = self.state_f.quantum_numbers['J']
             return (reduced_electric_dipole_matrix_element(self.A, self.k, J_f, self._ureg)).to('e a0')
@@ -142,18 +148,6 @@ class Transition:
             #     f"Transition type calculation is implemented only between states with LS coupling, but transition has {self.state_i.coupling} --> {self.state_f.coupling}")
             return TransitionType.NONE
     
-    Einstein_coefficient = make_alias(attr_name='_A', get_unit='1/s')
-    Γ = make_alias(attr_name='_A', get_unit='_2pi*MHz')
     Gamma = make_alias(attr_name='_A', get_unit='_2pi*MHz')
-    ν = make_alias(attr_name='frequency', get_unit='THz')
-    nu = make_alias(attr_name='frequency', get_unit='THz')
-    ω = make_alias(attr_name='angular_frequency', get_unit='_2pi*1/s')
-    omega = make_alias(attr_name='angular_frequency', get_unit='_2pi*1/s') 
-    λ = make_alias('wavelength', 'nm')
-    d = make_alias('reduced_matrix_element')
-    I_sat = make_alias(attr_name='saturation_intensity', get_unit='mW/cm^2')
-    Isat = make_alias(attr_name='saturation_intensity', get_unit='mW/cm^2')
-    I_s = make_alias(attr_name='saturation_intensity', get_unit='mW/cm^2')
-    σ0 = make_alias(attr_name='cross_section', get_unit='cm^2')
 
     

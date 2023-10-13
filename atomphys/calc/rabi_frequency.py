@@ -14,11 +14,11 @@
 import pint
 from .matrix_element import dipole_matrix_element, quadrupole_matrix_element
 import numpy as np
-from ..electric_field import ElectricField
+from ..electric_field import LaserField
 from ..transition import Transition, TransitionType
 
 
-def dipole_Rabi_Frequency(E_field: pint.Quantity, A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry | None = None):
+def dipole_Rabi_Frequency(E_field: pint.Quantity, A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry):
     """
     Function will only work for a dipole transitions
 
@@ -38,7 +38,7 @@ def dipole_Rabi_Frequency(E_field: pint.Quantity, A: pint.Quantity, k: pint.Quan
     d = dipole_matrix_element(A=A, k=k, J_i=J_i, J_f=J_f, mJ_i=mJ_i, mJ_f=mJ_f, _ureg=_ureg)
     return (np.dot(E_field, d)*_ureg('e/hbar')).to('MHz')
 
-def quadrupole_Rabi_Frequency(E_gradient: pint.Quantity, A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry | None = None):
+def quadrupole_Rabi_Frequency(E_gradient: pint.Quantity, A: pint.Quantity, k: pint.Quantity, J_i: float, J_f: float, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry):
     """
     Funciton will only work for a quadrupole transitions
 
@@ -59,7 +59,7 @@ def quadrupole_Rabi_Frequency(E_gradient: pint.Quantity, A: pint.Quantity, k: pi
     return (1/2*np.sum(E_gradient*qme)*_ureg('e/hbar')).to('MHz')
 
 
-def Rabi_Frequency(E_field: ElectricField, transition: Transition, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry | None = None):
+def Rabi_Frequency(E_field: LaserField, transition: Transition, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry | None = None):
     """
     Args:
         E_field: ElectricField object -> can be for instance a laser beam
