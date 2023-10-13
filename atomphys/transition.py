@@ -4,16 +4,14 @@
 # Created: 06/2023
 # Author: Carmelo Mordini <cmordini@phys.ethz.ch>
 
+import numpy as np
 import pint
-from math import pi
-
 from .state import State
 from .util import default_units, make_alias
 from .calc.coupling import Coupling
 from .calc.selection_rules import get_transition_type_LS, TransitionType
 from .calc.matrix_element import reduced_electric_dipole_matrix_element, reduced_electric_quadrupole_matrix_element, electric_dipole_matrix_element, electric_quadrupole_matrix_element, dipole_matrix_element, quadrupole_matrix_element
 from .calc.zeeman import field_sensitivity
-from .calc.linewidths import transition_specific_linewidth
 
 
 class Transition:
@@ -54,7 +52,7 @@ class Transition:
         
     @property
     def k(self) -> pint.Quantity:
-        return (2*pi/self.wavelength).to('1/m')
+        return (2 * np.pi / self.wavelength).to('1/m')
         
     @property
     def frequency(self) -> pint.Quantity:
@@ -62,13 +60,13 @@ class Transition:
 
     @property
     def angular_frequency(self) -> pint.Quantity:
-        return self.energy.to('1/s', 'sp')*self._ureg('_2pi')
+        return self.energy.to('1/s', 'sp') * self._ureg('_2pi')
       
     @property
     def reduced_electric_matrix_element(self):
         """
         Reduced electric matrix element in units of e a0
-        
+
         Returns:
             pint.Quantity: reduced electric matrix element
         """
@@ -92,7 +90,6 @@ class Transition:
             J_f = self.state_f.quantum_numbers['J']
             return quadrupole_matrix_element(self.A, self.k, J_i, J_f, mJ_i, mJ_f, self._ureg).to('a0**2')
 
-
     def electric_matrix_element(self, mJ_i: int, mJ_f: int):
         if self.type == TransitionType.E1:
             J_i = self.state_i.quantum_numbers['J']
@@ -111,7 +108,6 @@ class Transition:
             return 2
         else:
             return 0
-            
 
     @property    
     def sublevels(self):
@@ -131,11 +127,11 @@ class Transition:
 
     @property
     def saturation_intensity(self):
-        return (self._ureg('pi*planck_constant*c/3') * self.A  / (self.wavelength ** 3)).to('mW/cm^2')
+        return (self._ureg('pi*planck_constant*c/3') * self.A / (self.wavelength ** 3)).to('mW/cm^2')
     
     @property
     def cross_section(self):
-        return (self._ureg('hbar/2') * self.ω * self.A / (self.Isat)).to('cm^2')
+        return (self._ureg('hbar/2') * self.angular_frequency * self.A / (self.saturation_intensity)).to('cm^2')
     
     @property
     def type(self) -> TransitionType:
@@ -149,5 +145,4 @@ class Transition:
             #     f"Transition type calculation is implemented only between states with LS coupling, but transition has {self.state_i.coupling} --> {self.state_f.coupling}")
             return TransitionType.NONE
 
-    
     Gamma = make_alias(attr_name='_A', get_unit='_2pi*MHz')

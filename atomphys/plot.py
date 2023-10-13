@@ -7,7 +7,6 @@
 
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
-
 import networkx as nx
 from math import nan
 

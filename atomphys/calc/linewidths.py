@@ -9,6 +9,7 @@ from ..transition import Transition, TransitionType
 from sympy.physics.wigner import wigner_3j as w3j
 from .matrix_element import reduced_dipole_matrix_element, reduced_quadrupole_matrix_element
 
+
 def transition_specific_linewidth(transition: Transition, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry):
     """
     Args:

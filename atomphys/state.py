@@ -3,8 +3,6 @@
 #
 # Created: 06/2023
 # Author: Carmelo Mordini <cmordini@phys.ethz.ch>
-
-
 import pint
 from math import pi
 import warnings
@@ -17,6 +15,7 @@ from .calc.hyperfine import hyperfine_shift
 from .calc.zeeman import g_lande_fine_LS, g_lande_hyperfine, field_sensitivity
 from .calc.angular_momentum import couple_angular_momenta, magnetic_sublevels
 from .calc.coupling import get_coupling, Coupling
+from .atom import Atom
 
 
 class State:
@@ -90,10 +89,10 @@ class State:
     @property
     def frequency(self) -> pint.Quantity:
         return (self.energy.to('THz', 'sp'))
-    
+
     @property
     def angular_frequency(self) -> pint.Quantity:
-        return (self.energy.to('1/s', 'sp')*self._ureg('2*pi'))
+        return (self.energy.to('1/s', 'sp') * self._ureg('2*pi'))
 
     @property
     def name(self) -> str:
@@ -171,7 +170,7 @@ class State:
             warnings.warn("State not attached to an Atom: no transitions available")
             return list()
         return self._atom.transitions_to(self)
-    
+  
     @property
     def transitions(self) -> list:
         return self.transitions_from + self.transitions_to

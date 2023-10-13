@@ -1,8 +1,6 @@
 from collections import UserList
 from typing import Any
-
 import pint
-
 from atomphys import _ureg
 
 

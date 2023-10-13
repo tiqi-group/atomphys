@@ -16,7 +16,6 @@ from ...transition import Transition
 from ..linewidths import transition_specific_linewidth
 
 
-
 def sqrt_lindblad_operator(transition: Transition, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry):
     """
     Args:

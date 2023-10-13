@@ -6,8 +6,6 @@ from .transition import Transition
 from .util import default_units, set_default_units
 
 
-
-
 class Atom:
     def __init__(self, name: str, _ureg=None) -> None:
         self.name = name
@@ -177,8 +175,6 @@ class Atom:
             atom.remove_isolated(copy=False)
         return atom
 
-    """Graph Truncation functions"""
-
     def remove_states_below_energy(self, energy: pint.Quantity, copy=True, remove_isolated=True):
         """
         Removes states with energy below a given value from the Atom
@@ -214,7 +210,6 @@ class Atom:
                 atom.remove_transition(t)
         return atom
 
-    """Retrieval functions"""
     @property
     def states(self) -> list[State]:
         """

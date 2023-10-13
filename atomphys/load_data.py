@@ -1,5 +1,5 @@
 from .atom import Atom
-from .util import default_units, set_default_units
+from .util import set_default_units
 from .data import nist
 from .state import State
 from .transition import Transition
