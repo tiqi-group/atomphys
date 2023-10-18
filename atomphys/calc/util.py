@@ -48,14 +48,14 @@ def spherical_basis_second_rank_tensor(q):
 
 
 def find_rotating_frame(fields):
-
     G = nx.Graph()  # create a new graph
 
     for electric_field, transitions in fields.items():
         for transition in transitions:
             # create an edge between state_i and state_f
-            G.add_edge(transition.state_i, transition.state_f,
-                       weight=electric_field.angular_frequency.to('MHz').magnitude)
+            G.add_edge(
+                transition.state_i, transition.state_f, weight=electric_field.angular_frequency.to("MHz").magnitude
+            )
 
     adjacency_matrix_sparse = nx.adjacency_matrix(G)
     adjacency_matrix = adjacency_matrix_sparse.toarray()

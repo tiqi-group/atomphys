@@ -19,7 +19,7 @@ from .calc.matrix_element import (
     dipole_matrix_element,
     quadrupole_matrix_element,
 )
-from .calc.zeeman import field_sensitivity
+from .calc.zeeman import field_sensitivity, zeeman_shift
 
 
 class Transition:
@@ -125,8 +125,15 @@ class Transition:
     @property
     def sublevels_field_sentitivity(self):
         return {
-            (mi, mf): field_sensitivity(self.state_f.g, mf, self._ureg) -
-            field_sensitivity(self.state_i.g, mi, self._ureg)
+            (mi, mf): (field_sensitivity(self.state_f.g, mf, self._ureg) -
+                       field_sensitivity(self.state_i.g, mi, self._ureg))
+            for (mi, mf) in self.sublevels
+        }
+
+    def sublevels_zeeman_shift(self, B: pint.Quantity) -> dict[float: pint.Quantity]:
+        return {
+            (mi, mf): (zeeman_shift(self.state_f.g, mf, B, self._ureg) -
+                       zeeman_shift(self.state_i.g, mi, B, self._ureg)).to('MHz')
             for (mi, mf) in self.sublevels
         }
 

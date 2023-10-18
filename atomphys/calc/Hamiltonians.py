@@ -59,7 +59,13 @@ def H_zeeman(atom: Atom, states: list[State], B_field: pint.Quantity):
     return H
 
 
-def H_int(atom: Atom, states: list[State], fields: dict[ElectricField, list[Transition]], _ureg: pint.UnitRegistry):
+def H_int(
+    atom: Atom,
+    states: list[State],
+    fields: dict[ElectricField, list[Transition]],
+    _ureg: pint.UnitRegistry,
+    rwa_shifts=True,
+):
     """Returns the interaction hamiltonian in rotating frame of reference for a given atom and electric fields, with states decided by the user
     The idea is that if the electric fields do not form a closed roop, one can enter rotating frame of reference (interaction picture), such
     that fields either rotate at 0 frequency or the frequency much higher than the rabi frequency of any transition. This leaves the hamiltonian
@@ -92,14 +98,13 @@ def H_int(atom: Atom, states: list[State], fields: dict[ElectricField, list[Tran
                     h = 1 / 2 * Omega_ij.magnitude * (ket_i * ket_f.dag())
                     H += h + h.dag()
         # transition_graph = H.full()
-
-    # TODO: perhaps this could be another dedicated function?
-    RWA_shifts, nodes = find_rotating_frame(fields)
-    for i, state in enumerate(nodes):
-        for m in state.sublevels:
-            ket = kets_dict[(state, m)]
-            H += complex(RWA_shifts[i]) * ket * ket.dag()
-
+    if rwa_shifts:
+        # TODO: perhaps this could be another dedicated function?
+        RWA_shifts, nodes = find_rotating_frame(fields)
+        for i, state in enumerate(nodes):
+            for m in state.sublevels:
+                ket = kets_dict[(state, m)]
+                H += complex(RWA_shifts[i]) * ket * ket.dag()
     return H
 
 

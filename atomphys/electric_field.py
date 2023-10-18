@@ -91,6 +91,7 @@ class LaserField(ElectricField):
         intensity=None,
         power=None,
         waist=None,
+        waist2=None,
         detuning=None,
         _ureg=None,
     ):
@@ -106,8 +107,9 @@ class LaserField(ElectricField):
             self.intensity = intensity
 
         # If the user specified power and waist, calculate the intensity
+        waist2 = waist if waist2 is None else waist2
         if power is not None and waist is not None:
-            self.intensity = self.calculate_intensity(power, waist)
+            self.intensity = self.calculate_intensity(power, waist, waist2)
 
         if frequency is not None:
             self.frequency = frequency
@@ -116,7 +118,10 @@ class LaserField(ElectricField):
 
         self._power = power
         self._waist = waist
-        assert np.dot(polarization, direction_of_propagation) == 0, "Polarization must be perpendicular to wavevector"
+        self._waist2 = waist2
+        assert np.isclose(
+            np.dot(polarization, direction_of_propagation), 0
+        ), "Polarization must be perpendicular to wavevector"
         self._epsilon = np.asarray(polarization) / np.linalg.norm(polarization)
         self._kappa = np.asarray(direction_of_propagation) / np.linalg.norm(direction_of_propagation)
 
@@ -127,10 +132,10 @@ class LaserField(ElectricField):
         # Calculates electric field amplitude from intensity
 
     @staticmethod
-    def calculate_intensity(power, waist):
+    def calculate_intensity(power, waist, waist2):
         # Use the formula for the intensity of a Gaussian beam:
         # I = 2P/(pi*w^2)
-        return 2 * power / (np.pi * waist**2)
+        return 2 * power / (np.pi * waist * waist2)
 
     @property
     def detuning(self):
@@ -167,7 +172,7 @@ class LaserField(ElectricField):
     def power(self, value):
         self._power = value
         if self.waist is not None:
-            self.intensity = self.calculate_intensity(value, self.waist)
+            self.intensity = self.calculate_intensity(value, self.waist, self._waist2)
 
     @property
     def waist(self):
@@ -178,7 +183,7 @@ class LaserField(ElectricField):
     def waist(self, value):
         self._waist = value
         if self.power is not None:
-            self.intensity = self.calculate_intensity(self.power, value)
+            self.intensity = self.calculate_intensity(self.power, value, self._waist2)
 
     @property
     def wavevector(self):
@@ -214,9 +219,9 @@ class PlaneWaveElectricField(ElectricField):
     def field(self, x=0, y=0, z=0):
         shape, X = self._ravel_coords(x, y, z)
         return (
-            self._epsilon.reshape((1,) * len(shape) + (-1,)) *
-            self.field_amplitude *
-            self._phase(X).reshape(shape + (1,))
+            self._epsilon.reshape((1,) * len(shape) + (-1,))
+            * self.field_amplitude
+            * self._phase(X).reshape(shape + (1,))
         )
 
     def gradient(self, x=0, y=0, z=0):

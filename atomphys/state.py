@@ -173,7 +173,7 @@ class State:
         return {m: field_sensitivity(self.g, m, self._ureg) for m in self.sublevels}
 
     def sublevels_zeeman_shift(self, B: pint.Quantity) -> dict[float: pint.Quantity]:
-        return {m: zeeman_shift(self.g, m, B, self._ureg) for m in self.sublevels}
+        return {m: zeeman_shift(self.g, m, B, self._ureg).to('MHz') for m in self.sublevels}
 
     @property
     def transitions_from(self) -> list:
@@ -240,6 +240,7 @@ class HyperfineState(State):
         _ureg=None,
     ):
         super().__init__(configuration, term, energy, atom, _ureg)
+        self._gI = 0  # TODO: fix
         self.quantum_numbers = QuantumNumbers.from_term(term, I=I, F=F)
 
     @property
@@ -253,7 +254,11 @@ class HyperfineState(State):
     @property
     def gF(self) -> float:
         J, I, F = (getattr(self.quantum_numbers, n) for n in ("J", "I", "F"))
-        return g_lande_hyperfine(J, I, F, self.gJ)
+        return g_lande_hyperfine(J, I, F, self.gJ, self.gI)
+
+    @property
+    def gI(self) -> float:
+        return self._gI
 
     @property
     def g(self) -> float:
