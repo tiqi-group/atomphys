@@ -10,6 +10,7 @@ References:
 [1] Hans A. Bethe and Edwin E. Salpeter, Quantum Mechanics of One- and Two-Electron Atoms (SpringerVerlag, Berlin, 1957).
 """
 
+import numpy as np
 import pint
 g_spin = 2.00231930436256
 
@@ -74,3 +75,69 @@ def field_sensitivity(g, m, _ureg=None):
     _ureg = pint.get_application_registry() if _ureg is None else _ureg
     mu = (1 * _ureg.bohr_magneton).to('J/gauss', 'Gaussian')
     return (mu * g * m / _ureg.planck_constant).to('MHz/gauss')
+
+
+def breit_rabi(B, Ahf, I, mJ, mI, gJ, gI=0, _ureg=None):
+    """F = 1, F = 2 Na B-field shift from Breit rabi formula.
+    freq = breit_rabi(B, F, mF)
+
+    Args:
+        B : B field (Gauss)
+        F : Hyperfine level F. Must be 1 or 2 (raises AssertionError instead)
+        mF: Zeeman sublevel. Must be abs(mF) <= F (raises AssertionError)
+
+    Returns:
+        freq: frequency shift (MHz) wrt 3S_{1/2} fine structure energy.
+              Note that mF = 0 levels have nonzero energy in this way.
+    """
+    # B (Gauss) -> freq (MHz)
+    assert np.abs(mI) <= I
+    assert mJ in (-0.5, 0.5)
+    _ureg = pint.get_application_registry() if _ureg is None else _ureg
+
+    Ehf = Ahf * (I + 1 / 2)
+    mu = _ureg.bohr_magneton
+    B = B.to('tesla', 'Gaussian')
+    sign = np.sign(mJ)
+    if np.abs(mI) == I and np.sign(mI) == sign:  # stretched states
+        dE = Ehf * I / (2 * I + 1) + sign * 0.5 * (gJ + 2 * I * gI) * mu * B
+    else:
+        mF = mI + mJ
+        x = (gJ - gI) * mu * B / Ehf
+        dE = -Ehf / 2 / (2 * I + 1) + sign * Ehf / 2 * np.sqrt(1 + 4 * mF * x / (2 * I + 1) + x**2)
+        if gI != 0:
+            dE += gI * mu * mF * B
+    return dE
+
+
+def breit_rabi_dEdB(B, Ahf, I, mJ, mI, gJ, gI=0, _ureg=None):
+    """F = 1, F = 2 Na B-field shift from Breit rabi formula.
+    freq = breit_rabi(B, F, mF)
+
+    Args:
+        B : B field (Gauss)
+        F : Hyperfine level F. Must be 1 or 2 (raises AssertionError instead)
+        mF: Zeeman sublevel. Must be abs(mF) <= F (raises AssertionError)
+
+    Returns:
+        freq: frequency shift (MHz) wrt 3S_{1/2} fine structure energy.
+              Note that mF = 0 levels have nonzero energy in this way.
+    """
+    # B (Gauss) -> freq (MHz)
+    assert np.abs(mI) <= I
+    assert mJ in (-0.5, 0.5)
+    _ureg = pint.get_application_registry() if _ureg is None else _ureg
+
+    Ehf = Ahf * (I + 1 / 2)
+    mu = _ureg.bohr_magneton
+    B = B.to('tesla', 'Gaussian')
+    sign = np.sign(mJ)
+    if np.abs(mI) == I and np.sign(mI) == sign:  # stretched states
+        dEdB = sign * 0.5 * (gJ + 2 * I * gI) * mu * np.ones_like(B)
+    else:
+        mF = mI + mJ
+        x = (gJ - gI) * mu * B / Ehf
+        dEdB = sign / 4 * (2 * x + 4 * mF / (2 * I + 1)) / np.sqrt(1 + 4 * mF * x / (2 * I + 1) + x**2) * (gJ - gI) * mu
+        if gI != 0:
+            dEdB += gI * mu * mF
+    return dEdB
