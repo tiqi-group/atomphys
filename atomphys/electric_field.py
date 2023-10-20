@@ -117,7 +117,7 @@ class LaserField(ElectricField):
 
 
         assert (
-            np.dot(polarization, direction_of_propagation) == 0
+            np.abs(np.dot(polarization, direction_of_propagation)) < 1e-6
         ), "Polarization must be perpendicular to wavevector"
         self._epsilon = np.asarray(polarization) / np.linalg.norm(polarization)
         self._kappa = np.asarray(direction_of_propagation) / np.linalg.norm(
