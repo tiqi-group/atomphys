@@ -97,10 +97,7 @@ def ac_stark_shift(
                     )
                 )
             except Exception as e:
-                print(
-                    f"Error encountered: {e}. Transition type might not be implemented."
-                )
-                # Continue with the next operation or iteration here, if needed.
+                pass
 
     if wavelengths is None:
         return delta_E.to("k*mK").magnitude.real* _ureg("k*mK")
