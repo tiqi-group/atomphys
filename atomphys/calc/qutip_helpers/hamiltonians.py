@@ -40,7 +40,7 @@ def hamiltonian_bare(states: list[State], _ureg: pint.UnitRegistry):
     return H
 
 
-def hamiltonian_intercation(
+def hamiltonian_interacation(
     states: list[State],
     fields: dict[ElectricField, list[Transition]],
     _ureg: pint.UnitRegistry,
