@@ -118,11 +118,11 @@ class State:
         return pattern.lower() in self.name.lower()
 
     @property
-    def atom(self->'Atom'):
+    def atom(self):
         return self._atom
 
     @atom.setter
-    def atom(self, value: 'Atom'):
+    def atom(self, value):
         self._atom = value
 
     # Derived properties
