@@ -55,11 +55,16 @@ class ElectricField:
         return shape, X
 
 
+# Change name to Gaussian Beam
+# Add elipticity
+# 
 class LaserField(ElectricField):
     def __init__(
         self,
-        polarization,
-        direction_of_propagation,
+        polarization=None,
+        direction_of_propagation=None,
+        phi=None,
+        gamma=None,
         frequency=None,
         wavelength=None,
         intensity=None,
@@ -73,6 +78,8 @@ class LaserField(ElectricField):
             polarization (array-like): Polarization vector
             direction_of_propagation (array-like): Direction of propagation of the laser beam
             frequency (pint.Quantity): Frequency of the laser (NOT ANGULAR FREQUENCY) - One can provide instead wavelength
+            phi (float): Angle between the laser beam and the magnetic field, where the B field is defined to be aligned with z (Radians)
+            gamma (float): Angle between the polarization vector and the plane defined by n and B (Radians)
             wavelength (pint.Quantity): Wavelength of the laser - One can provide instead frequency
             intensity (pint.Quantity): Intensity of the laser - One can provide instead power and waist
             power (pint.Quantity): Power of the laser - One can provide instead intensity
@@ -103,6 +110,12 @@ class LaserField(ElectricField):
 
         self._power = power
         self._waist = waist
+        if polarization is None and direction_of_propagation is None:
+            direction_of_propagation = np.array([np.sin(phi), 0, np.cos(phi)])
+            polarization = np.array([-np.cos(gamma)*np.cos(phi), np.sin(gamma), np.cos(gamma)*np.sin(phi)])
+
+
+
         assert (
             np.dot(polarization, direction_of_propagation) == 0
         ), "Polarization must be perpendicular to wavevector"
