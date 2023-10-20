@@ -103,11 +103,11 @@ def ac_stark_shift(
                 # Continue with the next operation or iteration here, if needed.
 
     if wavelengths is None:
-        return delta_E
+        return delta_E.to("k*mK").magnitude.real* _ureg("k*mK")
     else:
         return np.array(
             [
-                complex((delta_single_E.to("k*mK")).magnitude)
+                ((delta_single_E.to("k*mK")).magnitude).real
                 for delta_single_E in delta_E
             ]
         ) * _ureg("k*mK")
