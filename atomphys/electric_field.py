@@ -65,6 +65,7 @@ class LaserField(ElectricField):
         direction_of_propagation=None,
         phi=None,
         gamma=None,
+        alpha=None,
         frequency=None,
         wavelength=None,
         intensity=None,
@@ -80,6 +81,8 @@ class LaserField(ElectricField):
             frequency (pint.Quantity): Frequency of the laser (NOT ANGULAR FREQUENCY) - One can provide instead wavelength
             phi (float): Angle between the laser beam and the magnetic field, where the B field is defined to be aligned with z (Radians)
             gamma (float): Angle between the polarization vector and the plane defined by n and B (Radians)
+            alpha (float): Phase of the polarization vector (Radians) as defined in https://www.research-collection.ethz.ch/bitstream/handle/20.500.11850/111013/eth-48865-02.pdf?sequence=2&isAllowed=y
+                            'For Left or Right circularily polarised state use +- pi/2'
             wavelength (pint.Quantity): Wavelength of the laser - One can provide instead frequency
             intensity (pint.Quantity): Intensity of the laser - One can provide instead power and waist
             power (pint.Quantity): Power of the laser - One can provide instead intensity
@@ -112,7 +115,7 @@ class LaserField(ElectricField):
         self._waist = waist
         if polarization is None and direction_of_propagation is None:
             direction_of_propagation = np.array([np.sin(phi), 0, np.cos(phi)])
-            polarization = np.array([-np.cos(gamma)*np.cos(phi), np.sin(gamma), np.cos(gamma)*np.sin(phi)])
+            polarization = np.array([-np.cos(gamma)*np.cos(phi), np.exp(1j*alpha)*np.sin(gamma), np.cos(gamma)*np.sin(phi)])
 
 
 
