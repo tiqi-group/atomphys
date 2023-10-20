@@ -3,10 +3,7 @@ import networkx as nx
 import pint
 from .transition import Transition
 from .util import default_units, set_default_units
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .state import State
+from .state import State
 
 
 class Atom:

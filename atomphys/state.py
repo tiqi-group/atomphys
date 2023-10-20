@@ -15,7 +15,6 @@ from .calc.hyperfine import hyperfine_shift
 from .calc.zeeman import g_lande_fine_LS, g_lande_hyperfine, field_sensitivity
 from .calc.angular_momentum import couple_angular_momenta, magnetic_sublevels
 from .calc.coupling import get_coupling, Coupling
-from .atom import Atom
 
 
 class State:
@@ -119,7 +118,7 @@ class State:
         return pattern.lower() in self.name.lower()
 
     @property
-    def atom(self) -> 'Atom':
+    def atom(self->'Atom'):
         return self._atom
 
     @atom.setter
