@@ -1,12 +1,1 @@
-{
-    "flake8.importStrategy": "fromEnvironment",
-    "python.linting.flake8Path": ".venv/Scripts/flake8",
-    "flake8.args": [
-        "--config=setup.cfg"
-    ],
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": false,
-    "python.linting.lintOnSave": true,
-    "python.analysis.typeCheckingMode": "basic",
-    "python.linting.pylintEnabled": true,
-}
+{}

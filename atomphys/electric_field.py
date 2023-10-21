@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 #
 # Created: 07/2023
-# Author: Carmelo Mordini <cmordini@phys.ethz.ch>
+# Author: Carmelo Mordini <cmordini@phys.ethz.ch>, Philip Leindecker <pleindecker@ethz.ch>
 
 import pint
 import numpy as np
@@ -11,10 +11,17 @@ from .util import default_units, make_alias
 
 
 class ElectricField:
-    def __init__(self, frequency: pint.Quantity, _ureg=None) -> None:
+    def __init__(self, frequency: pint.Quantity = None, wavelength: pint.Quantity = None, _ureg=None) -> None:
         self._ureg = pint.get_application_registry() if _ureg is None else _ureg
-        self._frequency = frequency
 
+        # Initialize frequency from given frequency or calculate it from given wavelength
+        if frequency is not None:
+            self._frequency = frequency
+        elif wavelength is not None:
+            self._frequency = self._ureg("c") / wavelength
+        else:
+            raise ValueError("Either frequency or wavelength must be provided.")
+        
     @property
     def frequency(self) -> pint.Quantity:
         return self._frequency.to("THz")
@@ -23,6 +30,15 @@ class ElectricField:
     @default_units("THz")
     def frequency(self, value: pint.Quantity):
         self._frequency = value
+
+    @property
+    def wavelength(self):
+        return (self._ureg("c") / self.frequency).to("nm")
+
+    @wavelength.setter
+    @default_units("nm")
+    def wavelength(self, value):
+        self.frequency = self._ureg("c") / value
 
     @property
     def angular_frequency(self) -> pint.Quantity:
@@ -58,174 +74,194 @@ class ElectricField:
 class GaussianBeam(ElectricField):
     def __init__(
         self,
-        polarization=None,
-        direction_of_propagation=None,
-        phi=None,
-        gamma=None,
-        alpha=None,
-        frequency=None,
-        wavelength=None,
-        intensity=None,
-        power=None,
-        waist=None,
-        detuning=None,
-        _ureg=None,
+        frequency: pint.Quantity=None,
+        wavelength: pint.Quantity=None,
+        phi: float=None,
+        gamma: float=None,
+        alpha: float=None,
+        theta: float=None,
+        power: pint.Quantity=None,
+        target_saturation_power_multiple: float=None,
+        waist: float | list[float]=None,
+        detuning: pint.Quantity=None,
+        linewidth: pint.Quantity=None,
+        used_for: list[str]=None,
+        _ureg: pint.UnitRegistry=None,
     ):
         """
         Args:
-            polarization (array-like): Polarization vector
-            direction_of_propagation (array-like): Direction of propagation of the laser beam
-            frequency (pint.Quantity): Frequency of the laser (NOT ANGULAR FREQUENCY) - One can provide instead wavelength
-            phi (float): Angle between the laser beam and the magnetic field, where the B field is defined to be aligned with z (Radians)
-            gamma (float): Angle between the polarization vector and the plane defined by n and B (Radians)
-            alpha (float): Phase of the polarization vector (Radians) as defined in https://www.research-collection.ethz.ch/bitstream/handle/20.500.11850/111013/eth-48865-02.pdf?sequence=2&isAllowed=y
-                            'For Left or Right circularily polarised state use +- pi/2'
-            wavelength (pint.Quantity): Wavelength of the laser - One can provide instead frequency
-            intensity (pint.Quantity): Intensity of the laser - One can provide instead power and waist
-            power (pint.Quantity): Power of the laser - One can provide instead intensity
-            waist (pint.Quantity): Waist of the laser (either single value or array of [waist_x, waist_y] - One can provide instead intensity
-            detuning (pint.Quantity): Detuning of the laser: (its detuning in MHz not in 2*pi*MHz) - i.e. Δ = ν-ν0
-            _ureg (pint.UnitRegistry): Unit registry
+            frequency: Frequency of the laser (NOT ANGULAR FREQUENCY) - One can provide instead wavelength.
+            wavelength: Wavelength of the laser - One can provide instead frequency.
+            phi: Angle between the laser beam and the magnetic field, where the B field is defined to be aligned with z (Radians).
+            gamma: Angle between the polarization vector and the plane defined by n and B (Radians).
+            alpha: Phase of the polarization vector (Radians). For Left or Right circularily polarised state use +- pi/2.
+            theta: Angle of the laser beam to fully define the direction in 3D.
+            power: Power of the laser - One can provide instead intensity.
+            target_saturation_power_multiple: Multiple of the saturation power that the laser is targeting.
+            waist: Waist of the laser (either single value or array of [waist_x, waist_y].
+            detuning: Detuning of the laser: (its detuning in MHz not in 2*pi*MHz)
+            linewidth: Linewidth of the laser: (its linewidth in Hz not in 2*pi*Hz)
+            used_for: List of strings describing the purpose of the laser.
+            _ureg: Unit registry
         """
 
-        # Call the ElectricField constructor
-        super().__init__(frequency, _ureg)
-
-        # Make sure the user has specified either intensity or both power and waist
-        if intensity is None and (power is None or waist is None):
-            raise ValueError("Must specify either intensity or both power and waist")
-
-        # If the user specified intensity, use it
-        if intensity is not None:
-            self.intensity = intensity
-
-        # If the user specified power and waist, calculate the intensity
-        if power is not None and waist is not None:
-            self.intensity = self.calculate_intensity(power, waist)
-
-        if frequency is not None:
-            self.frequency = frequency
-        elif wavelength is not None:
-            self.wavelength = wavelength
-
+        super().__init__(frequency, wavelength, _ureg)
+        self._phi = phi
+        self._gamma = gamma
+        self._alpha = alpha
+        self._theta = theta
         self._power = power
+        self._target_saturation_power_multiple = target_saturation_power_multiple
         self._waist = waist
-        if polarization is None and direction_of_propagation is None:
-            direction_of_propagation = np.array([np.sin(phi), 0, np.cos(phi)])
-            polarization = np.array([-np.cos(gamma)*np.cos(phi), np.exp(1j*alpha)*np.sin(gamma), np.cos(gamma)*np.sin(phi)])
+        self._detuning = detuning
+        self._linewidth = linewidth
+        self._used_for = used_for
+    
+    # PROPERTIES
 
+    def set_attribute(self, attribute_name, value):
+        """
+        A method to safely set the attributes of the class instance,
+        ensuring the beam's validity after each setting.
 
-
-        assert (
-            np.abs(np.dot(polarization, direction_of_propagation)) < 1e-6
-        ), "Polarization must be perpendicular to wavevector"
-        self._epsilon = np.asarray(polarization) / np.linalg.norm(polarization)
-        self._kappa = np.asarray(direction_of_propagation) / np.linalg.norm(
-            direction_of_propagation
-        )
-
-        if detuning is not None:
-            self._detuning = detuning
-        else:
-            self._detuning = 0 * self._ureg("MHz")
-
-    @staticmethod
-    def calculate_intensity(power, waist):
-        # Use the formula for the intensity of a Gaussian beam:
-        # I = 2P/A
-        # P ... Power
-        # A ... Area of the beam
-        if isinstance(waist, list) and len(waist) == 2:
-            # Elliptic
-            area = np.pi * waist[0] * waist[1]
-        else:
-            # Circular
-            area = np.pi * waist**2
-        return 2 * power / area
+        Args:
+        attribute_name (str): The name of the attribute to change.
+        value: The value to set the attribute to.
+        """
+        try:
+            setattr(self, '_' + attribute_name, value)
+            self.beam_is_valid()
+        except ValueError as e:
+            print(f"An error occurred: {e}")
 
     @property
-    def detuning(self):
-        return self._detuning
-
-    @detuning.setter
-    @default_units("MHz")
-    def detuning(self, value):
-        self._detuning = value
-
-    @property
-    def frequency(self) -> pint.Quantity:
-        return (self._frequency - self._detuning).to("THz")
-
-    @frequency.setter
-    @default_units("THz")
-    def frequency(self, value: pint.Quantity):
-        self._frequency = value
+    def phi(self):
+        return self._phi
+    
+    @phi.setter
+    def phi(self, value):
+        self.set_attribute('phi', value)
 
     @property
-    def wavelength(self):
-        return self._ureg("c") / self._frequency
-
-    @wavelength.setter
-    def wavelength(self, value):
-        self._frequency = self._ureg("c") / value
-
-    @property
-    def field_amplitude(self):
-        return (self._field_amplitude).to("V/m")
-
-    @field_amplitude.setter
-    @default_units("V/m")
-    def field_amplitude(self, value):
-        self._field_amplitude = value
+    def gamma(self):
+        return self._gamma
+    
+    @gamma.setter
+    def gamma(self, value):
+        self.set_attribute('gamma', value)
 
     @property
-    def intensity(self):
-        return (self._field_amplitude**2 * self._ureg("c*epsilon_0") / 2).to(
-            "mW/mm^2"
-        )
+    def alpha(self):
+        return self._alpha
+    
+    @alpha.setter
+    def alpha(self, value):
+        self.set_attribute('alpha', value)
 
-    @intensity.setter
-    @default_units("W/cm^2")
-    def intensity(self, value):
-        self._field_amplitude = np.sqrt(2 * value / self._ureg("c*epsilon_0"))
+    @property
+    def theta(self):
+        return self._theta
+    
+    @theta.setter
+    def theta(self, value):
+        self.set_attribute('theta', value)
 
     @property
     def power(self):
         return (self._power).to("mW")
-
+    
     @power.setter
     @default_units("W")
     def power(self, value):
         self._power = value
-        if self.waist is not None:
-            self.intensity = self.calculate_intensity(value, self.waist)
+
+    @property
+    def target_saturation_power_multiple(self):
+        return self._target_saturation_power_multiple
+    
+    @target_saturation_power_multiple.setter
+    def target_saturation_power_multiple(self, value):
+        self._target_saturation_power_multiple = value
 
     @property
     def waist(self):
         return self._waist
-
+    
     @waist.setter
     @default_units("um")
     def waist(self, value):
         self._waist = value
-        if self.power is not None:
-            self.intensity = self.calculate_intensity(self.power, value)
+    
+    @property
+    def detuning(self):
+        return self._detuning
+    
+    @detuning.setter
+    @default_units("MHz")  
+    def detuning(self, value):
+        self._detuning = value
+
+    @property
+    def linewidth(self):
+        return self._linewidth
+    
+    @linewidth.setter
+    @default_units("Hz")
+    def linewidth(self, value):
+        self._linewidth = value
+
+    @property
+    def used_for(self):
+        return self._used_for
+    
+    @used_for.setter
+    def used_for(self, value):
+        self._used_for = value
+
+    # CALCULATED PROPERTIES
+
+    @property
+    def propagation_vector(self):
+        # TODO: Use the theta vector
+        return np.array([np.sin(self.phi), 0, np.cos(self.phi)])
+    
+    @property
+    def polarization_vector(self):
+        return np.array([-np.cos(self.gamma)*np.cos(self.phi), np.exp(1j*self.alpha)*np.sin(self.gamma), np.cos(self.gamma)*np.sin(self.phi)])
+
+    @property
+    def intensity(self):
+        # Elliptic Beam
+        if isinstance(self.waist, list) and len(self.waist) == 2:
+            area = np.pi * self.waist[0] * self.waist[1]
+        # Circular Beam
+        else:
+            area = np.pi * self.waist**2
+        return (2 * self.power / area).to("mW/mm^2")
 
     @property
     def wavevector(self):
-        wavevector = self._kappa * self.angular_frequency / self._ureg("c")
-        return wavevector
-
-    k = make_alias("wavevector")
-
+        kappa = np.asarray(self.propagation_vector) / np.linalg.norm(self.propagation_vector)
+        return kappa * self.angular_frequency / self._ureg("c")
+    
+    @property
+    def field_amplitude(self):
+        return (np.sqrt(2 * self.intensity / self._ureg("c*epsilon_0"))).to("V/m")
+    
+    @property
     def field(self):
-        return self._epsilon * self._field_amplitude
-
-    # def gradient(self):
-    #     return np.einsum('i,...j->...ij', 1j * self.wavevector, self.field())
-
+        epsilon = np.asarray(self.polarization_vector) / np.linalg.norm(self.polarization_vector)
+        return epsilon * self.field_amplitude
+    
+    @property
     def gradient(self):
-        return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field())
+        return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field)
+    
+    # METHODS
+
+    def beam_is_valid(self):
+        if np.abs(np.dot(self.polarization_vector, self.propagation_vector)) >= 1e-6:
+            raise ValueError("Invalid beam: Polarization is not perpendicular to wavevector.")
 
 
 class PlaneWaveElectricField(ElectricField):
@@ -264,15 +300,6 @@ class PlaneWaveElectricField(ElectricField):
     def gradient(self, x, y, z):
         # outer product
         return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field(x, y, z))
-
-    @property
-    def wavelength(self):
-        return (self._ureg("c") / self.frequency).to("nm")
-
-    @wavelength.setter
-    @default_units("nm")
-    def wavelength(self, value):
-        self.frequency = self._ureg("c") / value
 
     @property
     def k(self):
