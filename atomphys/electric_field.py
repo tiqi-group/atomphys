@@ -76,12 +76,12 @@ class GaussianBeam(ElectricField):
         self,
         frequency: pint.Quantity=None,
         wavelength: pint.Quantity=None,
-        phi: float=None,
-        gamma: float=None,
-        alpha: float=None,
-        theta: float=None,
+        phi: pint.Quantity=None,
+        gamma: pint.Quantity=None,
+        alpha: pint.Quantity=None,
+        theta: pint.Quantity=None,
         power: pint.Quantity=None,
-        target_saturation_power_multiple: float=None,
+        target_saturation_power_multiple: pint.Quantity=None,
         waist: float | list[float]=None,
         detuning: pint.Quantity=None,
         linewidth: pint.Quantity=None,
@@ -130,7 +130,7 @@ class GaussianBeam(ElectricField):
         """
         try:
             setattr(self, '_' + attribute_name, value)
-            self.beam_is_valid()
+            self._beam_is_valid()
         except ValueError as e:
             print(f"An error occurred: {e}")
 
@@ -257,9 +257,9 @@ class GaussianBeam(ElectricField):
     def gradient(self):
         return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field)
     
-    # METHODS
+    # PRIVATE METHODS
 
-    def beam_is_valid(self):
+    def _beam_is_valid(self):
         if np.abs(np.dot(self.polarization_vector, self.propagation_vector)) >= 1e-6:
             raise ValueError("Invalid beam: Polarization is not perpendicular to wavevector.")
 
