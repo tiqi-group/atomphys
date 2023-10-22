@@ -22,7 +22,6 @@ def ac_stark_shift(
 
     if wavelengths is None:
         omega_field = El_field.angular_frequency
-        print(omega_field)
     else:
         omega_field = np.pi * 2 * _ureg("c") / wavelengths
 

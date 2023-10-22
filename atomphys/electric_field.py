@@ -7,14 +7,15 @@
 import pint
 import numpy as np
 from numpy.typing import ArrayLike
-from .util import default_units, make_alias
+from .util import default_units
 
 
 class ElectricField:
-    def __init__(self, frequency: pint.Quantity = None, wavelength: pint.Quantity = None, _ureg=None) -> None:
+    def __init__(self, frequency: pint.Quantity = None, wavelength: pint.Quantity = None, detuning: pint.Quantity = 0, _ureg=None) -> None:
         self._ureg = pint.get_application_registry() if _ureg is None else _ureg
 
-        # Initialize frequency from given frequency or calculate it from given wavelength
+        # Initialize frequency from given frequency or calculate it from given wavelength and detuning
+        self._detuning = detuning
         if frequency is not None:
             self._frequency = frequency
         elif wavelength is not None:
@@ -23,8 +24,17 @@ class ElectricField:
             raise ValueError("Either frequency or wavelength must be provided.")
         
     @property
+    def detuning(self):
+        return self._detuning
+    
+    @detuning.setter
+    @default_units("MHz")  
+    def detuning(self, value):
+        self._detuning = value
+        
+    @property
     def frequency(self) -> pint.Quantity:
-        return self._frequency.to("THz")
+        return (self._frequency - self._detuning).to("THz")
 
     @frequency.setter
     @default_units("THz")
@@ -105,7 +115,7 @@ class GaussianBeam(ElectricField):
             _ureg: Unit registry
         """
 
-        super().__init__(frequency, wavelength, _ureg)
+        super().__init__(frequency, wavelength, detuning, _ureg)
         self._phi = phi
         self._gamma = gamma
         self._alpha = alpha
@@ -195,15 +205,6 @@ class GaussianBeam(ElectricField):
     @default_units("um")
     def waist(self, value):
         self._waist = value
-    
-    @property
-    def detuning(self):
-        return self._detuning
-    
-    @detuning.setter
-    @default_units("MHz")  
-    def detuning(self, value):
-        self._detuning = value
 
     @property
     def linewidth(self):
