@@ -223,11 +223,11 @@ class GaussianBeam(ElectricField):
     @property
     def propagation_vector(self):
         # TODO: Use the theta vector
-        return np.array([np.sin(self.phi), 0, np.cos(self.phi)])
+        return np.array([np.sin(self.phi.to('rad')), 0, np.cos(self.phi.to('rad'))])
     
     @property
     def polarization_vector(self):
-        return np.array([-np.cos(self.gamma)*np.cos(self.phi), np.exp(1j*self.alpha)*np.sin(self.gamma), np.cos(self.gamma)*np.sin(self.phi)])
+        return np.array([-np.cos(self.gamma.to('rad'))*np.cos(self.phi.to('rad')), np.exp(1j*self.alpha.to('rad'))*np.sin(self.gamma.to('rad')), np.cos(self.gamma.to('rad'))*np.sin(self.phi.to('rad'))])
 
     @property
     def intensity(self):
@@ -256,7 +256,7 @@ class GaussianBeam(ElectricField):
         return epsilon * self.field_amplitude
     
     def gradient(self):
-        return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field)
+        return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field())
     
     # PRIVATE METHODS
 
