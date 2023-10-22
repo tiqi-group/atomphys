@@ -146,7 +146,7 @@ class GaussianBeam(ElectricField):
 
     @property
     def phi(self):
-        return self._phi
+        return self._phi.to('rad')
     
     @phi.setter
     @default_units("rad")
@@ -155,7 +155,7 @@ class GaussianBeam(ElectricField):
 
     @property
     def gamma(self):
-        return self._gamma
+        return self._gamma.to('rad')
     
     @gamma.setter
     @default_units("rad")
@@ -164,7 +164,7 @@ class GaussianBeam(ElectricField):
 
     @property
     def alpha(self):
-        return self._alpha
+        return self._alpha.to('rad')
     
     @alpha.setter
     @default_units("rad")
@@ -173,7 +173,7 @@ class GaussianBeam(ElectricField):
 
     @property
     def theta(self):
-        return self._theta
+        return self._theta.to('rad')
     
     @theta.setter
     @default_units("rad")
@@ -199,7 +199,7 @@ class GaussianBeam(ElectricField):
 
     @property
     def waist(self):
-        return self._waist
+        return self._waist.to('um')
     
     @waist.setter
     @default_units("um")
@@ -208,7 +208,7 @@ class GaussianBeam(ElectricField):
 
     @property
     def linewidth(self):
-        return self._linewidth
+        return self._linewidth.to('Hz')
     
     @linewidth.setter
     @default_units("Hz")
