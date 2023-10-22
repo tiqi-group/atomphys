@@ -139,6 +139,7 @@ class GaussianBeam(ElectricField):
         return self._phi
     
     @phi.setter
+    @default_units("rad")
     def phi(self, value):
         self.set_attribute('phi', value)
 
@@ -147,6 +148,7 @@ class GaussianBeam(ElectricField):
         return self._gamma
     
     @gamma.setter
+    @default_units("rad")
     def gamma(self, value):
         self.set_attribute('gamma', value)
 
@@ -155,6 +157,7 @@ class GaussianBeam(ElectricField):
         return self._alpha
     
     @alpha.setter
+    @default_units("rad")
     def alpha(self, value):
         self.set_attribute('alpha', value)
 
@@ -163,6 +166,7 @@ class GaussianBeam(ElectricField):
         return self._theta
     
     @theta.setter
+    @default_units("rad")
     def theta(self, value):
         self.set_attribute('theta', value)
 
@@ -223,11 +227,16 @@ class GaussianBeam(ElectricField):
     @property
     def propagation_vector(self):
         # TODO: Use the theta vector
-        return np.array([np.sin(self.phi.to('rad')), 0, np.cos(self.phi.to('rad'))])
+        phi = self.phi.to('rad').m
+        # theta = self.theta.to('rad').m
+        return np.array([np.sin(phi), 0, np.cos(phi)])
     
     @property
     def polarization_vector(self):
-        return np.array([-np.cos(self.gamma.to('rad'))*np.cos(self.phi.to('rad')), np.exp(1j*self.alpha.to('rad'))*np.sin(self.gamma.to('rad')), np.cos(self.gamma.to('rad'))*np.sin(self.phi.to('rad'))])
+        phi = self.phi.to('rad').m
+        gamma = self.gamma.to('rad').m
+        alpha = self.alpha.to('rad').m
+        return np.array([-np.cos(gamma)*np.cos(phi), np.exp(1j*alpha)*np.sin(gamma), np.cos(gamma)*np.sin(phi)])
 
     @property
     def intensity(self):
