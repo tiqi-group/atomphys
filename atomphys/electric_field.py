@@ -248,12 +248,13 @@ class GaussianBeam(ElectricField):
     def field_amplitude(self):
         return (np.sqrt(2 * self.intensity / self._ureg("c*epsilon_0"))).to("V/m")
     
-    @property
+    # Methods
+    # TODO: Change them to properties
+    
     def field(self):
         epsilon = np.asarray(self.polarization_vector) / np.linalg.norm(self.polarization_vector)
         return epsilon * self.field_amplitude
     
-    @property
     def gradient(self):
         return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field)
     
