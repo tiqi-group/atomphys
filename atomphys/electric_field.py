@@ -199,10 +199,9 @@ class GaussianBeam(ElectricField):
 
     @property
     def waist(self):
-        return self._waist.to('um')
+        return self._waist
     
     @waist.setter
-    @default_units("um")
     def waist(self, value):
         self._waist = value
 
