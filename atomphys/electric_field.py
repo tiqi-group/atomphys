@@ -225,6 +225,15 @@ class GaussianBeam(ElectricField):
     # CALCULATED PROPERTIES
 
     @property
+    def area(self):
+        # Elliptic Beam
+        if isinstance(self.waist, list) and len(self.waist) == 2:
+            return np.pi * self.waist[0] * self.waist[1]
+        # Circular Beam
+        else:
+            return np.pi * self.waist**2
+
+    @property
     def propagation_vector(self):
         # TODO: Use the theta vector
         phi = self.phi.to('rad').m
@@ -240,13 +249,7 @@ class GaussianBeam(ElectricField):
 
     @property
     def intensity(self):
-        # Elliptic Beam
-        if isinstance(self.waist, list) and len(self.waist) == 2:
-            area = np.pi * self.waist[0] * self.waist[1]
-        # Circular Beam
-        else:
-            area = np.pi * self.waist**2
-        return (2 * self.power / area).to("mW/mm^2")
+        return (2 * self.power / self.area).to("mW/mm^2")
 
     @property
     def wavevector(self):
