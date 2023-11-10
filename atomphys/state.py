@@ -179,11 +179,11 @@ class State:
         transitions_to = self.transitions_to
         if len(transitions_to) == 0:
             return self._ureg("0 MHz")
-        return sum([tr.Gamma for tr in transitions_to.values()])
+        return sum([tr.Gamma for tr in transitions_to])
 
     @property
     def decay_branching_ratios(self) -> dict:
-        return {s: (tr.Gamma / self.Gamma).m for s, tr in self.transitions_to.items()}
+        return {tr: (tr.Gamma / self.Gamma).m for tr in self.transitions_to}
 
     @property
     def lifetime(self) -> pint.Quantity:
