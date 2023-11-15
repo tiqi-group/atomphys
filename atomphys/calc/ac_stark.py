@@ -59,9 +59,7 @@ def ac_stark_shift(
                     )
                 )
             except Exception as e:
-                print(
-                    f"Error encountered: {e}. Transition type might not be implemented."
-                )
+                pass
                 # Continue with the next operation or iteration here, if needed.
 
     for transition in state.transitions_to:
