@@ -55,10 +55,7 @@ class ElectricField:
         return shape, X
 
 
-# Change name to Gaussian Beam
-# Add elipticity
-# 
-class LaserField(ElectricField):
+class GaussianBeam(ElectricField):
     def __init__(
         self,
         polarization=None,
@@ -86,7 +83,7 @@ class LaserField(ElectricField):
             wavelength (pint.Quantity): Wavelength of the laser - One can provide instead frequency
             intensity (pint.Quantity): Intensity of the laser - One can provide instead power and waist
             power (pint.Quantity): Power of the laser - One can provide instead intensity
-            waist (pint.Quantity): Waist of the laser - One can provide instead intensity
+            waist (pint.Quantity): Waist of the laser (either single value or array of [waist_x, waist_y] - One can provide instead intensity
             detuning (pint.Quantity): Detuning of the laser: (its detuning in MHz not in 2*pi*MHz) - i.e. Δ = ν-ν0
             _ureg (pint.UnitRegistry): Unit registry
         """
@@ -135,8 +132,16 @@ class LaserField(ElectricField):
     @staticmethod
     def calculate_intensity(power, waist):
         # Use the formula for the intensity of a Gaussian beam:
-        # I = 2P/(pi*w^2)
-        return 2 * power / (np.pi * waist**2)
+        # I = 2P/A
+        # P ... Power
+        # A ... Area of the beam
+        if isinstance(waist, list) and len(waist) == 2:
+            # Elliptic
+            area = np.pi * waist[0] * waist[1]
+        else:
+            # Circular
+            area = np.pi * waist**2
+        return 2 * power / area
 
     @property
     def detuning(self):

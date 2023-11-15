@@ -14,7 +14,7 @@
 import pint
 from .matrix_element import dipole_matrix_element, quadrupole_matrix_element
 import numpy as np
-from ..electric_field import LaserField
+from ..electric_field import ElectricField
 from ..transition import Transition, TransitionType
 
 
@@ -83,7 +83,7 @@ def quadrupole_Rabi_Frequency(
 
 
 def Rabi_Frequency(
-    E_field: LaserField,
+    E_field: ElectricField,
     transition: Transition,
     mJ_i: float,
     mJ_f: float,
