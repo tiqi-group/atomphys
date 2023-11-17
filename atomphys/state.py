@@ -188,7 +188,7 @@ class State:
     @property
     def lifetime(self) -> pint.Quantity:
         try:
-            return (1 / (2 * pi * self.Gamma)).to('seconds')
+            return (self.A).to('seconds')
         except ZeroDivisionError:
             return self._ureg("inf seconds")
 
