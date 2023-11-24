@@ -126,7 +126,7 @@ class GaussianBeam(ElectricField):
     def from_json(cls, json_data: dict, _ureg: pint.UnitRegistry):
 
         def parse_unit_value(json_data: dict, value_name: str):
-            return json_data[value_name]["value"] * _ureg(json_data[value_name]["units"])
+            return float(json_data[value_name]["value"]) * _ureg(json_data[value_name]["units"])
         
         if 'frequency' in json_data:
             frequency = parse_unit_value(json_data, 'frequency')
@@ -138,10 +138,10 @@ class GaussianBeam(ElectricField):
         theta = parse_unit_value(json_data, 'theta')
         power = parse_unit_value(json_data, 'power')
         if 'value' in json_data['waist']:
-            waist = parse_unit_value('waist')
+            waist = parse_unit_value(json_data, 'waist')
         else:
             waist = [parse_unit_value(json_data['waist'], 'wx'), parse_unit_value(json_data['waist'], 'wy')]
-        detuning = parse_unit_value('detuning')
+        detuning = parse_unit_value(json_data, 'detuning')
 
         return cls(frequency, wavelength, phi, gamma, alpha, theta, power, waist, detuning)
     
