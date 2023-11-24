@@ -82,6 +82,7 @@ class ElectricField:
 
 
 class GaussianBeam(ElectricField):
+
     def __init__(
         self,
         frequency: pint.Quantity=None,
@@ -91,11 +92,8 @@ class GaussianBeam(ElectricField):
         alpha: pint.Quantity=None,
         theta: pint.Quantity=None,
         power: pint.Quantity=None,
-        target_saturation_power_multiple: pint.Quantity=None,
         waist: float | list[float]=None,
         detuning: pint.Quantity=None,
-        linewidth: pint.Quantity=None,
-        used_for: list[str]=None,
         _ureg: pint.UnitRegistry=None,
     ):
         """
@@ -107,11 +105,8 @@ class GaussianBeam(ElectricField):
             alpha: Phase of the polarization vector (Radians). For Left or Right circularily polarised state use +- pi/2.
             theta: Angle of the laser beam to fully define the direction in 3D.
             power: Power of the laser - One can provide instead intensity.
-            target_saturation_power_multiple: Multiple of the saturation power that the laser is targeting.
             waist: Waist of the laser (either single value or array of [waist_x, waist_y].
             detuning: Detuning of the laser: (its detuning in MHz not in 2*pi*MHz)
-            linewidth: Linewidth of the laser: (its linewidth in Hz not in 2*pi*Hz)
-            used_for: List of strings describing the purpose of the laser.
             _ureg: Unit registry
         """
 
@@ -121,11 +116,59 @@ class GaussianBeam(ElectricField):
         self._alpha = alpha
         self._theta = theta
         self._power = power
-        self._target_saturation_power_multiple = target_saturation_power_multiple
         self._waist = waist
         self._detuning = detuning
-        self._linewidth = linewidth
-        self._used_for = used_for
+
+
+    # JSON METHODS
+
+    @classmethod
+    def from_json(cls, json_data: dict, _ureg: pint.UnitRegistry):
+
+        def parse_unit_value(json_data: dict, value_name: str):
+            return json_data[value_name]["value"] * _ureg(json_data[value_name]["units"])
+        
+        if 'frequency' in json_data:
+            frequency = parse_unit_value(json_data, 'frequency')
+        elif 'wavelength' in json_data:
+            wavelength = parse_unit_value(json_data, 'wavelength')
+        phi = parse_unit_value(json_data, 'phi')
+        gamma = parse_unit_value(json_data, 'gamma')
+        alpha = parse_unit_value(json_data, 'alpha')
+        theta = parse_unit_value(json_data, 'theta')
+        power = parse_unit_value(json_data, 'power')
+        if 'value' in json_data['waist']:
+            waist = parse_unit_value('waist')
+        else:
+            waist = [parse_unit_value(json_data['waist'], 'wx'), parse_unit_value(json_data['waist'], 'wy')]
+        detuning = parse_unit_value('detuning')
+
+        return cls(frequency, wavelength, phi, gamma, alpha, theta, power, waist, detuning)
+    
+
+    def to_json(self):
+        def serialize_unit_value(quantity):
+            return {'value': quantity.magnitude, 'units': str(quantity.units)}
+
+        data = {
+            'wavelength': serialize_unit_value(self.wavelength),
+            'phi': serialize_unit_value(self.phi),
+            'gamma': serialize_unit_value(self.gamma),
+            'alpha': serialize_unit_value(self.alpha),
+            'theta': serialize_unit_value(self.theta),
+            'power': serialize_unit_value(self.power),
+            'detuning': serialize_unit_value(self.detuning)
+        }
+        if isinstance(self.waist, list):
+            data['waist'] = {
+                'wx': serialize_unit_value(self.waist[0]),
+                'wy': serialize_unit_value(self.waist[1])
+            }
+        else:
+            data['waist'] = serialize_unit_value(self.waist)
+
+        return data
+
     
     # PROPERTIES
 
@@ -190,37 +233,12 @@ class GaussianBeam(ElectricField):
         self._power = value
 
     @property
-    def target_saturation_power_multiple(self):
-        return self._target_saturation_power_multiple
-    
-    @target_saturation_power_multiple.setter
-    def target_saturation_power_multiple(self, value):
-        self._target_saturation_power_multiple = value
-
-    @property
     def waist(self):
         return self._waist
     
     @waist.setter
     def waist(self, value):
         self._waist = value
-
-    @property
-    def linewidth(self):
-        return self._linewidth.to('Hz')
-    
-    @linewidth.setter
-    @default_units("Hz")
-    def linewidth(self, value):
-        self._linewidth = value
-
-    @property
-    def used_for(self):
-        return self._used_for
-    
-    @used_for.setter
-    def used_for(self, value):
-        self._used_for = value
 
     # CALCULATED PROPERTIES
 
@@ -261,7 +279,7 @@ class GaussianBeam(ElectricField):
         return (np.sqrt(2 * self.intensity / self._ureg("c*epsilon_0"))).to("V/m")
     
     # Methods
-    # TODO: Change them to properties
+    # TODO: Change them to properties?
     
     def field(self):
         epsilon = np.asarray(self.polarization_vector) / np.linalg.norm(self.polarization_vector)
