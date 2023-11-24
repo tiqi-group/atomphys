@@ -130,7 +130,9 @@ class GaussianBeam(ElectricField):
         
         if 'frequency' in json_data:
             frequency = parse_unit_value(json_data, 'frequency')
+            wavelength = None
         elif 'wavelength' in json_data:
+            frequency = None
             wavelength = parse_unit_value(json_data, 'wavelength')
         phi = parse_unit_value(json_data, 'phi')
         gamma = parse_unit_value(json_data, 'gamma')
