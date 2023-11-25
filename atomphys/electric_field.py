@@ -154,10 +154,10 @@ class GaussianBeam(ElectricField):
 
         data = {
             'wavelength': serialize_unit_value(self.wavelength),
-            'phi': serialize_unit_value(self.phi),
-            'gamma': serialize_unit_value(self.gamma),
-            'alpha': serialize_unit_value(self.alpha),
-            'theta': serialize_unit_value(self.theta),
+            'phi': serialize_unit_value(self.phi.to('deg')),
+            'gamma': serialize_unit_value(self.gamma.to('deg')),
+            'alpha': serialize_unit_value(self.alpha.to('deg')),
+            'theta': serialize_unit_value(self.theta.to('deg')),
             'power': serialize_unit_value(self.power),
             'detuning': serialize_unit_value(self.detuning)
         }
