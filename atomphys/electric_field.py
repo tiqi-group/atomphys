@@ -227,7 +227,18 @@ class GaussianBeam(ElectricField):
 
     @property
     def power(self):
-        return (self._power).to("mW")
+        power_in_watts = self._power.to("W").magnitude
+
+        if power_in_watts >= 1:
+            return self._power.to("W")
+        elif power_in_watts >= 1e-3:
+            return self._power.to("mW")
+        elif power_in_watts >= 1e-6:
+            return self._power.to("uW")
+        elif power_in_watts >= 1e-9:
+            return self._power.to("nW")
+        else:
+            return self._power.to("pW")
     
     @power.setter
     @default_units("W")
