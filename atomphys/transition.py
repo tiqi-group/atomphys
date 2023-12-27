@@ -58,7 +58,7 @@ class Transition:
 
     @property
     def k(self) -> pint.Quantity:
-        return (2 * pi / self.wavelength).to("1/m")
+        return (self._ureg("2*pi") * 1 / self.wavelength).to("1/m")
 
     @property
     def frequency(self) -> pint.Quantity:

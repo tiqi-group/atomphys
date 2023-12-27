@@ -56,7 +56,7 @@ def dipole_Rabi_Frequency(
     return (np.dot(E_field, d) * _ureg("e/hbar")).to("MHz")
 
 
- def quadrupole_Rabi_Frequency(
+def quadrupole_Rabi_Frequency(
     E_gradient: pint.Quantity,
     A: pint.Quantity,
     k: pint.Quantity,
@@ -108,10 +108,6 @@ def Rabi_Frequency(
         Rabi frequency for a transition [2pi*MHz]
     """
     _ureg = E_field._ureg if _ureg is None else _ureg
-    A = transition.A
-    k = transition.k
-    J_i = transition.state_i.quantum_numbers['J']
-    J_f = transition.state_f.quantum_numbers['J']
     if transition.type == TransitionType.E1:
         return dipole_Rabi_Frequency(
             E_field.field(),

@@ -19,7 +19,7 @@ class Atom:
         _copy._reset_unit_registry(self._ureg)
         return _copy
 
-    def add_state(self, s: State):
+    def add_state(self, s):
         """
         Add state to the graph associated with the Atom
 
@@ -33,7 +33,7 @@ class Atom:
         s._ureg = self._ureg
         self._graph.add_node(s)
 
-    def remove_state(self, s: State):
+    def remove_state(self, s):
         """
         Remove state and all associated transitions from the graph associated with the Atom
 
@@ -45,7 +45,7 @@ class Atom:
 
         self._graph.remove_node(s)
 
-    def add_states(self, states: list[State]):
+    def add_states(self, states):
         """
         Add states to the graph associated with the Atom
 
@@ -56,7 +56,7 @@ class Atom:
         for s in states:
             self.add_state(s)
 
-    def remove_states(self, states: list[State]):
+    def remove_states(self, states):
         """
         Removes states and all associated transitions from the graph associated with the Atom
 
@@ -67,7 +67,7 @@ class Atom:
         for s in states:
             self.remove_state(s)
 
-    def remove_all_but_states(self, states: list[State], copy: bool = False):
+    def remove_all_but_states(self, states, copy: bool = False):
         """
         Removes all states and all associated transitions from the graph associated with the Atom except the ones in the list
 
@@ -211,7 +211,7 @@ class Atom:
         return atom
 
     @property
-    def states(self) -> list[State]:
+    def states(self):
         """
         Returns a list of states in the Atom
 
@@ -221,7 +221,7 @@ class Atom:
         return list(self._graph.nodes)
 
     @property
-    def isolated_states(self) -> list[State]:
+    def isolated_states(self):
         """
         Returns a list of states without transitions
 
@@ -355,7 +355,7 @@ class Atom:
         """
         return list(nx.get_edge_attributes(self._graph, "transition").values())
 
-    def transitions_from(self, state: State) -> list[Transition]:
+    def transitions_from(self, state) -> list[Transition]:
         """
         Retrieve all transitions from a given state
 
@@ -373,7 +373,7 @@ class Atom:
         """
         return [edge["transition"] for node, edge in self._graph.succ[state].items()]
 
-    def transitions_to(self, state: State) -> list[Transition]:
+    def transitions_to(self, state) -> list[Transition]:
         """
         Retrieve all transitions to a given state
 
@@ -392,7 +392,7 @@ class Atom:
 
         return [edge["transition"] for node, edge in self._graph.pred[state].items()]
 
-    def transition_between(self, state_i: State, state_f: State) -> Transition:
+    def transition_between(self, state_i, state_f) -> Transition:
         """
         Retrieve a transition between two states
 

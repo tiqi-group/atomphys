@@ -122,7 +122,6 @@ class State:
         return pattern.lower() in self.name.lower()
 
     @property
-    def atom(self) -> "Atom":
     def atom(self):
         return self._atom
 

@@ -126,9 +126,8 @@ class GaussianBeam(ElectricField):
             self.intensity = intensity
 
         # If the user specified power and waist, calculate the intensity
-        waist2 = waist if waist2 is None else waist2
         if power is not None and waist is not None:
-            self.intensity = self.calculate_intensity(power, waist, waist2)
+            self.intensity = self.calculate_intensity(power, waist)
 
         if frequency is not None:
             self.frequency = frequency
@@ -140,8 +139,6 @@ class GaussianBeam(ElectricField):
         if polarization is None and direction_of_propagation is None:
             direction_of_propagation = np.array([np.sin(phi), 0, np.cos(phi)])
             polarization = np.array([-np.cos(gamma)*np.cos(phi), np.exp(1j*alpha)*np.sin(gamma), np.cos(gamma)*np.sin(phi)])
-
-
 
         assert (
             np.abs(np.dot(polarization, direction_of_propagation)) < 1e-6
@@ -157,17 +154,13 @@ class GaussianBeam(ElectricField):
             self._detuning = 0 * self._ureg("MHz")
 
     @staticmethod
-    def calculate_intensity(power, waist, waist2):
+    def calculate_intensity(power, waist):
         # Use the formula for the intensity of a Gaussian beam:
         # I = 2P/A
         # P ... Power
         # A ... Area of the beam
-        if isinstance(waist, list) and len(waist) == 2:
-            # Elliptic
-            area = np.pi * waist[0] * waist[1]
-        else:
-            # Circular
-            area = np.pi * waist**2
+        # Circular
+        area = np.pi * waist**2
         return 2 * power / area
 
     @property
@@ -185,8 +178,6 @@ class GaussianBeam(ElectricField):
     def frequency(self) -> pint.Quantity:
         return (self._frequency - self._detuning).to("THz")
 
-        return (self._frequency - self._detuning).to("THz")
-
     @frequency.setter
     @default_units("THz")
     @default_units("THz")
@@ -196,8 +187,6 @@ class GaussianBeam(ElectricField):
 
     @property
     def wavelength(self):
-        return self._ureg("c") / self._frequency
-
         return self._ureg("c") / self._frequency
 
     @wavelength.setter
@@ -228,8 +217,6 @@ class GaussianBeam(ElectricField):
     def power(self):
         return (self._power).to("mW")
 
-        return (self._power).to("mW")
-
     @power.setter
     @default_units("W")
     @default_units("W")
@@ -249,7 +236,7 @@ class GaussianBeam(ElectricField):
     def waist(self, value):
         self._waist = value
         if self.power is not None:
-            self.intensity = self.calculate_intensity(self.power, value, self._waist2)
+            self.intensity = self.calculate_intensity(self.power, value)
 
     @property
     def wavevector(self):
@@ -258,14 +245,9 @@ class GaussianBeam(ElectricField):
 
     k = make_alias("wavevector")
 
-    def field(self):
+    def field(self, x=0, y=0, z=0):
         return self._epsilon * self._field_amplitude
 
-    # def gradient(self):
-    #     return np.einsum('i,...j->...ij', 1j * self.wavevector, self.field())
-
-    def gradient(self):
-        return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field())
     def gradient(self, x=0, y=0, z=0):
         return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field(x, y, z))
 
@@ -307,12 +289,9 @@ class PlaneWaveElectricField(ElectricField):
     def gradient(self, x=0, y=0, z=0):
         # outer product
         return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field(x, y, z))
-        return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field(x, y, z))
 
     @property
     def wavelength(self):
-        return (self._ureg("c") / self.frequency).to("nm")
-
         return (self._ureg("c") / self.frequency).to("nm")
 
     @wavelength.setter
@@ -324,7 +303,6 @@ class PlaneWaveElectricField(ElectricField):
 
     @property
     def k(self):
-        return (self._kappa / self.wavelength).to("1/nm") * self._ureg("2*pi")
         return (self._kappa / self.wavelength).to("1/nm") * self._ureg("2*pi")
 
     @property
