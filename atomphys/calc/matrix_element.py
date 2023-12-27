@@ -11,15 +11,14 @@
 # I took j' to be the lower level states, as it agrees with other sources and makes sense intuitively
 # -> it increases spontaneous decay rate the more possibilities of decays to the lower states there are.
 
-
+import numpy as np
 import pint
 from sympy.physics.wigner import wigner_3j as w3j
 from .util import spherical_basis_second_rank_tensor, spherical_basis_vector
 
 
 def reduced_dipole_matrix_element(
-    A: pint.Quantity, k: pint.Quantity, J_f: float, _ureg: pint.UnitRegistry
-):
+        A: pint.Quantity, k: pint.Quantity, J_f: float, _ureg: pint.UnitRegistry):
     """
     Args:
         A: Einstein coefficient [1/s]
@@ -85,6 +84,7 @@ def reduced_electric_quadrupole_matrix_element(
     return _ureg("e") * reduced_quadrupole_matrix_element(A, k, J_f, _ureg)
 
 
+
 def dipole_matrix_element(
     A: pint.Quantity,
     k: pint.Quantity,
@@ -95,6 +95,7 @@ def dipole_matrix_element(
     _ureg: pint.UnitRegistry,
 ):
     """
+    Dipole Matrix Element is reduced dipole matrix element decorated with clebsh gordan coefficients (wigner 3j sybol),
     Dipole Matrix Element is reduced dipole matrix element decorated with clebsh gordan coefficients (wigner 3j sybol),
     hence expressing the coupling between different magnetic sublevels.
 
@@ -114,7 +115,7 @@ def dipole_matrix_element(
     dme = 0 * _ureg("a0")
     d = reduced_dipole_matrix_element(A, k, J_f, _ureg)
     for q in range(-1, 2):
-        w3j_coeff = w3j(J_f, 1, J_i, -mJ_f, q, mJ_i)
+        w3j_coeff = float(w3j(J_f, 1, J_i, -mJ_f, q, mJ_i))
         dme += w3j_coeff * spherical_basis_vector(q) * d
     return dme.to("a0").magnitude * _ureg("a0")
 
@@ -182,6 +183,7 @@ def electric_dipole_matrix_element(
     return _ureg("e") * dipole_matrix_element(A, k, J_i, J_f, mJ_i, mJ_f, _ureg)
 
 
+
 def electric_quadrupole_matrix_element(
     A: pint.Quantity,
     k: pint.Quantity,
@@ -202,6 +204,7 @@ def electric_quadrupole_matrix_element(
         mJ_i: Magnetic quantum number of the lower state
         mJ_f: Magnetic quantum number of the upper state
         _ureg: Unit registry
+
 
     Returns:
         Electric quadrupole matrix element [e a0]

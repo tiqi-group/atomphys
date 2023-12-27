@@ -6,7 +6,7 @@ variables:
 lint_autopep8:
   image: $TIQI_PODMAN_IMAGES_URL/python:3.10
   tags:
-    - podman-nosid # ISG managed machine, subuid and subgid entries not configured
+    - podman
   script:
     - poetry install
     - poetry run autopep8 --diff --recursive --exclude _*.py --exit-code atomphys/
@@ -14,7 +14,15 @@ lint_autopep8:
 lint_flake8:
   image: $TIQI_PODMAN_IMAGES_URL/python:3.10
   tags:
-    - podman-nosid # ISG managed machine, subuid and subgid entries not configured
+    - podman
   script:
     - poetry install
     - poetry run flake8 --config setup.cfg atomphys/
+
+test:
+  image: $TIQI_PODMAN_IMAGES_URL/python:3.10
+  tags:
+    - podman
+  script:
+    - poetry install
+    - poetry run pytest tests/

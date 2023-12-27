@@ -7,13 +7,15 @@
 import pint
 import numpy as np
 from numpy.typing import ArrayLike
-from .util import default_units, make_alias
+
+from .util import default_units, set_default_units, make_alias, make_alias_with_setter
 
 
 class ElectricField:
-    def __init__(self, frequency: pint.Quantity, _ureg=None) -> None:
+    def __init__(self, frequency: pint.Quantity, E0: pint.Quantity, _ureg=None) -> None:
         self._ureg = pint.get_application_registry() if _ureg is None else _ureg
         self._frequency = frequency
+        self._field_amplitude = set_default_units(E0, "V/m", self._ureg)
 
     @property
     def frequency(self) -> pint.Quantity:
@@ -33,6 +35,30 @@ class ElectricField:
     def angular_frequency(self, value: pint.Quantity):
         self.frequency = value / self._ureg("2*pi")
 
+    @property
+    def field_amplitude(self):
+        return (self._field_amplitude).to("V/m")
+
+    @field_amplitude.setter
+    @default_units("V/m")
+    def field_amplitude(self, value):
+        self._field_amplitude = value
+
+    @property
+    def intensity(self):
+        return (self._field_amplitude**2 * self._ureg("c*epsilon_0") / 2).to("mW/cm^2")
+
+    @intensity.setter
+    @default_units("W/cm^2")
+    def intensity(self, value):
+        self._field_amplitude = np.sqrt(2 * value / self._ureg("c*epsilon_0"))
+
+    E0 = make_alias_with_setter("_field_amplitude")
+    nu = make_alias_with_setter("frequency")
+    ν = make_alias_with_setter("frequency")
+    ω = make_alias_with_setter("angular_frequency")
+    omega = make_alias_with_setter("angular_frequency")
+
     def field(self, x, y, z):
         raise NotImplementedError
 
@@ -46,8 +72,8 @@ class ElectricField:
             raise ValueError("Can only sum fields at the same frequency")
         return SumElectricField(self, other)
 
-    @staticmethod
-    def _ravel_coords(*args):
+    def _ravel_coords(self, *args):
+        args = tuple(map(lambda _x: set_default_units(_x, "m", self._ureg), args))
         args = np.broadcast_arrays(*args)
         shape = args[0].shape
         args = list(map(np.ravel, args))
@@ -89,7 +115,7 @@ class GaussianBeam(ElectricField):
         """
 
         # Call the ElectricField constructor
-        super().__init__(frequency, _ureg)
+        super().__init__(frequency, E0=0, _ureg=_ureg)
 
         # Make sure the user has specified either intensity or both power and waist
         if intensity is None and (power is None or waist is None):
@@ -100,8 +126,9 @@ class GaussianBeam(ElectricField):
             self.intensity = intensity
 
         # If the user specified power and waist, calculate the intensity
+        waist2 = waist if waist2 is None else waist2
         if power is not None and waist is not None:
-            self.intensity = self.calculate_intensity(power, waist)
+            self.intensity = self.calculate_intensity(power, waist, waist2)
 
         if frequency is not None:
             self.frequency = frequency
@@ -130,7 +157,7 @@ class GaussianBeam(ElectricField):
             self._detuning = 0 * self._ureg("MHz")
 
     @staticmethod
-    def calculate_intensity(power, waist):
+    def calculate_intensity(power, waist, waist2):
         # Use the formula for the intensity of a Gaussian beam:
         # I = 2P/A
         # P ... Power
@@ -147,7 +174,9 @@ class GaussianBeam(ElectricField):
     def detuning(self):
         return self._detuning
 
+
     @detuning.setter
+    @default_units("MHz")
     @default_units("MHz")
     def detuning(self, value):
         self._detuning = value
@@ -156,13 +185,19 @@ class GaussianBeam(ElectricField):
     def frequency(self) -> pint.Quantity:
         return (self._frequency - self._detuning).to("THz")
 
+        return (self._frequency - self._detuning).to("THz")
+
     @frequency.setter
+    @default_units("THz")
     @default_units("THz")
     def frequency(self, value: pint.Quantity):
         self._frequency = value
 
+
     @property
     def wavelength(self):
+        return self._ureg("c") / self._frequency
+
         return self._ureg("c") / self._frequency
 
     @wavelength.setter
@@ -193,7 +228,10 @@ class GaussianBeam(ElectricField):
     def power(self):
         return (self._power).to("mW")
 
+        return (self._power).to("mW")
+
     @power.setter
+    @default_units("W")
     @default_units("W")
     def power(self, value):
         self._power = value
@@ -204,12 +242,14 @@ class GaussianBeam(ElectricField):
     def waist(self):
         return self._waist
 
+
     @waist.setter
+    @default_units("um")
     @default_units("um")
     def waist(self, value):
         self._waist = value
         if self.power is not None:
-            self.intensity = self.calculate_intensity(self.power, value)
+            self.intensity = self.calculate_intensity(self.power, value, self._waist2)
 
     @property
     def wavevector(self):
@@ -226,6 +266,8 @@ class GaussianBeam(ElectricField):
 
     def gradient(self):
         return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field())
+    def gradient(self, x=0, y=0, z=0):
+        return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field(x, y, z))
 
 
 class PlaneWaveElectricField(ElectricField):
@@ -247,13 +289,14 @@ class PlaneWaveElectricField(ElectricField):
 
     def _phase(self, X):
         xk = (np.dot(X, self.k).to("")).magnitude[0]
+        xk = (np.dot(X, self.k).to("")).magnitude[0]
         return np.exp(1j * xk)
 
-    def phase(self, x, y, z):
+    def phase(self, x=0, y=0, z=0):
         shape, X = self._ravel_coords(x, y, z)
         return self._phase(X).reshape(shape)
 
-    def field(self, x, y, z):
+    def field(self, x=0, y=0, z=0):
         shape, X = self._ravel_coords(x, y, z)
         return (
             self._epsilon.reshape((1,) * len(shape) + (-1,))
@@ -261,12 +304,15 @@ class PlaneWaveElectricField(ElectricField):
             * self._phase(X).reshape(shape + (1,))
         )
 
-    def gradient(self, x, y, z):
+    def gradient(self, x=0, y=0, z=0):
         # outer product
+        return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field(x, y, z))
         return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field(x, y, z))
 
     @property
     def wavelength(self):
+        return (self._ureg("c") / self.frequency).to("nm")
+
         return (self._ureg("c") / self.frequency).to("nm")
 
     @wavelength.setter
@@ -274,13 +320,17 @@ class PlaneWaveElectricField(ElectricField):
     def wavelength(self, value):
         self.frequency = self._ureg("c") / value
 
+        self.frequency = self._ureg("c") / value
+
     @property
     def k(self):
+        return (self._kappa / self.wavelength).to("1/nm") * self._ureg("2*pi")
         return (self._kappa / self.wavelength).to("1/nm") * self._ureg("2*pi")
 
     @property
     def polarization(self):
         return self._epsilon
+
 
     @polarization.setter
     def polarization(self, value):
@@ -293,8 +343,8 @@ class SumElectricField(ElectricField):
         self._field_a = field_a
         self._field_b = field_b
 
-    def field(self, x, y, z):
+    def field(self, x=0, y=0, z=0):
         return self._field_a.field(x, y, z) + self._field_b.field(x, y, z)
 
-    def gradient(self, x, y, z):
+    def gradient(self, x=0, y=0, z=0):
         return self._field_a.gradient(x, y, z) + self._field_b.gradient(x, y, z)

@@ -3,16 +3,21 @@
 #
 # Created: 13/2023
 # Author: Carmelo Mordini <cmordini@phys.ethz.ch> & Wojciech Adamczyk <wadamczyk@phys.ethz.ch>
+# Author: Carmelo Mordini <cmordini@phys.ethz.ch> & Wojciech Adamczyk <wadamczyk@phys.ethz.ch>
 #
 # Reference for this calculation is James 1998: Quantum dynamics of cold trappedions, with application to quantum computation
 # https://arxiv.org/abs/quant-ph/9702053
+# Also very usefull whilst coding this up was
 # Also very usefull whilst coding this up was
 # -> PhD Thesis of Lindenfelser, Frieder from 2017 (ETH Zürich) - Trapped Ion Quantum Informaiton Group
 # -> Master Thesis of Beck, Gillenhall from 2020 (ETH Zürich) - Trapped Ion Quantum Informaiton Group
 
 
 import pint
-from .matrix_element import dipole_matrix_element, quadrupole_matrix_element
+from .matrix_element import (
+    dipole_matrix_element, quadrupole_matrix_element,
+    reduced_dipole_matrix_element, w3j
+)
 import numpy as np
 from ..electric_field import ElectricField
 from ..transition import Transition, TransitionType
@@ -41,6 +46,7 @@ def dipole_Rabi_Frequency(
         mJ_f: Magnetic quantum number of the upper state
         _ureg: Unit registry
 
+
     Returns:
         Rabi frequency for a dipole transition [2pi*MHz]
     """
@@ -50,7 +56,7 @@ def dipole_Rabi_Frequency(
     return (np.dot(E_field, d) * _ureg("e/hbar")).to("MHz")
 
 
-def quadrupole_Rabi_Frequency(
+ def quadrupole_Rabi_Frequency(
     E_gradient: pint.Quantity,
     A: pint.Quantity,
     k: pint.Quantity,
@@ -59,7 +65,7 @@ def quadrupole_Rabi_Frequency(
     mJ_i: float,
     mJ_f: float,
     _ureg: pint.UnitRegistry,
-):
+):   
     """
     Funciton will only work for a quadrupole transitions
 
@@ -99,8 +105,13 @@ def Rabi_Frequency(
 
     Returns:
         Rabi frequency for a transition [2pi*MHz]
+        Rabi frequency for a transition [2pi*MHz]
     """
-
+    _ureg = E_field._ureg if _ureg is None else _ureg
+    A = transition.A
+    k = transition.k
+    J_i = transition.state_i.quantum_numbers['J']
+    J_f = transition.state_f.quantum_numbers['J']
     if transition.type == TransitionType.E1:
         return dipole_Rabi_Frequency(
             E_field.field(),

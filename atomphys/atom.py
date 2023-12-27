@@ -3,7 +3,6 @@ import networkx as nx
 import pint
 from .transition import Transition
 from .util import default_units, set_default_units
-from .state import State
 
 
 class Atom:
@@ -11,20 +10,21 @@ class Atom:
         self.name = name
         self._graph = nx.DiGraph()
         self._ureg = pint.get_application_registry() if _ureg is None else _ureg
-        self._ureg.define('_2pi = 2 * pi')
 
     def __repr__(self) -> str:
         return f"Atom({self.name} {len(self.states)} states {len(self.transitions)} transitions)"
 
     def copy(self):
-        return deepcopy(self)
+        _copy = deepcopy(self)
+        _copy._reset_unit_registry(self._ureg)
+        return _copy
 
     def add_state(self, s: State):
         """
-            Add state to the graph associated with the Atom
+        Add state to the graph associated with the Atom
 
-            Args:
-                s (State): State object to add to the Atom
+        Args:
+            s (State): State object to add to the Atom
         """
         if s in self.states:
             raise ValueError(f"State {s} already in atom")
@@ -35,10 +35,10 @@ class Atom:
 
     def remove_state(self, s: State):
         """
-            Remove state and all associated transitions from the graph associated with the Atom
+        Remove state and all associated transitions from the graph associated with the Atom
 
-            Args:
-                s (State): State object to remove from the Atom
+        Args:
+            s (State): State object to remove from the Atom
         """
         if s not in self.states:
             raise ValueError(f"State {s} not in atom")
@@ -47,10 +47,10 @@ class Atom:
 
     def add_states(self, states: list[State]):
         """
-            Add states to the graph associated with the Atom
+        Add states to the graph associated with the Atom
 
-            Args:
-                states (list[State]): List of State objects to add to the Atom
+        Args:
+            states (list[State]): List of State objects to add to the Atom
         """
 
         for s in states:
@@ -195,14 +195,14 @@ class Atom:
         if remove_isolated:
             atom.remove_isolated(copy=False)
         return atom
-    
+
     def remove_transitions_above_wavelength(self, wavelength: pint.Quantity, copy=True):
         atom = self.copy() if copy else self
         for t in atom.transitions:
             if t.wavelength > wavelength:
                 atom.remove_transition(t)
         return atom
-    
+
     def remove_transitions_below_wavelength(self, wavelength: pint.Quantity, copy=True):
         atom = self.copy() if copy else self
         for t in atom.transitions:
@@ -276,7 +276,7 @@ class Atom:
         except StopIteration:
             return None
 
-    @default_units('Ry')
+    @default_units("Ry")
     def get_state_by_energy(self, energy: pint.Quantity):
         """
         Retrieves a state from the Atom by parsing energy.
@@ -339,7 +339,7 @@ class Atom:
         matching_states = self._match_term(key)
         if len(matching_states) == 0:
             return None
-        energy = set_default_units(energy, 'Ry', self._ureg)
+        energy = set_default_units(energy, "Ry", self._ureg)
         return min(matching_states, key=lambda state: abs(state.energy - energy))
 
     @property
@@ -353,7 +353,7 @@ class Atom:
         Returns:
             list[Transition]: A list of all transitions in the Atom.
         """
-        return list(nx.get_edge_attributes(self._graph, 'transition').values())
+        return list(nx.get_edge_attributes(self._graph, "transition").values())
 
     def transitions_from(self, state: State) -> list[Transition]:
         """
@@ -371,7 +371,7 @@ class Atom:
         Raises:
             KeyError: If the given state is not in the Atom.
         """
-        return [edge['transition'] for node, edge in self._graph.succ[state].items()]
+        return [edge["transition"] for node, edge in self._graph.succ[state].items()]
 
     def transitions_to(self, state: State) -> list[Transition]:
         """
@@ -390,7 +390,7 @@ class Atom:
             KeyError: If the given state is not in the Atom.
         """
 
-        return [edge['transition'] for node, edge in self._graph.pred[state].items()]
+        return [edge["transition"] for node, edge in self._graph.pred[state].items()]
 
     def transition_between(self, state_i: State, state_f: State) -> Transition:
         """
@@ -411,16 +411,17 @@ class Atom:
         """
         if state_f not in self._graph.succ[state_i]:
             return None
-        return self._graph.get_edge_data(state_i, state_f)['transition']
+        return self._graph.get_edge_data(state_i, state_f)["transition"]
 
-    @default_units('nm')
+    @default_units("nm")
     def get_transition_by_wavelength(self, wavelength: str | float | pint.Quantity):
         """
         Args:
-            wavelength (str | float | pint.Quantity):
-                The wavelength of the transition to retrieve. [m]
-
+            wavelength (str | float | pint.Quantity): The wavelength of the transition to retrieve. [m]
+        
         Returns:
             Transition: A Transition object with a wavelength closest to the given wavelength.
         """
         return min(self.transitions, key=lambda tr: abs(tr.wavelength - wavelength))
+
+

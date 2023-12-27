@@ -55,7 +55,7 @@ def load_from_nist(name, refresh_cache=False):
     token = tokenize_name(name)
     states_data = parse_states(fetch_states(token, refresh_cache))
     transitions_data = parse_transitions(fetch_transitions(token, refresh_cache))
-    return states_data, transitions_data
+    return name, states_data, transitions_data
 
 
 class NISTHTMLParser(HTMLParser):
@@ -123,7 +123,7 @@ def _parse_state(state: dict):
     if vaildate_term(term):
         _parsed_data = {
             "configuration": state["Configuration"],
-            "term": term.replace('*',''),
+            "term": term.replace('*', ''),
             "energy": remove_annotations(state["Level (Ry)"]) + " Ry",
             # "g": None if state["g"] == "" else float(state["g"]),
             # "Lande": None if "Lande" not in state or state["Lande"] == "" else float(state["Lande"])
@@ -182,11 +182,11 @@ def _parse_transition(transition: dict):
             "A": A,
             "state_i": {
                 "energy": remove_annotations(transition["Ei(Ry)"]) + " Ry",
-                "term": term_i.replace('*',''),
+                "term": term_i.replace('*', ''),
             },
             "state_f": {
                 "energy": remove_annotations(transition["Ek(Ry)"]) + " Ry",
-                "term": term_k.replace('*',''),
+                "term": term_k.replace('*', ''),
             },
             # **data
         }

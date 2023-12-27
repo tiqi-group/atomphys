@@ -9,16 +9,22 @@ import numpy as np
 from atomphys.calc.rabi_frequency import Rabi_Frequency
 from atomphys.electric_field import ElectricField
 from atomphys.state import State
+from atomphys.util import set_default_units
 
 
 def ac_stark_shift(
     state: State,
     mJ: float,
+    mJ: float,
     El_field: ElectricField,
     _ureg: pint.UnitRegistry,
     wavelengths: np.ndarray | None = None,
+    B: pint.Quantity = 0,
+    _ureg: pint.UnitRegistry | None = None,
 ):
     delta_E = 0 * _ureg("k*mK")
+
+    B = set_default_units(B, 'tesla')
 
     if wavelengths is None:
         omega_field = El_field.angular_frequency
@@ -27,14 +33,16 @@ def ac_stark_shift(
         omega_field = np.pi * 2 * _ureg("c") / wavelengths
 
     for transition in state.transitions_from:
+        zeeman_shifts = transition.sublevels_zeeman_shift(B)
         state_i = state
         state_f = transition.state_f
 
-        for i in range(int(state_f.quantum_numbers["J"] * 2 + 1)):
-            mJ_i = mJ
-            mJ_f = -state_f.quantum_numbers["J"] + i
+        mJ_i = mJ
+        for mJ_f in state_f.sublevels:
 
             try:
+                tr_omega = transition.angular_frequency + zeeman_shifts[(mJ_i, mJ_f)]
+
                 Omega = complex(
                     (
                         Rabi_Frequency(
@@ -53,9 +61,9 @@ def ac_stark_shift(
                     / 4
                     * (
                         (Omega * np.conj(Omega))
-                        / (-transition.angular_frequency - omega_field)
+                        / (-tr_omega - omega_field)
                         + (Omega * np.conj(Omega))
-                        / (-transition.angular_frequency + omega_field)
+                        / (-tr_omega + omega_field)
                     )
                 )
             except Exception as e:
@@ -63,14 +71,16 @@ def ac_stark_shift(
                 # Continue with the next operation or iteration here, if needed.
 
     for transition in state.transitions_to:
+        zeeman_shifts = transition.sublevels_zeeman_shift(B)
         state_i = transition.state_i
         state_f = state
 
-        for i in range(int(state_i.quantum_numbers["J"] * 2 + 1)):
-            mJ_f = mJ
-            mJ_i = -state_i.quantum_numbers["J"] + i
+        mJ_f = mJ
+        for mJ_i in state_i.sublevels:
 
             try:
+                tr_omega = transition.angular_frequency + zeeman_shifts[(mJ_i, mJ_f)]
+
                 Omega = complex(
                     (
                         Rabi_Frequency(
@@ -89,9 +99,9 @@ def ac_stark_shift(
                     / 4
                     * (
                         (Omega * np.conj(Omega))
-                        / (transition.angular_frequency - omega_field)
+                        / (tr_omega - omega_field)
                         + (Omega * np.conj(Omega))
-                        / (transition.angular_frequency + omega_field)
+                        / (tr_omega + omega_field)
                     )
                 )
             except Exception as e:

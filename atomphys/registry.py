@@ -36,9 +36,7 @@ class TypeRegistry(UserList):
 
     def _assert_type(self, item: Any):
         if not isinstance(item, self.__type):
-            raise TypeError(
-                f"{self.__class__.__name__} can only contain {self.__type.__name__}"
-            )
+            raise TypeError(f"{self.__class__.__name__} can only contain {self.__type.__name__}")
 
     def __setitem__(self, index: int, item):
         self._assert_type(item)

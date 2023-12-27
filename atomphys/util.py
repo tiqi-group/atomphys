@@ -8,6 +8,7 @@
 from functools import wraps
 from typing import Callable
 import pint
+
 _ureg = pint.get_application_registry()
 
 
@@ -74,6 +75,7 @@ def make_alias(attr_name: str, get_unit: str = None, multiplication_factor: floa
     return prop
 
 
+
 def make_alias_with_setter(attr_name: str, get_unit: str = None):
     @property
     def prop(self):
@@ -81,11 +83,12 @@ def make_alias_with_setter(attr_name: str, get_unit: str = None):
             return getattr(self, attr_name)
         else:
             return getattr(self, attr_name).to(get_unit)
-    
+
     @prop.setter
     def prop(self, value):
         if get_unit is None:
             setattr(self, attr_name, value)
         else:
             setattr(self, attr_name, value.to(get_unit))
+
     return prop

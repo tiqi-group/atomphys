@@ -7,14 +7,18 @@ import pint
 from math import pi
 import warnings
 from fractions import Fraction
+from typing import TYPE_CHECKING
 
 from .quantum_numbers import QuantumNumbers
 from .util import default_units
 
 from .calc.hyperfine import hyperfine_shift
-from .calc.zeeman import g_lande_fine_LS, g_lande_hyperfine, field_sensitivity
+from .calc.zeeman import g_lande_fine_LS, g_lande_hyperfine, field_sensitivity, zeeman_shift
 from .calc.angular_momentum import couple_angular_momenta, magnetic_sublevels
 from .calc.coupling import get_coupling, Coupling
+
+if TYPE_CHECKING:
+    from .atom import Atom
 
 
 class State:
@@ -58,9 +62,9 @@ class State:
     _energy: pint.Quantity
     _ureg: pint.UnitRegistry
 
-    def __init__(self, configuration: str, term: str, energy: pint.Quantity,
-                 atom=None,
-                 _ureg: pint.UnitRegistry | None = None):
+    def __init__(
+        self, configuration: str, term: str, energy: pint.Quantity, atom=None, _ureg: pint.UnitRegistry | None = None
+    ):
         self._atom = atom
         if atom is not None:
             self._ureg = atom._ureg
@@ -87,11 +91,11 @@ class State:
 
     @property
     def frequency(self) -> pint.Quantity:
-        return (self.energy.to('THz', 'sp'))
+        return self.energy.to("THz", "sp")
 
     @property
     def angular_frequency(self) -> pint.Quantity:
-        return (self.energy.to('1/s', 'sp') * self._ureg('2*pi'))
+        return self.energy.to("1/s", "sp") * self._ureg("2*pi")
 
     @property
     def name(self) -> str:
@@ -118,6 +122,7 @@ class State:
         return pattern.lower() in self.name.lower()
 
     @property
+    def atom(self) -> "Atom":
     def atom(self):
         return self._atom
 
@@ -138,23 +143,36 @@ class State:
     @property
     def gJ(self) -> float:
         if self.coupling == Coupling.LS:
-            L, S, J = (getattr(self.quantum_numbers, n) for n in ('L', 'S', 'J'))
+            L, S, J = (getattr(self.quantum_numbers, n) for n in ("L", "S", "J"))
             return g_lande_fine_LS(L, S, J)
         else:
             raise NotImplementedError(
-                f"Lande factor calculation is implemented only for LS coupling, but state has {self.coupling}")
+                f"Lande factor calculation is implemented only for LS coupling, but state has {self.coupling}"
+            )
 
     @property
     def g(self) -> float:
         return self.gJ
 
     @property
+    def spin(self) -> float:
+        """Total spin quantum number.
+
+        Return
+            J for Fine structure States, F for Hyperfine states
+        """
+        return self.quantum_numbers.J
+
+    @property
     def sublevels(self) -> list[float]:
-        return magnetic_sublevels(self.quantum_numbers.J)
-    
+        return magnetic_sublevels(self.spin)
+
     @property
     def sublevels_field_sensitivity(self) -> dict[float: pint.Quantity]:
         return {m: field_sensitivity(self.g, m, self._ureg) for m in self.sublevels}
+
+    def sublevels_zeeman_shift(self, B: pint.Quantity) -> dict[float: pint.Quantity]:
+        return {m: zeeman_shift(self.g, m, B, self._ureg).to('MHz') for m in self.sublevels}
 
     @property
     def transitions_from(self) -> list:
@@ -169,28 +187,32 @@ class State:
             warnings.warn("State not attached to an Atom: no transitions available")
             return list()
         return self._atom.transitions_to(self)
-  
+
     @property
     def transitions(self) -> list:
         return self.transitions_from + self.transitions_to
 
     @property
     def Gamma(self) -> pint.Quantity:
-        transitions_to = self.transitions_to
-        if len(transitions_to) == 0:
+        if len(self.transitions_to) == 0:
             return self._ureg("0 MHz")
-        return sum([tr.Gamma for tr in transitions_to.values()])
+        return sum([tr.Gamma for tr in self.transitions_to])
 
     @property
     def decay_branching_ratios(self) -> dict:
-        return {s: (tr.Gamma / self.Gamma).m for s, tr in self.transitions_to.items()}
+        transitions_to = self.transitions_to.copy()
+        transitions_to.sort(key=lambda tr: tr.Gamma.m, reverse=True)
+        return {tr.state_i: (tr.Gamma / self.Gamma).m for tr in transitions_to}
 
     @property
     def lifetime(self) -> pint.Quantity:
         try:
-            return (1 / (2 * pi * self.Gamma)).to('seconds')
+            return (1 / (2 * pi * self.Gamma)).to("seconds")
         except ZeroDivisionError:
             return self._ureg("inf seconds")
+
+    def to_json(self):
+        return {"configuration": self.configuration, "term": self.term, "energy": f"{self.energy.to('Ry'):f~P}"}
 
 
 class HyperfineState(State):
@@ -206,10 +228,18 @@ class HyperfineState(State):
         sublevels: Property that gets the magnetic sublevels of the hyperfine state.
     """
 
-    def __init__(self, configuration: str, term: str, energy: pint.Quantity,
-                 I: float, F: float,
-                 atom=None, _ureg=None):
+    def __init__(
+        self,
+        configuration: str,
+        term: str,
+        energy: pint.Quantity,
+        I: float,
+        F: float,
+        atom=None,
+        _ureg=None,
+    ):
         super().__init__(configuration, term, energy, atom, _ureg)
+        self._gI = 0  # TODO: fix
         self.quantum_numbers = QuantumNumbers.from_term(term, I=I, F=F)
 
     @property
@@ -222,19 +252,29 @@ class HyperfineState(State):
 
     @property
     def gF(self) -> float:
-        J, I, F = (getattr(self.quantum_numbers, n) for n in ('J', 'I', 'F'))
-        return g_lande_hyperfine(J, I, F, self.gJ)
+        J, I, F = (getattr(self.quantum_numbers, n) for n in ("J", "I", "F"))
+        return g_lande_hyperfine(J, I, F, self.gJ, self.gI)
+
+    @property
+    def gI(self) -> float:
+        return self._gI
 
     @property
     def g(self) -> float:
         return self.gF
 
     @property
-    def sublevels(self) -> list[float]:
-        return magnetic_sublevels(self.quantum_numbers.F)
+    def spin(self) -> float:
+        """Total spin
+        J for Fine structure States
+        F for Hyperfine states
+        """
+        return self.quantum_numbers.F
 
 
-def hyperfine_manifold(state: State, I: float, Ahf: pint.Quantity, Bhf: pint.Quantity = 0) -> list[HyperfineState]:
+def hyperfine_manifold(
+    state: State, I: float, Ahf: pint.Quantity, Bhf: pint.Quantity = 0
+) -> list[HyperfineState]:  # noqa: E741
     """
     This function generates a list of hyperfine states for a given state.
 

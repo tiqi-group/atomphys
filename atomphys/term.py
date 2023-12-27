@@ -48,11 +48,26 @@ Matches a pattern that consists of:
 
 
 L = {
-    "S": 0, "P": 1, "D": 2, "F": 3,
-    "G": 4, "H": 5, "I": 6, "K": 7,
-    "L": 8, "M": 9, "N": 10, "O": 11,
-    "Q": 12, "R": 13, "T": 14, "U": 15,
-    "V": 16, "W": 17, "X": 18, "Y": 19
+    "S": 0,
+    "P": 1,
+    "D": 2,
+    "F": 3,
+    "G": 4,
+    "H": 5,
+    "I": 6,
+    "K": 7,
+    "L": 8,
+    "M": 9,
+    "N": 10,
+    "O": 11,
+    "Q": 12,
+    "R": 13,
+    "T": 14,
+    "U": 15,
+    "V": 16,
+    "W": 17,
+    "X": 18,
+    "Y": 19,
 }
 
 L_inv = {value: key for key, value in L.items()}
@@ -83,18 +98,14 @@ def parse_term(term: str) -> dict:
         if key == "parity":
             return -1 if value == "*" else 1
 
-    term = {
-        key: convert(key, value) for key, value in match.groupdict().items()
-    }
+    term = {key: convert(key, value) for key, value in match.groupdict().items()}
 
     return term
 
 
-def print_term(J=None, S=None, L=None,
-               J1=None, J2=None, S2=None, K=None,
-               I=None, F=None,
-               parity=None, ionization_limit=None) -> str:
-
+def print_term(
+    J=None, S=None, L=None, J1=None, J2=None, S2=None, K=None, I=None, F=None, parity=None, ionization_limit=None
+) -> str:
     if ionization_limit is not None and ionization_limit:
         return "Ionization Limit"
 
@@ -121,7 +132,4 @@ def vaildate_term(term: str) -> dict:
     """
     parse term symbol string in NIST ASD
     """
-    return "Limit" in term or \
-        LS_term.search(term) or \
-        J1J2_term.search(term) or \
-        LK_term.search(term)
+    return "Limit" in term or LS_term.search(term) or J1J2_term.search(term) or LK_term.search(term)
