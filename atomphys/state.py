@@ -193,9 +193,10 @@ class State:
 
     @property
     def Gamma(self) -> pint.Quantity:
+        transitions_to = self.transitions_to
         if len(self.transitions_to) == 0:
             return self._ureg("0 MHz")
-        return sum([tr.Gamma for tr in self.transitions_to])
+        return sum([tr.Gamma for tr in transitions_to])
 
     @property
     def decay_branching_ratios(self) -> dict:
@@ -206,7 +207,7 @@ class State:
     @property
     def lifetime(self) -> pint.Quantity:
         try:
-            return (1 / (2 * pi * self.Gamma)).to("seconds")
+            return (1 / self.Gamma).to('seconds')
         except ZeroDivisionError:
             return self._ureg("inf seconds")
 
