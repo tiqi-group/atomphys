@@ -10,10 +10,9 @@ from scipy.optimize import curve_fit
 
 from atomphys.calc import Hamiltonians as hat
 from atomphys.calc.rabi_frequency import Rabi_Frequency
-from atomphys.electric_field import LaserField
+from atomphys.electric_field import GaussianBeam
 
 import pytest
-from pint.testsuite.helpers import assert_quantity_almost_equal
 
 
 def test_three_levels_decay(three_levels_atom):
@@ -43,8 +42,8 @@ def test_three_levels_decay(three_levels_atom):
     sol = qutip.mesolve(H0, psi0, t, c_ops, e_ops)
     populations = np.asarray(sol.expect)
 
-    expected_tau = (1 / atom.get_state('P').Gamma).to('us')
-    expected_populations = list(atom.get_state('P').decay_branching_ratios.values())
+    expected_tau = (1 / atom.get_state("P").Gamma).to("us")
+    expected_populations = list(atom.get_state("P").decay_branching_ratios.values())
 
     # ------- fit decay and check final populations
 
@@ -52,11 +51,11 @@ def test_three_levels_decay(three_levels_atom):
         return np.exp(-t / tau)
 
     p, cov = curve_fit(decay, t, populations[1], (1,))
-    fitted_tau = p[0] * atom._ureg('us')
+    fitted_tau = p[0] * atom._ureg("us")
 
     fitted_populations = populations[[0, 2], -1]
 
-    assert_quantity_almost_equal(expected_tau, fitted_tau, rtol=1e-4)
+    assert expected_tau == pytest.approx(fitted_tau, rel=1e-4)
     assert expected_populations == pytest.approx(fitted_populations, rel=1e-4)
 
 
@@ -74,9 +73,14 @@ def test_two_levels_flop(two_levels_atom):
     tr = atom.transitions[0]
     I0 = tr.saturation_intensity
 
-    laser = LaserField(
-        polarization=eps, direction_of_propagation=e_z,
-        wavelength=tr.wavelength, intensity=I0, detuning=0)
+    laser = GaussianBeam(
+        polarization=eps,
+        direction_of_propagation=e_z,
+        wavelength=tr.wavelength,
+        intensity=I0,
+        detuning=0,
+        _ureg=atom._ureg,
+    )
 
     lasers = {laser: [tr]}
     states = atom.states
@@ -97,11 +101,13 @@ def test_two_levels_flop(two_levels_atom):
     p, cov = curve_fit(flop, t, populations[:, 0], (15,))
 
     expected_rabi_freq_at_isat = tr.Gamma.to("MHz") / np.sqrt(2) / 2 / np.pi
-    fitted_rabi_freq = p[0] * atom._ureg('MHz')
+    fitted_rabi_freq = p[0] * atom._ureg("MHz")
     calculated_rabi_freq = (
-        abs(float(Rabi_Frequency(laser, tr, mJ_i=0, mJ_f=0).to("MHz").m)) *
-        atom._ureg("MHz") / 2 / np.pi
+        abs(float(Rabi_Frequency(laser, tr, mJ_i=0, mJ_f=0).to("MHz").m))
+        * atom._ureg("MHz")
+        / 2
+        / np.pi
     )
 
-    assert_quantity_almost_equal(expected_rabi_freq_at_isat, calculated_rabi_freq, rtol=1e-7)
-    assert_quantity_almost_equal(expected_rabi_freq_at_isat, fitted_rabi_freq, rtol=1e-4)
+    assert expected_rabi_freq_at_isat == pytest.approx(calculated_rabi_freq, rel=1e-7)
+    assert expected_rabi_freq_at_isat == pytest.approx(fitted_rabi_freq, rel=1e-4)
