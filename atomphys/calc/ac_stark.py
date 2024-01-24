@@ -15,7 +15,6 @@ from atomphys.util import set_default_units
 def ac_stark_shift(
     state: State,
     mJ: float,
-    mJ: float,
     El_field: ElectricField,
     _ureg: pint.UnitRegistry,
     wavelengths: np.ndarray | None = None,
