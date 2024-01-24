@@ -16,7 +16,6 @@ def ac_stark_shift(
     state: State,
     mJ: float,
     El_field: ElectricField,
-    _ureg: pint.UnitRegistry,
     wavelengths: np.ndarray | None = None,
     B: pint.Quantity = 0,
     _ureg: pint.UnitRegistry | None = None,
