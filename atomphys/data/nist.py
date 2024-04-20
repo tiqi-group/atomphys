@@ -154,7 +154,7 @@ def fetch_transitions(atom, refresh_cache=False):
         "format": 3,  # format {0: HTML, 1: ASCII, 2: CSV, 3: TSV}
         "en_unit": 2,  # energy units {0: cm^-1, 1: eV, 2: Ry}
         "line_out": 2,  # only with {1: transition , 2: level classifications}
-        "show_av": 5,
+#        "show_av": 5, - was causing some errors
         "allowed_out": 1,
         "forbid_out": 1,
         "enrg_out": "on",
