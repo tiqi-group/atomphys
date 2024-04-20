@@ -15,12 +15,10 @@ from atomphys.util import set_default_units
 def ac_stark_shift(
     state: State,
     mJ: float,
-    mJ: float,
     El_field: ElectricField,
-    _ureg: pint.UnitRegistry,
     wavelengths: np.ndarray | None = None,
     B: pint.Quantity = 0,
-    _ureg: pint.UnitRegistry | None = None,
+    _ureg: pint.UnitRegistry,
 ):
     delta_E = 0 * _ureg("k*mK")
 
