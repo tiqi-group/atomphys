@@ -1,24 +1,16 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-#
-# Created: 06/2023
-# Author: Carmelo Mordini <cmordini@phys.ethz.ch>
-import pint
-from math import pi
-import warnings
-from fractions import Fraction
-from typing import TYPE_CHECKING
 
-from .quantum_numbers import QuantumNumbers
-from .util import default_units
+import warnings
+import pint
+from fractions import Fraction
+from .utils.quantum_numbers import QuantumNumbers
+from .utils.utils import default_units
 
 from .calc.hyperfine import hyperfine_shift
 from .calc.zeeman import g_lande_fine_LS, g_lande_hyperfine, field_sensitivity, zeeman_shift
 from .calc.angular_momentum import couple_angular_momenta, magnetic_sublevels
-from .calc.coupling import get_coupling, Coupling
-
-if TYPE_CHECKING:
-    from .atom import Atom
+from .utils.coupling import get_coupling, Coupling
 
 
 class State:

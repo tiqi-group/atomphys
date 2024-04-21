@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-#
-# Created: 07/2023
-# Author: Carmelo Mordini <cmordini@phys.ethz.ch>
-
 
 from functools import wraps
 from typing import Callable
@@ -63,32 +59,3 @@ def fsolve(func: Callable, x0, x1=None, tol: float = 1.49012e-08, maxfev: int = 
         fx0, fx1 = fx1, func(x1)
         i += 1
     return x1
-
-
-def make_alias(attr_name: str, get_unit: str = None, multiplication_factor: float = 1):
-    @property
-    def prop(self):
-        if get_unit is None:
-            return multiplication_factor * getattr(self, attr_name)
-        else:
-            return multiplication_factor * getattr(self, attr_name).to(get_unit)
-    return prop
-
-
-
-def make_alias_with_setter(attr_name: str, get_unit: str = None):
-    @property
-    def prop(self):
-        if get_unit is None:
-            return getattr(self, attr_name)
-        else:
-            return getattr(self, attr_name).to(get_unit)
-
-    @prop.setter
-    def prop(self, value):
-        if get_unit is None:
-            setattr(self, attr_name, value)
-        else:
-            setattr(self, attr_name, value.to(get_unit))
-
-    return prop

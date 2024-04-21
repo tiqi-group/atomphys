@@ -1,8 +1,11 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+
 from copy import deepcopy
 import networkx as nx
 import pint
 from .transition import Transition
-from .util import default_units, set_default_units
+from .utils.utils import default_units, set_default_units
 
 
 class Atom:

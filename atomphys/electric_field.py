@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-#
-# Created: 07/2023
-# Author: Carmelo Mordini <cmordini@phys.ethz.ch>, Philip Leindecker <pleindecker@ethz.ch>
 
 import pint
 import numpy as np
-from numpy.typing import ArrayLike
-from .util import default_units, set_default_units, make_alias, make_alias_with_setter
+from .utils.utils import default_units, set_default_units
 
 
 class ElectricField:
@@ -83,7 +79,6 @@ class ElectricField:
 
 
 class GaussianBeam(ElectricField):
-
     def __init__(
         self,
         frequency: pint.Quantity = None,
