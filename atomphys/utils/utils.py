@@ -4,6 +4,7 @@
 from functools import wraps
 from typing import Callable
 import pint
+import numpy as np
 
 _ureg = pint.get_application_registry()
 
@@ -28,6 +29,61 @@ def default_units(unit: str):
         return wrapper
 
     return decorator
+
+def spherical_basis_vector(q):
+    """
+    Function to compute the normalized spherical basis vector c(q) in cartesian corrindates..
+
+    Args:
+    q (int): Quantum number, should be -1, 0, or 1.
+
+    Returns:
+    np.array: Corresponding basis vector.
+    """
+    if q == 1:
+        return (-1) * np.array([1, -1j, 0]) / np.sqrt(2)
+        return (-1) * np.array([1, -1j, 0]) / np.sqrt(2)
+    elif q == 0:
+        return np.array([0, 0, 1])
+    elif q == -1:
+        return np.array([1, 1j, 0]) / np.sqrt(2)
+    else:
+        raise ValueError("q should be -1, 0, or 1.")
+
+ 
+        raise ValueError(f"Invalid value {q} for q. It must be one of (-1, 0, 1).")
+
+
+def spherical_basis_second_rank_tensor(q):
+    """
+    Function to compute the second rank tensor c(q)_ij in cartesian coordinates.
+
+    Args:
+    q (int): Quantum number, should be -1, 0, or 1.
+
+    Returns:
+    np.array: Corresponding second rank tensor.
+    """
+
+    if q == 2:
+        return (1 / np.sqrt(6)) * np.array([[1, -1j, 0], [-1j, -1, 0], [0, 0, 0]])
+        return (1 / np.sqrt(6)) * np.array([[1, -1j, 0], [-1j, -1, 0], [0, 0, 0]])
+    elif q == 1:
+        return (1 / np.sqrt(6)) * np.array([[0, 0, -1], [0, 0, 1j], [-1, 1j, 0]])
+        return (1 / np.sqrt(6)) * np.array([[0, 0, -1], [0, 0, 1j], [-1, 1j, 0]])
+    elif q == 0:
+        return (1 / 3) * np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 2]])
+        return (1 / 3) * np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 2]])
+    elif q == -1:
+        return (1 / np.sqrt(6)) * np.array([[0, 0, 1], [0, 0, 1j], [1, 1j, 0]])
+        return (1 / np.sqrt(6)) * np.array([[0, 0, 1], [0, 0, 1j], [1, 1j, 0]])
+    elif q == -2:
+        return (1 / np.sqrt(6)) * np.array([[1, 1j, 0], [1j, -1, 0], [0, 0, 0]])
+        return (1 / np.sqrt(6)) * np.array([[1, 1j, 0], [1j, -1, 0], [0, 0, 0]])
+    else:
+        raise ValueError(f"Invalid value {q} for q. It must be one of (-2, -1, 0, 1, 2).")
+
+
 
 
 def fsolve(func: Callable, x0, x1=None, tol: float = 1.49012e-08, maxfev: int = 100):
