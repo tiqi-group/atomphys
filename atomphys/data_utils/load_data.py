@@ -1,8 +1,6 @@
-from ..atom import Atom
-from ..utils.utils import set_default_units
-from . import nist, json
-from ..state import State
-from ..transition import Transition
+from atomphys import Atom, State, Transition
+from atomphys.utils.utils import set_default_units
+from atomphys.data_utils import nist, json
 
 
 def load_from_database(

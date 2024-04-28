@@ -1,5 +1,5 @@
 import json
-from .name import parse_atom_name
+from atomphys.data_utils.name import parse_atom_name
 
 
 def load_from_json(filename):

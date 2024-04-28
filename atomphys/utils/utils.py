@@ -30,6 +30,7 @@ def default_units(unit: str):
 
     return decorator
 
+
 def spherical_basis_vector(q):
     """
     Function to compute the normalized spherical basis vector c(q) in cartesian corrindates..
@@ -82,8 +83,6 @@ def spherical_basis_second_rank_tensor(q):
         return (1 / np.sqrt(6)) * np.array([[1, 1j, 0], [1j, -1, 0], [0, 0, 0]])
     else:
         raise ValueError(f"Invalid value {q} for q. It must be one of (-2, -1, 0, 1, 2).")
-
-
 
 
 def fsolve(func: Callable, x0, x1=None, tol: float = 1.49012e-08, maxfev: int = 100):

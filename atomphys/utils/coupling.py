@@ -7,7 +7,7 @@
 # https://www.nist.gov/pml/atomic-spectroscopy-compendium-basic-ideas-notation-data-and-formulas/atomic-spectroscopy-2
 
 from enum import Enum
-from .quantum_numbers import QuantumNumbers
+from atomphys.utils.quantum_numbers import QuantumNumbers
 
 
 class Coupling(Enum):

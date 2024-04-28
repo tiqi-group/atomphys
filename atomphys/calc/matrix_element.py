@@ -11,10 +11,9 @@
 # I took j' to be the lower level states, as it agrees with other sources and makes sense intuitively
 # -> it increases spontaneous decay rate the more possibilities of decays to the lower states there are.
 
-import numpy as np
 import pint
 from sympy.physics.wigner import wigner_3j as w3j
-from .util import spherical_basis_second_rank_tensor, spherical_basis_vector
+from atomphys.utils.utils import spherical_basis_second_rank_tensor, spherical_basis_vector
 
 
 def reduced_dipole_matrix_element(
