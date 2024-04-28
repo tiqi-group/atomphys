@@ -1,7 +1,7 @@
 
 # Atomphys Documentation: 
 
-This document provides a guide to the Python module designed for atomic physics calculations. The idea behind this module is to make it easier for anyone to explore atomic physics, properties of atoms, and understand their electron dynamics in light fields. It aims to reduce the reinvention of the wheel. 
+This document provides a guide to the Python module designed for atomic physics calculations.  The idea behind this module is to explore atomic physics, properties of atoms, and understand their electron dynamics in light fields. It aims to reduce the reinvention of the wheel. 
 
 I hope this will be helpfull for many.
 
@@ -16,9 +16,74 @@ pip install git+https://gitlab.phys.ethz.ch/tiqi-projects/optical-trap/atomphys_
 ```
 ## Static Structure
 ### Atom (Graph):
-When you think about this deeply topologicaly human is a doughnut and atom can be thought as a graph with states as nodes and transitions as edges between the nodes. 
 
-We decided to go with this 
+At the center of the atomphys package there is an atom. We decided to define atom as a graph data structure. This is because it is natural to think about an atom as a graph, where the states are the vertices, and the transitions are the edges of the graph. 
+
+It allows us then to build upon great work that has been done on graphs in order to plot atoms, explore them, list all the properties, and their vertices, and edges. 
+
+![alt text](image.png)
+
+>`atomphys.Atom(name, _ureg)`
+>
+>Atom class. One can initialise it with a name and the unit registry. Upon initialization it creates an empty graph, to which tranistions can be added.
+
+
+#### Loading of an atom:
+
+But it would be extremaly tideous to build up such structure from scratch. Instead one can load an atom directly from NIST database, or from a custom json database. 
+
+To load an atom from NIST, you can call from_nist() function. As a name you need to parse the element name of an atom you are interested. For instance if you are interested in Calcium atom/ion you need to call from_nist('Ca')/from_nist('Ca+').
+
+> `atomphys.from_nist(name, _ureg)`
+>
+> Returns an atom with states and transitions found in NIST database. If NIST is not complete for your purposes, the missing transitions can be added manually. 
+
+Alternatively one can use:
+
+> `atomphys.from_json(name, _ureg)`
+>
+> Returns an atom with states and transitions found in the custom database. Database has to be a json file with a format given below
+
+```
+{"name": "Ca", 
+"states": [{"configuration": "3p6.4s2", "term": "1S0", "energy": "0.0 Ry"}, {"configuration": "3p6.4s.4p", "term": "3P0", "energy": "0.1381289573728982 Ry"}, ... ], 
+"transitions": [{"A": "2.74e+03 s^-1", "state_i": {"energy": "0.0 Ry", "term": "1S0"}, "state_f": {"energy": "0.138604292491823", "term": "3P1"}}, {"A": "4.89e+05 s^-1", "state_i": {"energy": "0.1381289573728982 Ry", "term": "3P0"}, "state_f": {"energy": "0.1853094352973106", "term": "3D1"}}...]
+}
+```
+Above example 'Ca' database was taken from {Mills 2018}.
+
+
+#### Possible operations on an atom:
+> - copy()
+> - add_state(s)
+> - remove_state(s)
+> - add_states(states)
+> - remove_states(states)
+> - remove_all_but_states(states, copy: bool = False)
+> - add_transition(tr: Transition)
+> - add_transitions(transitions: list[Transition])
+> - remove_transition(tr: Transition)
+> - remove_transitions(transitions: list[Transition])
+> - remove_isolated(copy=True)
+> - remove_states_above_energy(energy: pint.Quantity, copy=True, remove_isolated=False)
+> - remove_states_below_energy(energy: pint.Quantity, copy=True, remove_isolated=True)
+> - remove_transitions_above_wavelength(wavelength: pint.Quantity, copy=True)
+> - states()
+> - isolated_states()
+> - get_state(key: str | pint.Quantity)
+> - get_state_by_term(key: str)
+> - get_state_by_energy(energy: pint.Quantity)
+> - transitions()
+> - transitions_from(state)
+> - transitions_to(state)
+> - transition_between(state_i, state_f)
+> - get_transition_by_wavelength(wavelength: str | float | pint.Quantity)
+
+
+
+
+
+
 
 ### State (Node)
 ### Transition (Edge)

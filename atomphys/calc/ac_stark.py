@@ -18,7 +18,7 @@ def ac_stark_shift(
     El_field: ElectricField,
     _ureg: pint.UnitRegistry,
     wavelengths: np.ndarray | None = None,
-    B: pint.Quantity = 0
+    B: pint.Quantity | float = 0.0
 ):
     delta_E = 0 * _ureg("k*mK")
 
