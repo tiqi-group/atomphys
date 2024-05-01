@@ -1,443 +1,188 @@
-from collections.abc import Iterable
-from math import inf
-from math import pi as π
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+#
+# Created: 06/2023
+# Author: Carmelo Mordini <cmordini@phys.ethz.ch>
 
+import numpy as np
 import pint
-
-from atomphys.registry import TypeRegistry
-
-from . import _ureg, state
-from .util import default_units, fsolve
+from .state import State
+from .util import default_units, make_alias
+from .calc.coupling import Coupling
+from .calc.selection_rules import get_transition_type_LS, TransitionType
+from .calc.matrix_element import (
+    reduced_electric_dipole_matrix_element,
+    reduced_electric_quadrupole_matrix_element,
+    electric_dipole_matrix_element,
+    electric_quadrupole_matrix_element,
+    dipole_matrix_element,
+    quadrupole_matrix_element,
+)
+from .calc.zeeman import field_sensitivity, zeeman_shift
 
 
 class Transition:
-
+    state_i: State
+    state_f: State
+    _A: pint.Quantity
     _ureg: pint.UnitRegistry
-    __matrix_element: pint.Quantity
-    __type: str
-    __atom = None
-    __state_i = None
-    __state_f = None
 
-    def __init__(self, state_i=None, state_f=None, ureg=None, atom=None, **transition):
-        self.__atom = atom
+    def __init__(self, state_i: State, state_f: State, A: pint.Quantity, _ureg: pint.UnitRegistry | None = None):
+        self._ureg = _ureg if _ureg is not None else pint.get_application_registry()
+        # sort states
+        self.state_i, self.state_f = sorted([state_i, state_f])
+        self.A = A
 
-        self._ureg = _ureg
-        if ureg is not None:
-            self._ureg = ureg
-        if atom is not None:
-            self._ureg = atom._ureg
+    def __repr__(self) -> str:
+        return f"Transition({self.state_i.name} --> {self.state_f.name} {self.wavelength:~.1fP} ({self.type.value}))"
 
-        if not state_i:
-            state_i = state.State()
-        if isinstance(state_i, dict):
-            states = self.__atom.states.match(**state_i)
-            if "energy" in state_i:
-                self.__state_i = states(state_i["energy"])
-            elif "En" in state_i:
-                self.__state_i = states(state_i["En"])
-            else:
-                self.__state_i = states[0]
+    @property
+    def A(self) -> pint.Quantity:
+        return self._A.to("1/s")
+
+    @A.setter
+    @default_units("1 / s")
+    def A(self, value: pint.Quantity):
+        self._A = value
+
+    @property
+    def energy(self) -> pint.Quantity:
+        return (self.state_f.energy - self.state_i.energy).to("Ry")
+
+    @property
+    def wavelength(self) -> pint.Quantity:
+        try:
+            return self.energy.to("nm", "sp")
+        except ZeroDivisionError:
+            return self._ureg.Quantity("inf nm")
+
+    @property
+    def k(self) -> pint.Quantity:
+        return (self._ureg("2*pi") * 1 / self.wavelength).to("1/m")
+
+    @property
+    def frequency(self) -> pint.Quantity:
+        return self.energy.to("THz", "sp")
+
+    @property
+    def angular_frequency(self) -> pint.Quantity:
+        return self.energy.to('1/s', 'sp') * self._ureg('_2pi')
+      
+    @property
+    def reduced_electric_matrix_element(self):
+        """
+        Reduced electric matrix element in units of e a0
+
+        Returns:
+            pint.Quantity: reduced electric matrix element
+        """
+        if self.type == TransitionType.E1:
+            J_f = self.state_f.quantum_numbers["J"]
+            return (reduced_electric_dipole_matrix_element(self.A, self.k, J_f, self._ureg)).to("e a0")
+        elif self.type == TransitionType.E2:
+            J_f = self.state_f.quantum_numbers["J"]
+            return reduced_electric_quadrupole_matrix_element(self.A, self.k, J_f, self._ureg).to("e a0**2")
         else:
-            self.__state_i = state_i
-        self.__state_i.transitions.append(self)
+            raise NotImplementedError(
+                f"Matrix element calculation is implemented only for type E1/E2, but transition has {self.type}"
+            )
 
-        if not state_f:
-            state_f = state.State()
-        if isinstance(state_f, dict):
-            states = self.__atom.states.match(**state_f)
-            if "energy" in state_f:
-                self.__state_f = states(state_f["energy"])
-            elif "En" in state_f:
-                self.__state_f = states(state_f["En"])
-            else:
-                self.__state_f = states[0]
+    def matrix_element(self, mJ_i: int, mJ_f: int):
+        if self.type == TransitionType.E1:
+            J_i = self.state_i.quantum_numbers["J"]
+            J_f = self.state_f.quantum_numbers["J"]
+            return dipole_matrix_element(self.A, self.k, J_i, J_f, mJ_i, mJ_f, self._ureg).to("a0")
+        elif self.type == TransitionType.E2:
+            J_i = self.state_i.quantum_numbers["J"]
+            J_f = self.state_f.quantum_numbers["J"]
+            return quadrupole_matrix_element(self.A, self.k, J_i, J_f, mJ_i, mJ_f, self._ureg).to("a0**2")
+    def electric_matrix_element(self, mJ_i: int, mJ_f: int):
+        if self.type == TransitionType.E1:
+            J_i = self.state_i.quantum_numbers["J"]
+            J_f = self.state_f.quantum_numbers["J"]
+            return electric_dipole_matrix_element(self.A, self.k, J_i, J_f, mJ_i, mJ_f, self._ureg).to("e a0")
+        elif self.type == TransitionType.E2:
+            J_i = self.state_i.quantum_numbers["J"]
+            J_f = self.state_f.quantum_numbers["J"]
+            return electric_quadrupole_matrix_element(self.A, self.k, J_i, J_f, mJ_i, mJ_f, self._ureg).to("e a0**2")
+
+    @property
+    def delta_m(self):
+        if self.type == TransitionType.E1:
+            return 1
+        elif self.type == TransitionType.E2:
+            return 2
         else:
-            self.__state_f = state_f
-        self.__state_f.transitions.append(self)
+            return 0
 
-        self._matrix_element = 0
-        for attr in [
-            attr.strip("_")
-            for attr, val in self.__class__.__dict__.items()
-            if getattr(val, "fset", False)
-        ]:
-            if attr in transition:
-                setattr(self, "_" + attr, transition[attr])
+    @property
+    def sublevels(self):
+        mis = self.state_i.sublevels
+        mfs = self.state_f.sublevels
+        ss = []
+        for mi in mis:
+            for mf in mfs:
+                if abs(mf - mi) <= self.delta_m:
+                    ss.append((mi, mf))
+        return ss
 
-        if "type" in transition:
-            self.__type = transition["type"]
-        else:
-            self.__type = ""
-
-    def __repr__(self):
-        return (
-            f"Transition({self.i.name} <--> {self.f.name} : "
-            f"λ={self.λ.to('nm'):0.5g~P}, "
-            f"Γ=2π×{(self.Γ/(2*π)).to('Hz').to_compact():0.3g~P})"
-        )
-
-    def __lt__(self, other):
-        return self.energy < other.energy
-
-    def to_dict(self):
+    @property
+    def sublevels_field_sentitivity(self):
         return {
-            "state_i": {"energy": f"{self.i.energy: ~P}", "term": self.i.term},
-            "state_f": {"energy": f"{self.f.energy: ~P}", "term": self.f.term},
-            "wavelength": f'{self.λ.to("nm"):0.3f~P}',
-            "matrix_element": f'{self.d.to("e a0"):~P}',
-            "type": self.type,
+            (mi, mf): (field_sensitivity(self.state_f.g, mf, self._ureg) -
+                       field_sensitivity(self.state_i.g, mi, self._ureg))
+            for (mi, mf) in self.sublevels
         }
 
-    # ------
-    # States
-    # ------
-
-    @property
-    def state_i(self):
-        return self.__state_i
-
-    @property
-    def i(self):
-        return self.__state_i
-
-    @property
-    def state_f(self):
-        return self.__state_f
-
-    @property
-    def f(self):
-        return self.__state_f
-
-    # ------
-    # Energy
-    # ------
-
-    @property
-    def _energy(self):
-        return self.f.energy - self.i.energy
-
-    @_energy.setter
-    @default_units("E_h")
-    def _energy(self, energy):
-        self.f._energy = self.i.energy + energy
-
-    @property
-    def energy(self):
-        return self._energy
-
-    @property
-    def _En(self):
-        return self._energy
-
-    @_En.setter
-    def _En(self, energy):
-        self._energy = energy
-
-    @property
-    def En(self):
-        return self._En
-
-    @property
-    def _angular_frequency(self):
-        return (self._energy) / self._ureg.ħ
-
-    @_angular_frequency.setter
-    @default_units("THz")
-    def _angular_frequency(self, omega):
-        self._energy = omega * self._ureg.ħ
-
-    @property
-    def angular_frequency(self):
-        return self._angular_frequency
-
-    @property
-    def _omega(self):
-        return self._angular_frequency
-
-    @_omega.setter
-    def _omega(self, omega):
-        self._angular_frequency = omega
-
-    @property
-    def omega(self):
-        return self._omega
-
-    @property
-    def _ω(self):
-        return self._angular_frequency
-
-    @_ω.setter
-    def _ω(self, omega):
-        self._angular_frequency = omega
-
-    @property
-    def ω(self):
-        return self._ω
-
-    @property
-    def _frequency(self):
-        return (self._energy) / self._ureg.planck_constant
-
-    @_frequency.setter
-    @default_units("THz")
-    def _frequency(self, frequency):
-        self._energy = frequency * self._ureg.planck_constant
-
-    @property
-    def frequency(self):
-        return self._frequency
-
-    @property
-    def _nu(self):
-        return self._frequency
-
-    @_nu.setter
-    def _nu(self, frequency):
-        self._frequency = frequency
-
-    @property
-    def nu(self):
-        return self._nu
-
-    @property
-    def _ν(self):
-        return self._frequency
-
-    @_ν.setter
-    def _ν(self, frequency):
-        self._frequency = frequency
-
-    @property
-    def ν(self):
-        return self._ν
-
-    @property
-    def _wavelength(self):
-        try:
-            return (self._ureg.planck_constant * self._ureg.c) / self._energy
-        except ZeroDivisionError:
-            return self._ureg.Quantity(inf, "nm")
-
-    @_wavelength.setter
-    @default_units("nm")
-    def _wavelength(self, wavelength):
-        self._energy = (self._ureg.planck_constant * self._ureg.c) / wavelength
-
-    @property
-    def wavelength(self):
-        return self._wavelength
-
-    @property
-    def _λ(self):
-        return self._wavelength
-
-    @_λ.setter
-    def _λ(self, wavelength):
-        self._wavelength = wavelength
-
-    @property
-    def λ(self):
-        return self._λ
-
-    # --------------
-    # matrix element
-    # --------------
-
-    @property
-    def _matrix_element(self):
-        return self.__matrix_element
-
-    @_matrix_element.setter
-    @default_units("e a0")
-    def _matrix_element(self, matrix_element):
-        self.__matrix_element = matrix_element
-
-    @property
-    def _d(self):
-        return self.__matrix_element
-
-    @_d.setter
-    def _d(self, matrix_element):
-        self._matrix_element = matrix_element
-
-    @property
-    def _Gamma(self):
-        ε_0 = self._ureg.ε_0
-        ħ = self._ureg.ħ
-        c = self._ureg.c
-
-        ω = self.ω
-        J = self.f.J
-        d = self.matrix_element
-        return (ω ** 3) / ((3 * π * ε_0 * ħ * c ** 3) * (2 * J + 1)) * d ** 2
-
-    @_Gamma.setter
-    @default_units("s^-1")
-    def _Gamma(self, Γ):
-        ε_0 = self._ureg.ε_0
-        ħ = self._ureg.ħ
-        c = self._ureg.c
-
-        ω = self.ω
-        J = self.f.J
-        self._matrix_element = (
-            (3 * π * ε_0 * ħ * c ** 3) / (ω ** 3) * (2 * J + 1) * Γ
-        ) ** (1 / 2)
-
-    @property
-    def _Γ(self):
-        return self._Gamma
-
-    @_Γ.setter
-    def _Γ(self, Gamma):
-        self._Gamma = Gamma
-
-    @property
-    def _A(self):
-        return self._Gamma
-
-    @_A.setter
-    def _A(self, A):
-        self._Gamma = A
-
-    @property
-    def matrix_element(self):
-        return self.__matrix_element
-
-    @property
-    def d(self):
-        return self.__matrix_element
-
-    @property
-    def Gamma(self):
-        return self._Gamma
-
-    @property
-    def Γ(self):
-        return self._Gamma
-
-    @property
-    def A(self):
-        return self._Gamma
-
-    @property
-    def type(self):
-        return self.__type
-
-    # ---------------------
-    # high level properties
-    # ---------------------
-
-    @property
-    def branching_ratio(self):
-        return (self.Γ * self.f.τ).m_as("dimensionless")
+    def sublevels_zeeman_shift(self, B: pint.Quantity) -> dict[float: pint.Quantity]:
+        return {
+            (mi, mf): (zeeman_shift(self.state_f.g, mf, B, self._ureg) -
+                       zeeman_shift(self.state_i.g, mi, B, self._ureg)).to('MHz')
+            for (mi, mf) in self.sublevels
+        }
 
     @property
     def saturation_intensity(self):
-        h = self._ureg.planck_constant
-        c = self._ureg.c
-        return π * h * c * self.Γ / (3 * self.λ ** 3)
-
-    @property
-    def Isat(self):
-        return self.saturation_intensity
-
-    @property
-    def σ0(self):
-        ħ = self._ureg.ħ
-        return ħ * self.ω * self.Γ / (2 * self.Isat)
-
+        return (self._ureg('pi*planck_constant*c/3') * self.A / (self.wavelength ** 3)).to('mW/cm^2')
+    
+    # @property
+    # def transition_specific_saturation_intensity(self, mJ_i, mJ_f):
+    #     sA = transition_specific_linewidth(self, mJ_i, mJ_f, self._ureg).to('1/s')
+    #     return (self._ureg('pi*planck_constant*c/3') * sA / (self.wavelength ** 3)).to('mW/cm^2')
+    
     @property
     def cross_section(self):
-        return self.σ0
-
-    def polarizability(self, mJ_i=None, mJ_f=None, **kwargs):
-        return self.__state_f.polarizability(
-            mJ=mJ_f, **kwargs
-        ) - self.__state_i.polarizability(mJ=mJ_i, **kwargs)
-
+        return (self._ureg('hbar/2') * self.angular_frequency * self.A / (self.saturation_intensity)).to('cm^2')
+    
     @property
-    def α(self):
-        return self.polarizability
-
-    @default_units("nm")
-    def magic_wavelength(self, estimate, mJ_i=None, mJ_f=None, **kwargs):
-        return fsolve(
-            lambda λ: self.polarizability(λ=λ, mJ_i=None, mJ_f=None, **kwargs), estimate
-        )
-
-    @property
-    def λ_magic(self):
-        return self.magic_wavelength
-
-
-class TransitionRegistry(TypeRegistry):
-    def __init__(self, data=[], *args, **kwargs):
-        super().__init__(data=data, type=Transition, *args, **kwargs)
-
-    def __call__(self, key):
-        if isinstance(key, int):
-            return self[key]
-        elif isinstance(key, str):
-            try:
-                quantity = self._ureg.Quantity(key)
-                return self(quantity)
-            except (pint.errors.UndefinedUnitError, pint.errors.DimensionalityError):
-                pass
-
-            try:
-                return next(
-                    transition
-                    for transition in self
-                    if (transition.i.match(key) or transition.f.match(key))
-                )
-            except StopIteration:
-                pass
-
-            try:
-                for splitter in [
-                    ":",
-                    "to",
-                    ",",
-                    "<--->",
-                    "<-->",
-                    "<->",
-                    "--->",
-                    "-->",
-                    "->",
-                ]:
-                    if splitter in key:
-                        state_i, state_f = key.split(splitter)
-                        return next(
-                            transition
-                            for transition in self
-                            if (
-                                (transition.i.match(state_i.strip()) and transition.f.match(state_f.strip()))
-                                or (transition.i.match(state_f.strip()) and transition.f.match(state_i.strip()))
-                            )
-                        )
-            except StopIteration:
-                pass
-
-            raise KeyError(f"no transition {key} found")
-        elif isinstance(key, float):
-            wavelength = self._ureg.Quantity(key, "nm")
-            return min(self, key=lambda t: abs(t.wavelength - wavelength))
-        elif isinstance(key, state.State):
-            return next(
-                filter(
-                    lambda transition: transition.i is key or transition.f is key, self
-                )
-            )
-        elif isinstance(key, self._ureg.Quantity):
-            if key.check("[length]"):
-                return min(self, key=lambda t: abs(t.wavelength - key))
-            elif key.check("1/[time]"):
-                return min(self, key=lambda t: abs(t.frequency - key))
-            elif key.check("[energy]"):
-                return min(self, key=lambda t: abs(t.energy - key))
-        elif isinstance(key, Iterable):
-            return TransitionRegistry([self(item) for item in key], ureg=self._ureg)
+    def type(self) -> TransitionType:
+        # TODO: get the correct transition type from quantum numbers
+        if self.state_i.coupling == Coupling.LS and self.state_f.coupling == Coupling.LS:
+            qn_i = self.state_i.quantum_numbers
+            qn_f = self.state_f.quantum_numbers
+            return get_transition_type_LS(qn_i, qn_f)
         else:
-            raise TypeError("key must be integer index, term string")
+            # print(
+            #     f"Transition type calculation is implemented only between states with LS coupling, but transition has {self.state_i.coupling} --> {self.state_f.coupling}")
+            return TransitionType.NONE
+
+    def to_json(self):
+        return {
+            "A": f"{self.A.to('1/s').m} s^-1",
+            "state_i": {"term": self.state_i.term, "energy": f"{self.state_i.energy.to('Ry'):f~P}"},
+            "state_f": {"term": self.state_f.term, "energy": f"{self.state_f.energy.to('Ry'):f~P}"},
+        }
+
+    Einstein_coefficient = make_alias(attr_name="_A", get_unit="1/s")
+    Γ = make_alias(attr_name="_A", get_unit="_2pi*MHz")
+    Gamma = make_alias(attr_name="_A", get_unit="_2pi*MHz")
+    ν = make_alias(attr_name="frequency", get_unit="THz")
+    nu = make_alias(attr_name="frequency", get_unit="THz")
+    ω = make_alias(attr_name="angular_frequency", get_unit="_2pi*1/s")
+    omega = make_alias(attr_name="angular_frequency", get_unit="_2pi*1/s")
+    λ = make_alias("wavelength", "nm")
+    d = make_alias("reduced_matrix_element")
+    I_sat = make_alias(attr_name="saturation_intensity", get_unit="mW/cm^2")
+    Isat = make_alias(attr_name="saturation_intensity", get_unit="mW/cm^2")
+    I_s = make_alias(attr_name="saturation_intensity", get_unit="mW/cm^2")
+    σ0 = make_alias(attr_name="cross_section", get_unit="cm^2")

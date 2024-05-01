@@ -1,44 +1,37 @@
-import json
-import os
-import pathlib
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+#
+# Created: 07/2023
+# Author: Carmelo Mordini <cmordini@phys.ethz.ch>
+
+
 from functools import wraps
 from typing import Callable
+import pint
+
+_ureg = pint.get_application_registry()
+
+
+def set_default_units(quantity, unit, _ureg=_ureg):
+    if isinstance(quantity, str):
+        quantity = _ureg(quantity)
+    if not isinstance(quantity, _ureg.Quantity) or quantity.dimensionless:
+        quantity = _ureg.Quantity(quantity, unit)
+    if not quantity.check(unit):
+        raise ValueError(f"must have units equivalent to {unit}")
+    return quantity
 
 
 def default_units(unit: str):
     def decorator(setter):
         @wraps(setter)
         def wrapper(self, quantity, *args, **kwargs):
-            if isinstance(quantity, str):
-                quantity = self._ureg(quantity)
-            if not isinstance(quantity, self._ureg.Quantity) or quantity.dimensionless:
-                quantity = self._ureg.Quantity(quantity, unit)
-            if not quantity.check(unit):
-                raise ValueError(f"must have units equivalent to {unit}")
+            quantity = set_default_units(quantity, unit, self._ureg)
             return setter(self, quantity, *args, **kwargs)
 
         return wrapper
 
     return decorator
-
-
-cache_dir = os.path.join(os.getcwd(), ".atomphys")
-
-
-def disk_cache(func):
-    @wraps(func)
-    def wrapper(arg, refresh_cache=False):
-        pathlib.Path(cache_dir).mkdir(parents=True, exist_ok=True)
-        filename = os.path.join(cache_dir, f"{func.__name__}({arg}).cache")
-        if not refresh_cache and os.path.exists(filename):
-            with open(filename) as fp:
-                return json.load(fp)
-        data = func(arg, refresh_cache)
-        with open(filename, "w+") as fp:
-            json.dump(data, fp)
-        return data
-
-    return wrapper
 
 
 def fsolve(func: Callable, x0, x1=None, tol: float = 1.49012e-08, maxfev: int = 100):
@@ -70,3 +63,32 @@ def fsolve(func: Callable, x0, x1=None, tol: float = 1.49012e-08, maxfev: int = 
         fx0, fx1 = fx1, func(x1)
         i += 1
     return x1
+
+
+def make_alias(attr_name: str, get_unit: str = None, multiplication_factor: float = 1):
+    @property
+    def prop(self):
+        if get_unit is None:
+            return multiplication_factor * getattr(self, attr_name)
+        else:
+            return multiplication_factor * getattr(self, attr_name).to(get_unit)
+    return prop
+
+
+
+def make_alias_with_setter(attr_name: str, get_unit: str = None):
+    @property
+    def prop(self):
+        if get_unit is None:
+            return getattr(self, attr_name)
+        else:
+            return getattr(self, attr_name).to(get_unit)
+
+    @prop.setter
+    def prop(self, value):
+        if get_unit is None:
+            setattr(self, attr_name, value)
+        else:
+            setattr(self, attr_name, value.to(get_unit))
+
+    return prop

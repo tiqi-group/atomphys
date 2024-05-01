@@ -1,17 +1,51 @@
-import enum
 import re
 from fractions import Fraction
 
 
-class Coupling(enum.Enum):
-    LS = "LS"  # Russell-Saunders coupling
-    jj = "jj"
-    LK = "LK"  # pair coupling
+LS_term = re.compile(r"^(?P<S>\d+)(?P<L>[A-Z])(?P<parity>\*)?(?P<J>\d+(/2)?)$")
+r"""
+Regular expression for LS terms.
 
+Matches a pattern that consists of:
+- ^: Start of the string.
+- (?P<S>\d+): Named capturing group 'S' matching one or more digits.
+- (?P<L>[A-Z]): Named capturing group 'L' matching a single uppercase letter.
+- (?P<parity>\*)?: Named capturing group 'parity' matching an asterisk character '*' zero or one time (optional).
+- (?P<J>\d+(/2)?): Named capturing group 'J' matching a sequence of digits, optionally followed by '/2'.
+- $: End of the string.
+"""
 
-LS_term = re.compile(r"(?P<S>\d+)(?P<L>[A-Z])\*?(?P<J>\d+(/\d)?\d*)?")
-J1J2_term = re.compile(r"\((?P<J1>\d+/?\d*),(?P<J2>\d+/?\d*)\)\*?(?P<J>\d+(/\d)?\d*)?")
-LK_term = re.compile(r"(?P<S2>\d+)\[(?P<K>\d+/?\d*)\]\*?(?P<J>\d+(/\d)?\d*)?")
+J1J2_term = re.compile(r"^\((?P<J1>\d+(/2)?),(?P<J2>\d+(/2)?)\)(?P<parity>\*)?(?P<J>\d+(/2)?)$")
+r"""
+Regular expression for J1J2 terms.
+
+Matches a pattern that consists of:
+- ^: Start of the string.
+- \(: Literal parentheses '(' character.
+- (?P<J1>\d+(/2)?): Named capturing group 'J1' matching a sequence of digits, optionally followed by '/2'.
+- ,: Literal comma ',' character.
+- (?P<J2>\d+(/2)?): Named capturing group 'J2' matching a sequence of digits, optionally followed by '/2'.
+- \): Literal parentheses ')' character.
+- (?P<parity>\*)?: Named capturing group 'parity' matching an asterisk character '*' zero or one time (optional).
+- (?P<J>\d+(/2)?): Named capturing group 'J' matching a sequence of digits, optionally followed by '/2'.
+- $: End of the string.
+"""
+
+LK_term = re.compile(r"^(?P<S2>\d+)\[(?P<K>\d+(/2)?)\](?P<parity>\*)?(?P<J>\d+(/2)?)$")
+r"""
+Regular expression for LK terms.
+
+Matches a pattern that consists of:
+- ^: Start of the string.
+- (?P<S2>\d+): Named capturing group 'S2' matching one or more digits.
+- \[: Literal square bracket '[' character.
+- (?P<K>\d+(/2)?): Named capturing group 'K' matching a sequence of digits, optionally followed by '/2'.
+- \]: Literal square bracket ']' character.
+- (?P<parity>\*)?: Named capturing group 'parity' matching an asterisk character '*' zero or one time (optional).
+- (?P<J>\d+(/2)?): Named capturing group 'J' matching a sequence of digits, optionally followed by '/2'.
+- $: End of the string.
+"""
+
 
 L = {
     "S": 0,
@@ -35,6 +69,7 @@ L = {
     "X": 18,
     "Y": 19,
 }
+
 L_inv = {value: key for key, value in L.items()}
 
 
@@ -45,64 +80,56 @@ def parse_term(term: str) -> dict:
     if "Limit" in term:
         return {"ionization_limit": True}
 
-    parity = -1 if "*" in term else 1
-
     match = LS_term.search(term)
     if match is None:
         match = J1J2_term.search(term)
     if match is None:
         match = LK_term.search(term)
     if match is None:
-        return {"parity": parity}
+        raise ValueError(f"Invalid term {term}")
 
     def convert(key, value):
         if key in ["S", "S2"]:
             return float(Fraction((int(value) - 1) / 2))
-        if key in ["J1", "J2", "J", "K"]:
+        if key in ["J1", "J2", "J", "K", "I", "F"]:
             return float(Fraction(value))
         if key == "L":
             return L[value]
+        if key == "parity":
+            return -1 if value == "*" else 1
 
-    term = {
-        key: convert(key, value) for key, value in match.groupdict().items() if value
-    }
+    term = {key: convert(key, value) for key, value in match.groupdict().items()}
 
-    return {**term, "parity": parity}
+    return term
 
 
 def print_term(
-    term: str = None, include_parity: bool = False, **quantum_numbers
+    J=None, S=None, L=None, J1=None, J2=None, S2=None, K=None, I=None, F=None, parity=None, ionization_limit=None
 ) -> str:
-    if term:
-        quantum_numbers = {**parse_term(term), **quantum_numbers}
-
-    if "ionization_limit" in quantum_numbers:
+    if ionization_limit is not None and ionization_limit:
         return "Ionization Limit"
 
-    P = ""
-    if include_parity:
-        if "parity" in quantum_numbers and quantum_numbers["parity"] == -1:
-            P = "*"
+    P = "*" if parity == -1 else ""
 
-    J = ""
-    if "J" in quantum_numbers:
-        try:
-            J = f"{Fraction(quantum_numbers['J'])}"
-        except ValueError:
-            return None
+    J = f"{Fraction(J)}"
 
     # Russell-Saunders coupling
-    if all(key in quantum_numbers.keys() for key in ["S", "L"]):
-        return f"{2*quantum_numbers['S']+ 1:g}{L_inv[quantum_numbers['L']]}{P}{J}"
+    if S is not None and L is not None:
+        return f"{2 * S + 1:g}{L_inv[L]}{P}{J}"
 
     # J1J2 coupling
-    if all(key in quantum_numbers.keys() for key in ["J1", "J2"]):
-        return f"({Fraction(quantum_numbers['J1'])},{Fraction(quantum_numbers['J2'])}){P}{J}"
+    if J1 is not None and J2 is not None:
+        return f"({Fraction(J1)},{Fraction(J2)}){P}{J}"
 
     # LK coupling
-    if all(key in quantum_numbers.keys() for key in ["S2", "K"]):
-        return (
-            f"{2*quantum_numbers['S2'] + 1:g}[{Fraction(quantum_numbers['K'])}]{P}{J}"
-        )
+    if S2 is not None and K is not None:
+        return f"{2 * S2 + 1:g}[{Fraction(K)}]{P}{J}"
 
-    return None
+    raise ValueError("Invalid arguments")
+
+
+def vaildate_term(term: str) -> dict:
+    """
+    parse term symbol string in NIST ASD
+    """
+    return "Limit" in term or LS_term.search(term) or J1J2_term.search(term) or LK_term.search(term)
