@@ -7,14 +7,14 @@ from .utils.utils import default_units, set_default_units
 
 
 class ElectricField:
-    def __init__(self, frequency: pint.Quantity, E0: pint.Quantity, _ureg=None) -> None:
+    def __init__(self, frequency: pint.Quantity, _ureg=None) -> None:
         self._ureg = pint.get_application_registry() if _ureg is None else _ureg
         self.frequency = frequency
 
     @property
     def frequency(self) -> pint.Quantity:
         return (self._frequency).to("THz")
-    
+
     @frequency.setter
     @default_units("THz")
     def frequency(self, value: pint.Quantity):
@@ -79,55 +79,13 @@ class GaussianBeam(ElectricField):
         direction_of_propagation,
         _ureg: pint.UnitRegistry,
     ):
-        """
-        Gaussian Beam class is designed in such way to handle hierarchal redundancies. 
-        The idea is that one can define laser in multiple ways. 
-        For instance, one can define the polarization vector and the direction of propagation or 
-        one can define the angle of the laser beam and the polarization vector. 
-        The class will then calculate the missing parameters. 
-
-        Construction of this hierarchal redundancies is following, 
-        when missing a base property, the base property will be calculated from the remaining properties. Base property are listed below:
-        e.g. frequency is the base property, and wavelength will be only used when frequency is missing
-
-        (frequency) <- (wavelength)         (+) (detuning)
-        (intensity) <- (power, waist)
-        (polarization, direction_of_propagation) <- (phi, gamma, alpha)
-
-
-        References:
-            - 
-            - Transformation of phi, gamma, alpha to propagation vector from Gillen Beck's Master Thesis (p. 26)
-            - Transformation of phi, gamma, alpha to polarization vector from Roland's Matts PhD Thesis (p. 19)
-
-
-        Args:
-            frequency: Frequency of the laser (NOT ANGULAR FREQUENCY)
-            wavelength: Wavelength of the laser
-            detuning: Detuning of the laser: (its detuning in MHz not in 2*pi*MHz)
-
-            intensity: Intensity of the laser [Pint Quantity]
-            power: Power of the laser [Pint Quantity]
-            waist: Waist of the laser [Pint Quantity]
-
-            polarization: Polarization vector of the laser beam - doesn't have to be normalized, as it will be later normalized
-            direction_of_propagation: Direction of the propagation of the laser beam - doesn't have to be normalized, as it will be later normalized
-            phi: angle between the axis of the k-vector and the quantization axis
-            gamma: angle between the axis of the polarization elipse and the quantization axis
-            alpha: phase of the polarization vector [Fill out how to define right and left circularly polarized states]
-
-            _ureg: Unit registry
-        """
-
         # Call the ElectricField constructor
-        super().__init__(frequency, E0=0, _ureg=_ureg)
+        super().__init__(frequency, _ureg=_ureg)
 
         if frequency is None:
             raise ValueError("Must specify frequency")
-        
         if (power is None or waist is None):
             raise ValueError("Must specify both power and waist")
-        
         if (polarization is None or direction_of_propagation is None):
             raise ValueError("Must specify polarization and direction of propagation")
 
@@ -145,6 +103,7 @@ class GaussianBeam(ElectricField):
 
     @staticmethod
     def calculate_intensity(power, waist):
+        """ Calculate the peak intensity of a Gaussian beam given the power and waist """
         return 2 * power / (np.pi * waist**2)
 
     @property
@@ -155,33 +114,38 @@ class GaussianBeam(ElectricField):
     @default_units("THz")
     def frequency(self, value: pint.Quantity):
         self._frequency = value
-        
+
     @property
     def wavelength(self):
+        """ Returns the wavelength (in vacuum) of the Gaussian beam in nm """
         return (self._ureg("c") / self.frequency).to("nm")
 
     @property
     def direction_of_propagation(self):
+        """ Returns the direction of propagation of the Gaussian beam, which is effectively unitless, unit wavevector. """
         return self._direction_of_propagation
-    
+
     @direction_of_propagation.setter
     def direction_of_propagation(self, value):
         self._direction_of_propagation = value / np.linalg.norm(value)
-    
+
     @property
     def polarization(self):
+        """ Returns the Jones polarization vector of the electric field in cartesian coordinates."""
         return self._polarization
-    
+
     @polarization.setter
     def polarization(self, value):
         self._polarization = value / np.linalg.norm(value)
 
     @property
     def intensity(self):
+        """ Returns the peak intensity of the Gaussian beam in W/cm^2 """
         return self._field_amplitude**2 * self._ureg("c*epsilon_0") / 2
 
     @property
     def power(self):
+        """ Returns the power of the Gaussian beam in W, mW, uW, nW, or pW depending on the magnitude of the power. This would be the total power of the beam. The one that you would measure with a powermeter in a lab."""
         power_in_watts = self._power.to("W").magnitude
 
         if power_in_watts >= 1:
@@ -194,7 +158,7 @@ class GaussianBeam(ElectricField):
             return self._power.to("nW")
         else:
             return self._power.to("pW")
-    
+
     @power.setter
     @default_units("W")
     def power(self, value):
@@ -204,6 +168,7 @@ class GaussianBeam(ElectricField):
 
     @property
     def waist(self):
+        """ Returns the waist of the Gaussian beam. """
         return self._waist
 
     @waist.setter
@@ -215,6 +180,7 @@ class GaussianBeam(ElectricField):
 
     @property
     def wavevector(self):
+        """ Returns the wavevector of the Gaussian beam."""
         wavevector = self.direction_of_propagation * self.angular_frequency / self._ureg("c")
         return wavevector
 
@@ -287,7 +253,6 @@ class GaussianBeam(ElectricField):
 
 
 class SumElectricField(ElectricField):
-    # TO DO: Update the class  - summation has problems
     def __init__(self, field_a: ElectricField, field_b: ElectricField):
         super().__init__(field_a.frequency, field_a._ureg)
         self._field_a = field_a
