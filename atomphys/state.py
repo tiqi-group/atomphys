@@ -1,5 +1,4 @@
 import enum
-from collections import UserList
 from collections.abc import Iterable
 from fractions import Fraction
 from typing import Any
@@ -11,6 +10,7 @@ from .calc import polarizability
 from .calc import ac_stark
 from .constants import gs
 from .laser import Laser
+from .registry import TypeRegistry
 from .term import L_inv, parse_term, print_term
 from .transition import TransitionRegistry
 from .util import default_units
@@ -73,8 +73,7 @@ class State:
 
     def __eq__(self, other):
         return (
-            self.energy == other.energy
-            and self.quantum_numbers == other.quantum_numbers
+            self.energy == other.energy and self.quantum_numbers == other.quantum_numbers
         )
 
     def __lt__(self, other):
@@ -124,7 +123,7 @@ class State:
     @property
     def quantum_numbers(self) -> dict:
         return self.__quantum_numbers
-    
+
     @property
     def configuration(self) -> str:
         return self.__configuration
@@ -137,13 +136,22 @@ class State:
     def name(self):
         if self.term is None:
             return None
-        if "n" in self.__quantum_numbers:
+        if all(k in self.__quantum_numbers for k in ("n", "L", "J")):
             return f"{self.n}{L_inv[self.L]}{Fraction(self.J)}, {self.term}"
         return f"{self.term}"
 
     # -----------
     # Transitions
     # -----------
+
+    @property
+    def states(self):
+        return StateRegistry(
+            [
+                transition.f if transition.i is self else transition.i
+                for transition in self.__transitions
+            ]
+        )
 
     @property
     def transitions(self):
@@ -155,11 +163,11 @@ class State:
 
     @property
     def transitions_down(self):
-        return self.__transitions.down_from(self)
+        return self.__transitions.filter(lambda state: state.f == self)
 
     @property
     def transitions_up(self):
-        return self.__transitions.up_from(self)
+        return self.__transitions.filter(lambda state: state.i == self)
 
     @property
     def down(self):
@@ -224,33 +232,22 @@ class State:
     @property
     def α(self):
         return self.polarizability
-    
-    def ACstark(self, mJ, laser, eps, e_z, I, u):
+
+    def ACstark(self, mJ, laser, eps, e_z, intensity, u):
         return ac_stark.total_ACshift(
             self,
             mJ,
             laser.omega,
-            eps, 
+            eps,
             e_z,
-            I,
+            intensity,
             u,
         )
 
 
-class StateRegistry(UserList):
-    _ureg: pint.UnitRegistry = None
-
-    def __init__(self, data=[], ureg=None, atom=None):
-        if not all(isinstance(state, State) for state in data):
-            raise TypeError("StateRegistry can only contain states")
-        super().__init__(data)
-
-        if atom:
-            self._ureg = atom._ureg
-        elif ureg:
-            self._ureg = ureg
-        else:
-            self._ureg = _ureg
+class StateRegistry(TypeRegistry):
+    def __init__(self, data=[], *args, **kwargs):
+        super().__init__(data=data, type=State, *args, **kwargs)
 
     def __call__(self, key):
         if isinstance(key, int):
@@ -279,55 +276,11 @@ class StateRegistry(UserList):
                 "key must be integer index, term string, energy, or iterable"
             )
 
-    def __repr__(self):
-        repr = f"{len(self)} States (\n"
-        if self.__len__() <= 6:
-            for state in self:
-                repr += f"{state}\n"
-        else:
-            for state in self[:3]:
-                repr += f"{state}\n"
-            repr += "...\n"
-            for state in self[-3:]:
-                repr += f"{state}\n"
-        repr = repr[:-1] + ")"
-        return repr
-
-    def _assert_State(self, state: Any):
-        if not isinstance(state, State):
-            raise TypeError("StateRegistry can only contain states")
-
-    def __setitem__(self, index: int, state: State):
-        self._assert_State(state)
-        super().__setitem__(index, state)
-
-    def insert(self, index: int, state: State):
-        self._assert_State(state)
-        super().insert(index, state)
-
-    def append(self, state: State):
-        self._assert_State(state)
-        super().append(state)
-
-    def extend(self, states):
-        [self._assert_State(state) for state in states]
-        super().extend(states)
-
-    def search(self, func):
-        def search_func(state):
-            try:
-                return func(state)
-            except BaseException:
-                return False
-
-        return StateRegistry(list(filter(search_func, self)), ureg=self._ureg)
-
     def match(self, **kwargs):
-        kwargs.pop("energy", None)
-        kwargs.pop("En", None)
-        return self.search(
-            lambda state: all(getattr(state, key) == val for key, val in kwargs.items())
+        return self.filter(
+            lambda state: all(
+                getattr(state, key, lambda: None) == val
+                for key, val in kwargs.items()
+                if key not in ["energy", "En"]
+            )
         )
-
-    def to_dict(self):
-        return [state.to_dict() for state in self]

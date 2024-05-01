@@ -1,0 +1,3 @@
+atomphys
+numpy
+matplotlib

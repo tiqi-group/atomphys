@@ -5,10 +5,10 @@ import urllib
 import urllib.request
 from typing import List
 
-from TIQIatomphys.term import print_term
-from TIQIatomphys.util import disk_cache
+from atomphys.term import print_term
+from atomphys.util import disk_cache
 
-monovalent = re.compile(r"^[a-z0-9]*\.(?P<n>\d+)[a-z]$")
+monovalent = re.compile(r"^[a-z0-9]*p6\.(?P<n>\d+)[a-z]$")
 
 
 def remove_annotations(s: str) -> str:
@@ -23,6 +23,7 @@ def remove_annotations(s: str) -> str:
 
 @disk_cache
 def fetch_states(atom, refresh_cache=False):
+    # option "off" is invalid, to not include a field just do not query for it
     url = "https://physics.nist.gov/cgi-bin/ASD/energy1.pl"
     values = {
         "spectrum": atom,
@@ -32,10 +33,10 @@ def fetch_states(atom, refresh_cache=False):
         "term_out": "on",  # output the term symbol string
         "conf_out": "on",  # output the configutation string
         "level_out": "on",  # output the energy level
-        "unc_out": 1,  # uncertainty on energy
+        # "unc_out": "on",  # uncertainty on energy
         "j_out": "on",  # output the J level
         "g_out": "on",  # output the g-factor
-        "lande_out": "on",  # output experimentally measured g-factor
+        # "lande_out": "on",  # output experimentally measured g-factor
     }
 
     get_postfix = urllib.parse.urlencode(values)
@@ -56,7 +57,7 @@ def parse_states(data: List[dict]):
         {
             **{
                 "energy": remove_annotations(state["Level (Ry)"]) + " Ry",
-                "term": print_term(state["Term"], J=state["J"]),
+                "term": print_term(state["Term"], include_parity=True, J=state["J"]),
                 "configuration": state["Configuration"],
                 "g": None if state["g"] == "" else float(state["g"]),
             },

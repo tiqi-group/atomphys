@@ -1,0 +1,67 @@
+site_name: atomphys
+site_url: https://mgrau.github.io/atomphys
+repo_url: https://github.com/mgrau/atomphys
+edit_uri: edit/main/docs/
+repo_name: atomphys
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.ipynb
+  - User Guide:
+      - Atom: user_guide/atom.md
+      - State: user_guide/state.md
+      - Transision: user_guide/transition.md
+      - Laser: user_guide/laser.md
+  - Reference: reference.md
+  - Developers: developers.md
+
+theme:
+  logo: img/atom.svg
+  favicon: img/atom.svg
+  name: material
+  features:
+    - navigation.instant
+    # - navigation.tabs
+    - navigation.top
+    - navigation.expand
+    - navigation.sections
+    - search.suggest
+  palette:
+    - scheme: default
+      media: "(prefers-color-scheme: light)"
+      toggle:
+        icon: material/eye
+        name: Switch to dark mode
+    - scheme: slate
+      media: "(prefers-color-scheme: dark)"
+      toggle:
+        icon: material/eye-outline
+        name: Switch to light mode
+
+markdown_extensions:
+  - footnotes
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - css/colors.css
+
+plugins:
+  - search
+  - include-markdown
+  - mknotebooks:
+      execute: true
+      enable_default_jupyter_cell_styling: false
+      binder: true
+      binder_service_name: "gh/mgrau"
+      binder_branch: "main"
+  - mkdocstrings:
+      watch:
+        - atomphys

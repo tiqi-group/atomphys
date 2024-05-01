@@ -1,0 +1,20 @@
+name: Build Docs
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - name: Install atomphys
+        run: pip install .
+      - name: Install MkDocs
+        run: pip install mkdocs-material mkdocstrings mkdocs-include-markdown-plugin mknotebooks
+      - name: Run MkDocs
+        run: mkdocs gh-deploy --force
