@@ -21,15 +21,6 @@ class ElectricField:
         self._frequency = value
 
     @property
-    def wavelength(self):
-        return (self._ureg("c") / self.frequency).to("nm")
-
-    @wavelength.setter
-    @default_units("nm")
-    def wavelength(self, value):
-        self.frequency = self._ureg("c") / value
-
-    @property
     def angular_frequency(self) -> pint.Quantity:
         return (self.frequency.to("1/s")) * self._ureg("2*pi")
 
@@ -81,19 +72,12 @@ class ElectricField:
 class GaussianBeam(ElectricField):
     def __init__(
         self,
-        frequency: pint.Quantity = None,
-        wavelength: pint.Quantity = None,
-        detuning: pint.Quantity = None,
-        intensity: pint.Quantity = None,
-        power: pint.Quantity = None,
-        waist: float | list[float] = None,
-        polarization = None,
-        direction_of_propagation = None,
-        phi: pint.Quantity = None,
-        gamma: pint.Quantity = None,
-        theta: pint.Quantity = None,
-        alpha: pint.Quantity = None,
-        _ureg: pint.UnitRegistry = None,
+        frequency: pint.Quantity,
+        power: pint.Quantity,
+        waist: float,
+        polarization,
+        direction_of_propagation,
+        _ureg: pint.UnitRegistry,
     ):
         """
         Gaussian Beam class is designed in such way to handle hierarchal redundancies. 
@@ -138,137 +122,63 @@ class GaussianBeam(ElectricField):
         # Call the ElectricField constructor
         super().__init__(frequency, E0=0, _ureg=_ureg)
 
-        if detuning is not None:
-            self._detuning = detuning
-        else:
-            self._detuning = 0 * self._ureg("MHz")
-
-        if frequency is None and wavelength is None:
-            raise ValueError("Must specify either frequency or wavelength")
+        if frequency is None:
+            raise ValueError("Must specify frequency")
         
-        if intensity is None and (power is None or waist is None):
-            raise ValueError("Must specify either intensity or both power and waist")
+        if (power is None or waist is None):
+            raise ValueError("Must specify both power and waist")
         
-        if (polarization is None or direction_of_propagation is None) and (phi is None or gamma is None or alpha is None):
-            raise ValueError("Must specify either polarization and direction of propagation or phi, gamma and alpha")
+        if (polarization is None or direction_of_propagation is None):
+            raise ValueError("Must specify polarization and direction of propagation")
 
-        if frequency is not None:
-            self.frequency = frequency
-        elif wavelength is not None:
-            self.wavelength = wavelength
-
-        # If the user specified intensity, use it
-        if intensity is not None:
-            self.intensity = intensity
-        elif power is not None and waist is not None:
-            self.intensity = self.calculate_intensity(power, waist)
-
+        self._frequency = frequency
         self._power = power
         self._waist = waist
         if polarization is not None and direction_of_propagation is not None:
-            self._epsilon = np.asarray(polarization) / np.linalg.norm(polarization)
-            self._n = np.asarray(direction_of_propagation) / np.linalg.norm(
+            self._polarization = np.asarray(polarization) / np.linalg.norm(polarization)
+            self._direction_of_propagation = np.asarray(direction_of_propagation) / np.linalg.norm(
                 direction_of_propagation
             )
-        elif phi is not None and gamma is not None and alpha is not None:
-            self.phi = phi
-            self.gamma = gamma
-            self.alpha = alpha
-            self.calculate_n_and_epsilon()
-        
         assert (
-            np.abs(np.dot(self._epsilon, self._n)) < 1e-6
+            np.abs(np.dot(self._polarization, self._direction_of_propagation)) < 1e-6
         ), "Polarization must be perpendicular to wavevector"
-
-    @staticmethod
-    def calculate_n_and_epsilon(self):
-        if self.phi is not None and self.gamma is not None and self.alpha is not None:
-            phi = self.phi.m
-            gamma = self.gamma.m
-            alpha = self.alpha.m
-            self.epsilon = np.array([-np.cos(gamma)*np.cos(phi), np.exp(1j*alpha)*np.sin(gamma), np.cos(gamma)*np.sin(phi)])
-            self.n = np.array([np.sin(phi), 0, np.cos(phi)])
-            assert (
-                np.abs(np.dot(self._epsilon, self._n)) < 1e-6
-            ), "Polarization must be perpendicular to wavevector"
 
     @staticmethod
     def calculate_intensity(power, waist):
         return 2 * power / (np.pi * waist**2)
 
     @property
-    def detuning(self):
-        return self._detuning
-
-    @detuning.setter
-    @default_units("MHz")
-    def detuning(self, value):
-        self._detuning = value
-
-    @property
     def frequency(self) -> pint.Quantity:
-        return (self._frequency + self._detuning).to("THz")
+        return (self._frequency).to("THz")
 
     @frequency.setter
     @default_units("THz")
     def frequency(self, value: pint.Quantity):
         self._frequency = value
-
-
+        
     @property
-    def n(self):
-        return self._n
-    
-    @n.setter
-    def n(self, value):
-        self._n = value / np.linalg.norm(value)
-    
-    @property
-    def epsilon(self):
-        return self._epsilon
-    
-    @epsilon.setter
-    def epsilon(self, value):
-        self._epsilon = value / np.linalg.norm(value)
+    def wavelength(self):
+        return (self._ureg("c") / self.frequency).to("nm")
 
     @property
-    def gamma(self):
-        return self._gamma.to('rad')
+    def direction_of_propagation(self):
+        return self._direction_of_propagation
     
-    @gamma.setter
-    @default_units("rad")
-    def gamma(self, value):
-        self.set_attribute('gamma', value)
-        self.calculate_n_and_epsilon()
-
+    @direction_of_propagation.setter
+    def direction_of_propagation(self, value):
+        self._direction_of_propagation = value / np.linalg.norm(value)
+    
     @property
-    def alpha(self):
-        return self._alpha.to('rad')
+    def polarization(self):
+        return self._polarization
     
-    @alpha.setter
-    @default_units("rad")
-    def alpha(self, value):
-        self.set_attribute('alpha', value)
-        self.calculate_n_and_epsilon()
-
-    @property
-    def theta(self):
-        return self._theta.to('rad')
-    
-    @theta.setter
-    @default_units("rad")
-    def theta(self, value):
-        self.set_attribute('theta', value)
-        self.calculate_n_and_epsilon()
+    @polarization.setter
+    def polarization(self, value):
+        self._polarization = value / np.linalg.norm(value)
 
     @property
     def intensity(self):
         return self._field_amplitude**2 * self._ureg("c*epsilon_0") / 2
-    
-    @intensity.setter
-    @default_units("W/cm^2")
-    def intensity(self, value):
-        self._field_amplitude = np.sqrt(2 * value / self._ureg("c*epsilon_0"))
 
     @property
     def power(self):
@@ -289,6 +199,8 @@ class GaussianBeam(ElectricField):
     @default_units("W")
     def power(self, value):
         self._power = value
+        intensity = self.calculate_intensity(self._power, self._waist)
+        self._field_amplitude = np.sqrt(2 * intensity / self._ureg("c*epsilon_0"))
 
     @property
     def waist(self):
@@ -298,14 +210,16 @@ class GaussianBeam(ElectricField):
     @default_units("um")
     def waist(self, value):
         self._waist = value
+        intensity = self.calculate_intensity(self._power, self._waist)
+        self._field_amplitude = np.sqrt(2 * intensity / self._ureg("c*epsilon_0"))
 
     @property
     def wavevector(self):
-        wavevector = self.n * self.angular_frequency / self._ureg("c")
+        wavevector = self.direction_of_propagation * self.angular_frequency / self._ureg("c")
         return wavevector
 
     def field(self):
-        return self._epsilon * self._field_amplitude
+        return self.polarization * self._field_amplitude
 
     def gradient(self):
         return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field())
@@ -373,8 +287,9 @@ class GaussianBeam(ElectricField):
 
 
 class SumElectricField(ElectricField):
+    # TO DO: Update the class  - summation has problems
     def __init__(self, field_a: ElectricField, field_b: ElectricField):
-        super().__init__(field_a.wavelength, field_a._ureg)
+        super().__init__(field_a.frequency, field_a._ureg)
         self._field_a = field_a
         self._field_b = field_b
 
