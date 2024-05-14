@@ -52,6 +52,11 @@ Alternatively one can use:
 ```
 Above example 'Ca' database was taken from {Mills 2018}.
 
+#### Basic Usage:
+Upon importing your atom, it allows you to interact with it in a similar way you would interact with a databse / or a graph. It makes it easy to interact in an easy way with NIST database, or any other database that you would use. 
+
+
+
 
 #### Possible operations on an atom:
 > - copy()
