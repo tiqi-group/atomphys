@@ -73,8 +73,8 @@ class GaussianBeam(ElectricField):
     def __init__(
         self,
         frequency: pint.Quantity,
+        waist: pint.Quantity,
         power: pint.Quantity,
-        waist: float,
         polarization,
         direction_of_propagation,
         _ureg: pint.UnitRegistry,
@@ -90,6 +90,8 @@ class GaussianBeam(ElectricField):
             raise ValueError("Must specify polarization and direction of propagation")
 
         self.frequency = frequency
+        self._power = power
+        self._waist = waist
         self.power = power
         self.waist = waist
         if polarization is not None and direction_of_propagation is not None:
@@ -160,7 +162,6 @@ class GaussianBeam(ElectricField):
             return self._power.to("pW")
 
     @power.setter
-    @default_units("W")
     def power(self, value):
         self._power = value
         intensity = self.calculate_intensity(self._power, self._waist)
