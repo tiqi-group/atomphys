@@ -89,12 +89,12 @@ class GaussianBeam(ElectricField):
         if (polarization is None or direction_of_propagation is None):
             raise ValueError("Must specify polarization and direction of propagation")
 
-        self._frequency = frequency
-        self._power = power
-        self._waist = waist
+        self.frequency = frequency
+        self.power = power
+        self.waist = waist
         if polarization is not None and direction_of_propagation is not None:
-            self._polarization = np.asarray(polarization) / np.linalg.norm(polarization)
-            self._direction_of_propagation = np.asarray(direction_of_propagation) / np.linalg.norm(
+            self.polarization = np.asarray(polarization) / np.linalg.norm(polarization)
+            self.direction_of_propagation = np.asarray(direction_of_propagation) / np.linalg.norm(
                 direction_of_propagation
             )
         assert (
