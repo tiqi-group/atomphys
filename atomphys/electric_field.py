@@ -47,11 +47,11 @@ class ElectricField:
     def intensity(self, value):
         self._field_amplitude = np.sqrt(2 * value / self._ureg("c*epsilon_0"))
 
-    def field(self, x, y, z):
-        raise NotImplementedError
+    # def field(self, x, y, z):
+    #     raise NotImplementedError
 
-    def gradient(self, x, y, z):
-        raise NotImplementedError
+    # def gradient(self, x, y, z):
+    #     raise NotImplementedError
 
     def __add__(self, other):
         if not isinstance(other, ElectricField):
@@ -95,10 +95,8 @@ class GaussianBeam(ElectricField):
         self.power = power
         self.waist = waist
         if polarization is not None and direction_of_propagation is not None:
-            self.polarization = np.asarray(polarization) / np.linalg.norm(polarization)
-            self.direction_of_propagation = np.asarray(direction_of_propagation) / np.linalg.norm(
-                direction_of_propagation
-            )
+            self.polarization = np.asarray(polarization) 
+            self.direction_of_propagation = np.asarray(direction_of_propagation) 
         assert (
             np.abs(np.dot(self._polarization, self._direction_of_propagation)) < 1e-6
         ), "Polarization must be perpendicular to wavevector"

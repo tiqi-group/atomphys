@@ -9,6 +9,7 @@
 from itertools import combinations
 import qutip
 import pint
+import numpy as np
 from atomphys.atom import Atom
 from atomphys.state import State
 from atomphys.electric_field import ElectricField
@@ -16,6 +17,7 @@ from atomphys.transition import Transition
 from atomphys.calc.rabi_frequency import Rabi_Frequency
 from atomphys.calc.zeeman import zeeman_shift
 from atomphys.calc.lindblad_operators import sqrt_lindblad_operator
+
 
 
 def kets(states: list[State]):
@@ -111,6 +113,40 @@ def H_zeeman(states: list[State], B_field: pint.Quantity):
             * ket
             * ket.dag()
         )
+    return H
+
+def H_zeeman_B_vector(states: list[State], B_field):
+    """
+    Returns extra zeeman shift due to the B field, where B_field is a vector (Bx, By, Bz). This is not the full hamiltonian, but rather a correction to the H0 hamiltonian.
+    
+    $$
+    \begin{aligned}
+    H_B = 
+    -\frac{\mu_b g_J}{\hbar}\mathbf{B}\cdot\hat{\mathbf{J}} =\\&
+    \sum_{\substack{(\zeta_1, \zeta_2)\in \{S\}|\\(n,l,s,j,m_j+1)^{\zeta_1}=(n,l,s,j,m_j)^{\zeta_2}}}
+    -\mu_b g_J (j^{(\zeta_1)}, l^{(\zeta_1)}, s^{(\zeta_1)} )\left(\frac{1}{2} \left( B_x-iB_y \right) \right) \sqrt{j^{(\zeta_1)}(j^{(\zeta_1)}+1)-m_j^{(\zeta_1)}(m_j^{(\zeta_1)}+1)}|\zeta_2 \rangle \langle \zeta_1 |
+    \\+&\sum_{\substack{(\zeta_1, \zeta_2)\in \{S\}|\\(n,l,s,j,m_j-1)^{\zeta_1}=(n,l,s,j,m_j)^{\zeta_2}}}
+    -\mu_b g_J (j^{(\zeta_1)}, l^{(\zeta_1)}, s^{(\zeta_1)} )\left(\frac{1}{2} \left(B_x + iB_y  \right) \right) \sqrt{j^{(\zeta_1)}(j^{(\zeta_1)}+1)-m_j^{(\zeta_1)}(m_j^{(\zeta_1)}-1)}|\zeta_2 \rangle \langle \zeta_1 |
+    \\+&\sum_{\zeta \in \{S\}}
+    -\mu_b g_J (j^{(\zeta)}, l^{(\zeta)}, s^{(\zeta)} )B_z m_j^{(\zeta)} |\zeta \rangle \langle \zeta |
+    \end{aligned}
+    $$
+    
+    """
+
+    H = 0
+    kets_dict = kets(states)
+    for (state_i, m_i), ket_i in kets_dict.items():
+        for (state_j, m_j), ket_j in kets_dict.items():
+            
+            J_i = state_i.quantum_numbers["J"]
+
+            if state_i == state_j and m_i + 1 == m_j:
+                H += - (state_i._ureg('bohr_magneton') * state_i.g * (1 / 2 * (B_field[0] - 1j * B_field[1])) * np.sqrt(J_i * (J_i + 1) - m_i * (m_i + 1))).to('hbar MHz').m * ket_j * ket_i.dag()
+            if state_i == state_j and m_i - 1 == m_j:
+                H += - (state_i._ureg('bohr_magneton') * state_i.g * (1 / 2 * (B_field[0] + 1j * B_field[1])) * np.sqrt(J_i * (J_i + 1) - m_i * (m_i - 1))).to('hbar MHz').m * ket_j * ket_i.dag()
+            if state_i == state_j and m_i == m_j:
+                    H += ((zeeman_shift(state_i.g, m_i, B_field[2], state_i._ureg).to("MHz")).magnitude * ket_j * ket_i.dag())
     return H
 
 
