@@ -19,7 +19,6 @@ class Atom:
 
     def copy(self):
         _copy = deepcopy(self)
-        _copy._reset_unit_registry(self._ureg)
         return _copy
 
     def add_state(self, s):

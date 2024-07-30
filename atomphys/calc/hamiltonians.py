@@ -68,7 +68,7 @@ def H0(states: list[State], _ureg: pint.UnitRegistry):
     H = 0
     kets_dict = kets(states)
     for (state, m), ket in kets_dict.items():
-        H += (state.angular_frequency.to("MHz")).m * ket * ket.dag()
+        H += (state.angular_frequency.to("hbar MHz")).m * ket * ket.dag()
     return H
 
 
@@ -109,7 +109,7 @@ def H_zeeman(states: list[State], B_field: pint.Quantity):
     kets_dict = kets(states)
     for (state, m), ket in kets_dict.items():
         H += (
-            (zeeman_shift(state.g, m, B_field, state._ureg).to("MHz")).magnitude
+            (zeeman_shift(state.g, m, B_field, state._ureg).to("hbar MHz")).magnitude
             * ket
             * ket.dag()
         )
@@ -146,7 +146,7 @@ def H_zeeman_B_vector(states: list[State], B_field):
             if state_i == state_j and m_i - 1 == m_j:
                 H += - (state_i._ureg('bohr_magneton') * state_i.g * (1 / 2 * (B_field[0] + 1j * B_field[1])) * np.sqrt(J_i * (J_i + 1) - m_i * (m_i - 1))).to('hbar MHz').m * ket_j * ket_i.dag()
             if state_i == state_j and m_i == m_j:
-                    H += ((zeeman_shift(state_i.g, m_i, B_field[2], state_i._ureg).to("MHz")).magnitude * ket_j * ket_i.dag())
+                    H += ((zeeman_shift(state_i.g, m_i, B_field[2], state_i._ureg).to("hbar MHz")).magnitude * ket_j * ket_i.dag())
     return H
 
 
