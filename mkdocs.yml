@@ -8,10 +8,16 @@ nav:
   - Home: index.md
   - Getting Started: getting-started.ipynb
   - User Guide:
-      - Atom: user_guide/atom.md
-      - State: user_guide/state.md
-      - Transision: user_guide/transition.md
-      - Laser: user_guide/laser.md
+      - Core: user_guide/core.md
+      - Calculations:
+        - Matrix Elements: user_guide/calculations/matrix_elements.md
+        - Rabi Frequencies: user_guide/calculations/rabi_frequencies.md
+        - AC Stark Shifts: user_guide/calculations/ac_stark_shifts.md
+        - Linewidhts: user_guide/calculations/linewidhts.md
+      - Qutip Helpers:
+        - Master Equation: user_guide/qutip_helpers/master_equation.md
+        - Hamiltonians: user_guide/qutip_helpers/hamiltonians.md
+        - Collapse Operators: user_guide/qutip_helpers/collapse_operators.md
   - Reference: reference.md
   - Developers: developers.md
 

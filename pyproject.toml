@@ -5,6 +5,7 @@ description = "Atomic physics for Python"
 authors = ["Carmelo Mordini <cmordini@phys.ethz.ch>"]
 license = "MIT"
 readme = "README.md"
+packages = [{ include = "atomphys", from='.' }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -15,6 +16,7 @@ numpy = "^1.25.0"
 sympy = "^1.12"
 matplotlib = "^3.7.2"
 qutip = "^4.7.2"
+pkg_resources
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.24.0"

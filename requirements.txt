@@ -1,6 +1,0 @@
-pint
-networkx
-requests
-numpy
-sympy
-matplotlib
