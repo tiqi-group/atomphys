@@ -41,7 +41,6 @@ class Transition:
         self._A = value
         
     @property
-    @default_units("_2pi*MHz")
     def Gamma(self) -> pint.Quantity:
         return self.A.to('_2pi*MHz')
     

@@ -22,12 +22,12 @@ class ElectricField:
 
     @property
     def angular_frequency(self) -> pint.Quantity:
-        return (self.frequency.to("1/s")) * self._ureg("2*pi")
+        return (self.frequency.to("1/s")) * self._ureg("_2pi")
 
     @angular_frequency.setter
-    @default_units("2pi/s")
+    @default_units("_2pi/s")
     def angular_frequency(self, value: pint.Quantity):
-        self.frequency = value / self._ureg("2*pi")
+        self.frequency = value / self._ureg("_2pi")
 
     @property
     def field_amplitude(self):
@@ -188,68 +188,6 @@ class GaussianBeam(ElectricField):
 
     def gradient(self):
         return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field())
-
-
-# class PlaneWaveElectricField(ElectricField):
-#     def __init__(
-#         self,
-#         E0: float,
-#         polarization: ArrayLike,
-#         wavevector: ArrayLike,
-#         frequency: pint.Quantity,
-#         _ureg=None,
-#     ) -> None:
-#         super().__init__(frequency, _ureg)
-#         assert (
-#             np.dot(polarization, wavevector) == 0
-#         ), "Polarization must be perpendicular to wavevector"
-#         self._epsilon = np.asarray(polarization) / np.linalg.norm(polarization)
-#         self._kappa = np.asarray(wavevector) / np.linalg.norm(wavevector)
-#         self._field_amplitude = E0
-
-#     def _phase(self, X):
-#         xk = (np.dot(X, self.k).to("")).magnitude[0]
-#         xk = (np.dot(X, self.k).to("")).magnitude[0]
-#         return np.exp(1j * xk)
-
-#     def phase(self, x=0, y=0, z=0):
-#         shape, X = self._ravel_coords(x, y, z)
-#         return self._phase(X).reshape(shape)
-
-#     def field(self, x=0, y=0, z=0):
-#         shape, X = self._ravel_coords(x, y, z)
-#         return (
-#             self._epsilon.reshape((1,) * len(shape) + (-1,))
-#             * self._field_amplitude
-#             * self._phase(X).reshape(shape + (1,))
-#         )
-
-#     def gradient(self, x=0, y=0, z=0):
-#         # outer product
-#         return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field(x, y, z))
-
-#     @property
-#     def wavelength(self):
-#         return (self._ureg("c") / self.frequency).to("nm")
-
-#     @wavelength.setter
-#     @default_units("nm")
-#     def wavelength(self, value):
-#         self.frequency = self._ureg("c") / value
-
-#     @property
-#     def k(self):
-#         return (self._kappa / self.wavelength).to("1/nm") * self._ureg("2*pi")
-
-#     @property
-#     def polarization(self):
-#         return self._epsilon
-
-
-#     @polarization.setter
-#     def polarization(self, value):
-#         self._epsilon = value / np.linalg.norm(value)
-
 
 class SumElectricField(ElectricField):
     def __init__(self, field_a: ElectricField, field_b: ElectricField):
