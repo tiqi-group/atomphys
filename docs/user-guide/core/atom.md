@@ -34,8 +34,3 @@ Upon importing your atom, it allows you to interact with it in a similar way you
 
 ### States (Node) and Transitions (Edge):
 Atom is formed by collection of states (nodes), connected via transitions (edges). Each State and Transition is a separate object with properties and possible functions associated with it. The representation of the atom as a graph could be used for the optimal repumping schemes, or optimal control schemes. 
-
-
-### Electric Field
-
-<span style="color:red">TO DO </span>

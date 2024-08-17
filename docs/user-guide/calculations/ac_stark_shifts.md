@@ -1,8 +1,6 @@
 
 ## AC Stark Shifts:
 
-<span style="color:red">NOT FINISHED </span>
-
 In order to introduce the theory behind the AC Stark Shifts, I will closely follow Beloy's Thesis [Beloy 2009]. I intend to present the calculation of AC Stark Shift in its more primitive form, without expanding the formula into most basic units. This allows one to directly understand the simplicity of the AC Stark Shift calculations, not make any assumptions about the structure of the Electric Field or allowed transitions. Normal derivations of AC Stark Shift only consider dipole transitions driven by running wave field. 
 
 Expression of AC Stark Shift in terms of Rabi Frequencies is possible, as we developed good apparatus to calculate Rabi Frequencies. 
@@ -11,13 +9,19 @@ Consider oscilating electric field
 
 $\mathbf{A_l}=\frac{1}{2}\left(\mathbf{A}_{l}(\mathbf{x})e^{-i\omega_lt}+\mathbf{A}_{l}^{\dag}(\mathbf{x})e^{i\omega_lt}\right)$
 
-Such field interacts with an atom perturbing the hamiltonian by additional term(see section Rabi Frequencies):
+Such field interacts with an atom perturbing the hamiltonian by additional term (see section Rabi Frequencies):
 
 $\mathcal{H}_L=-\sum_{i, j, l}|i\rangle \frac{1}{2}\left(\Omega_{ij}^{(l)} e^{-i \omega_l t}+ \Omega_{ij}^{\dag(l)} e^{i \omega_l t}\right)\langle j|$
 
 It is noted that $\Omega_{ij}^{(l)}$ is a time independent operator. For small field amplitudes (condition), one can treat the $\mathcal{H}_L$ as small perturbation to $\mathcal{H}_0$. Using Floquet perturbation theory [Beloy 2009, Appendix D/Chapter 3], one can develop expression for the mean energy shifts $\delta \mathcal{E} = \delta \mathcal{E}^{(1)} + \delta \mathcal{E}^{(2)} + ...$ . Due to symmetry  $\delta \mathcal{E}^{(1)}$ is not present, and so we will start from evaluating $\delta \mathcal{E}^{(2)}$.
 
-### Floquet Perturbation Theory:
+I won't go into the Floquet Perturbation theory here because it is in detail explained in the Beloy 2009
+
+
+<span style="color:red">Do we want to introduce the Floquet theory here? </span>
+
+
+<!-- ### Floquet Perturbation Theory:
 
 $
 \left[H(\xi, t)-i \frac{\partial}{\partial t}\right] \Psi(\xi, t)=0 \\
@@ -34,7 +38,7 @@ $
 H(\xi, t)=H_0(\xi)+V(\xi, t)\\
 \mathcal{H}_0(\xi, t)=\mathcal{H}(\xi, t)-V(\xi, t)=H_0(\xi)-i \frac{\partial}{\partial t}\\
 \mathcal{H}_0(\xi, t) \phi_{n q}^{(0)}(\xi, t)=\mathcal{E}_{n q}^{(0)} \phi_{n q}^{(0)}(\xi, t)\\
-\phi_{n q}^{(0)}(\xi, t)=f_n(\xi) e^{i q \omega t}$ , where $\mathcal{E}_{n q}^{(0)}=E_n+q \omega$ and $H_0(\xi) f_n(\xi)=E_n f_n(\xi)$
+\phi_{n q}^{(0)}(\xi, t)=f_n(\xi) e^{i q \omega t}$ , where $\mathcal{E}_{n q}^{(0)}=E_n+q \omega$ and $H_0(\xi) f_n(\xi)=E_n f_n(\xi)$ -->
 
 ### The second order AC Stark Shift
 
@@ -56,3 +60,5 @@ $\delta \mathcal{E}_i \approx \delta \mathcal{E}_i^{(2)}$
 Polarizability of an atom in state $|i \rangle$ , $\alpha_i$, is an AC Stark Shift, $\delta \mathcal{E}_i$  normalized by the electric field causing this stark shift, $E_0$.
 
 $\alpha_i = \frac{-4 \left(\delta \mathcal{E}_i\right)}{E_0^2}$
+
+In our package we decided to calculate overall polarizability without splitting it into scalar, vectorial and tensorial polarizability. This is because we wanted to generalize it to arbitrary types of transitions including light shifts coming from quadrupole transitions. 
