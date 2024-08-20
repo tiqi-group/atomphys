@@ -1,37 +1,36 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
-
 import pint
+from pint import Quantity, UnitRegistry
 import numpy as np
 from .utils.utils import default_units, set_default_units
+from abc import ABC, abstractmethod
 
 
-class ElectricField:
-    def __init__(self, frequency: pint.Quantity, _ureg=None) -> None:
+class ElectricField(ABC):
+    def __init__(self, frequency: Quantity, _ureg=None) -> None:
         self._ureg = pint.get_application_registry() if _ureg is None else _ureg
         self.frequency = frequency
 
     @property
-    def frequency(self) -> pint.Quantity:
-        return (self._frequency).to("THz")
+    def frequency(self) -> Quantity:
+        return self._frequency.to("THz")
 
     @frequency.setter
     @default_units("THz")
-    def frequency(self, value: pint.Quantity):
+    def frequency(self, value: Quantity):
         self._frequency = value
 
     @property
-    def angular_frequency(self) -> pint.Quantity:
-        return (self.frequency.to("1/s")) * self._ureg("_2pi")
+    def angular_frequency(self) -> Quantity:
+        return self.frequency.to("1/s") * self._ureg("_2pi")
 
     @angular_frequency.setter
     @default_units("_2pi/s")
-    def angular_frequency(self, value: pint.Quantity):
+    def angular_frequency(self, value: Quantity):
         self.frequency = value / self._ureg("_2pi")
 
     @property
     def field_amplitude(self):
-        return (self._field_amplitude).to("V/m")
+        return self._field_amplitude.to("V/m")
 
     @field_amplitude.setter
     @default_units("V/m")
@@ -47,11 +46,13 @@ class ElectricField:
     def intensity(self, value):
         self._field_amplitude = np.sqrt(2 * value / self._ureg("c*epsilon_0"))
 
-    # def field(self, x, y, z):
-    #     raise NotImplementedError
+    @abstractmethod
+    def field(self, x, y, z):
+        raise NotImplementedError
 
-    # def gradient(self, x, y, z):
-    #     raise NotImplementedError
+    @abstractmethod
+    def gradient(self, x, y, z):
+        raise NotImplementedError
 
     def __add__(self, other):
         if not isinstance(other, ElectricField):
@@ -72,101 +73,55 @@ class ElectricField:
 class GaussianBeam(ElectricField):
     def __init__(
         self,
-        frequency: pint.Quantity,
-        waist: pint.Quantity,
-        power: pint.Quantity,
-        polarization,
-        direction_of_propagation,
-        _ureg: pint.UnitRegistry,
+        frequency: Quantity,
+        waist: Quantity,
+        power: Quantity,
+        polarization: np.ndarray | list,
+        direction_of_propagation: np.ndarray | list,
+        _ureg: UnitRegistry
     ):
-        # Call the ElectricField constructor
         super().__init__(frequency, _ureg=_ureg)
 
-        if frequency is None:
-            raise ValueError("Must specify frequency")
-        if (power is None or waist is None):
-            raise ValueError("Must specify both power and waist")
-        if (polarization is None or direction_of_propagation is None):
-            raise ValueError("Must specify polarization and direction of propagation")
-
-        self.frequency = frequency
-        self._power = power
         self._waist = waist
-        self.power = power
-        self.waist = waist
-        if polarization is not None and direction_of_propagation is not None:
-            self.polarization = np.asarray(polarization) 
-            self.direction_of_propagation = np.asarray(direction_of_propagation) 
-        assert (
-            np.abs(np.dot(self._polarization, self._direction_of_propagation)) < 1e-6
-        ), "Polarization must be perpendicular to wavevector"
+        self._power = power
+        self._update_field_amplitude()
+        self._polarization = np.asarray(polarization)
+        self.direction_of_propagation = np.asarray(direction_of_propagation)
+        self._validate_beam()
 
-    @staticmethod
-    def calculate_intensity(power, waist):
-        """ Calculate the peak intensity of a Gaussian beam given the power and waist """
-        return 2 * power / (np.pi * waist**2)
+    def _validate_beam(self):
+        if np.abs(np.dot(self.polarization, self.direction_of_propagation)) >= 1e-6:
+            raise ValueError("Polarization must be perpendicular to the wavevector")
+        
+    @classmethod
+    def from_json(cls, json_data: dict, _ureg: UnitRegistry):
+        def parse_unit_value(json_data: dict, key: str) -> Quantity:
+            return _ureg.Quantity(json_data[key]["value"], json_data[key]["units"])
 
-    @property
-    def frequency(self) -> pint.Quantity:
-        return (self._frequency).to("THz")
+        return cls(
+            frequency = parse_unit_value(json_data, 'frequency'), 
+            waist = parse_unit_value(json_data, 'waist'), 
+            power = parse_unit_value(json_data, 'power'), 
+            polarization = np.array(json_data['polarization']), 
+            direction_of_propagation = np.array(json_data['direction_of_propagation']), 
+            _ureg=_ureg
+        )
 
-    @frequency.setter
-    @default_units("THz")
-    def frequency(self, value: pint.Quantity):
-        self._frequency = value
+    def to_json(self):
+        def serialize_unit_value(quantity):
+            return {'value': quantity.magnitude, 'units': str(quantity.units)}
 
-    @property
-    def wavelength(self):
-        """ Returns the wavelength (in vacuum) of the Gaussian beam in nm """
-        return (self._ureg("c") / self.frequency).to("nm")
-
-    @property
-    def direction_of_propagation(self):
-        """ Returns the direction of propagation of the Gaussian beam, which is effectively unitless, unit wavevector. """
-        return self._direction_of_propagation
-
-    @direction_of_propagation.setter
-    def direction_of_propagation(self, value):
-        self._direction_of_propagation = value / np.linalg.norm(value)
-
-    @property
-    def polarization(self):
-        """ Returns the Jones polarization vector of the electric field in cartesian coordinates."""
-        return self._polarization
-
-    @polarization.setter
-    def polarization(self, value):
-        self._polarization = value / np.linalg.norm(value)
+        data = {
+            'frequency': serialize_unit_value(self.frequency),
+            'waist': serialize_unit_value(self.waist),
+            'power': serialize_unit_value(self.power),
+            'polarization': self.polarization.tolist(),
+            'direction_of_propagation': self.direction_of_propagation.tolist()
+        }
+        return data
 
     @property
-    def intensity(self):
-        """ Returns the peak intensity of the Gaussian beam in W/cm^2 """
-        return self._field_amplitude**2 * self._ureg("c*epsilon_0") / 2
-
-    @property
-    def power(self):
-        """ Returns the power of the Gaussian beam in W, mW, uW, nW, or pW depending on the magnitude of the power. This would be the total power of the beam. The one that you would measure with a powermeter in a lab."""
-        power_in_watts = self._power.to("W").magnitude
-
-        if power_in_watts >= 1:
-            return self._power.to("W")
-        elif power_in_watts >= 1e-3:
-            return self._power.to("mW")
-        elif power_in_watts >= 1e-6:
-            return self._power.to("uW")
-        elif power_in_watts >= 1e-9:
-            return self._power.to("nW")
-        else:
-            return self._power.to("pW")
-
-    @power.setter
-    def power(self, value):
-        self._power = value
-        intensity = self.calculate_intensity(self._power, self._waist)
-        self._field_amplitude = np.sqrt(2 * intensity / self._ureg("c*epsilon_0"))
-
-    @property
-    def waist(self):
+    def waist(self) -> Quantity:
         """ Returns the waist of the Gaussian beam. """
         return self._waist
 
@@ -174,14 +129,51 @@ class GaussianBeam(ElectricField):
     @default_units("um")
     def waist(self, value):
         self._waist = value
+        self._update_field_amplitude()
+
+    @property
+    def power(self) -> Quantity:
+        """ Returns the power of the Gaussian beam in W, mW, uW, nW, or pW depending on the magnitude of the power. This would be the total power of the beam. The one that you would measure with a powermeter in a lab."""
+        return self._power.to_compact()
+
+    @power.setter
+    def power(self, value: Quantity):
+        self._power = value
+        self._update_field_amplitude()
+
+    @property
+    def polarization(self) -> np.ndarray:
+        """ Returns the Jones polarization vector of the electric field in cartesian coordinates. """
+        return self._polarization
+
+    @polarization.setter
+    def polarization(self, value):
+        self._polarization = value / np.linalg.norm(value)
+        self._validate_beam()
+
+    @property
+    def direction_of_propagation(self):
+        """ Returns the direction of propagation of the Gaussian beam, which is effectively unitless, unit wavevector. """
+        return self._direction_of_propagation
+
+    @direction_of_propagation.setter
+    def direction_of_propagation(self, value: np.ndarray | list):
+        self._direction_of_propagation = np.asarray(value) / np.linalg.norm(value)
+        self._validate_beam()
+
+    @staticmethod
+    def calculate_intensity(power: Quantity, waist: Quantity) -> Quantity:
+        """ Calculate the peak intensity of a Gaussian beam given the power and waist. """
+        return 2 * power / (np.pi * waist**2)
+    
+    def _update_field_amplitude(self):
         intensity = self.calculate_intensity(self._power, self._waist)
         self._field_amplitude = np.sqrt(2 * intensity / self._ureg("c*epsilon_0"))
 
     @property
-    def wavevector(self):
+    def wavevector(self) -> np.ndarray:
         """ Returns the wavevector of the Gaussian beam."""
-        wavevector = self.direction_of_propagation * self.angular_frequency / self._ureg("c")
-        return wavevector
+        return self.direction_of_propagation * self.angular_frequency / self._ureg("c")
 
     def field(self):
         return self.polarization * self._field_amplitude

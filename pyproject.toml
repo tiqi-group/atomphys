@@ -16,7 +16,7 @@ numpy = "^1.25.0"
 sympy = "^1.12"
 matplotlib = "^3.7.2"
 qutip = "^4.7.2"
-pkg_resources
+setuptools = "^73.0.1"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.24.0"
