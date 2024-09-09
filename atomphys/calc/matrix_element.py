@@ -113,6 +113,9 @@ def dipole_matrix_element(
 
     dme = 0 * _ureg("a0")
     d = reduced_dipole_matrix_element(A, k, J_f, _ureg)
+    
+    mJ_f = mJ_f if mJ_f != 0.0 else -mJ_f
+
     for q in range(-1, 2):
         w3j_coeff = float(w3j(J_f, 1, J_i, -mJ_f, q, mJ_i))
         dme += w3j_coeff * spherical_basis_vector(q) * d
