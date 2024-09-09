@@ -114,3 +114,11 @@ def fsolve(func: Callable, x0, x1=None, tol: float = 1.49012e-08, maxfev: int = 
         fx0, fx1 = fx1, func(x1)
         i += 1
     return x1
+
+def inthalf(value):
+    if abs(value - round(value)) < 1e-8:  # Close enough to an integer
+        return int(round(value))  # Convert to an integer
+    elif abs(value*2 - round(value*2)) < 1e-8:  # Close enough to a half-integer
+        return round(value * 2) / 2  # Convert to a half-integer (like 0.5, 1.5, etc.)
+    else:
+        raise ValueError(f"Cannot convert {value} to integer or half-integer.")
