@@ -21,7 +21,6 @@ nav:
         - Master Equation: user_guide/qutip_helpers/master_equation.md
         - Hamiltonians: user_guide/qutip_helpers/hamiltonians.md
         - Collapse Operators: user_guide/qutip_helpers/collapse_operators.md
-  - Reference: reference.md
   - Developers: developers.md
 
 theme:
