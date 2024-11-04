@@ -2,7 +2,7 @@
 name = "atomphys"
 version = "0.1.0"
 description = "Atomic physics for Python"
-authors = ["Carmelo Mordini <cmordini@phys.ethz.ch>"]
+authors = ["Wojciech Adamczyk <wadamczyk@phys.ethz.ch>", "Carmelo Mordini <cmordini@phys.ehtz.ch>"]
 license = "MIT"
 readme = "README.md"
 packages = [{ include = "atomphys", from='.' }]
