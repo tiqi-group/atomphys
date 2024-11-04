@@ -5,8 +5,9 @@ The package should be primarily used for bosonic isotopes, where the hyperfine s
 I hope this will be helpfull for many.
 
 The documentation is divided into three subsections, which each discuss different potential use-cases of atomphys:
-- (1) Core - Here we discuss how atomphys can be used as python API for NIST database and other databases
-- (2) Calculations - Here we discuss the theory behind the calculations with which atomphys can help
-- (3) Helper functions for qutip - Here we discuss how atomphys can be usef to build light-atom hamiltonians that can be directly parsed to qutip and can be solved
+
+1. **Core** - Here we discuss how atomphys can be used as python API for NIST database and other databases
+2. **Calculations** - Here we discuss the theory behind the calculations with which atomphys can help
+3. **Helper functions for qutip** - Here we discuss how atomphys can be usef to build light-atom hamiltonians that can be directly parsed to qutip and can be solved
 
 

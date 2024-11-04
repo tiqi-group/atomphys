@@ -1,3 +1,16 @@
+# Hamiltonians:
+
+There are multiple hamiltonians that can be explored. 
+
+
+
+
+
+
+
+
+
+
 # Derivation of Zeeman Hamiltonian with arbitrary B-field
 
 For the purpose of Pavel's project (Grating MOT simulations) we need to consider Zeeman Hamiltonian due to the field pointing in arbitrary direction. As in atomphys I express all states w.r.t. quantization axis pointing in direction $\hat{z}$, I need to now express the hamiltonian $\mathbf{B}\cdot\mathbf{J}$ in arbitrary basis.

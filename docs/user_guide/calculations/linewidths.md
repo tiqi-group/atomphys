@@ -1,9 +1,6 @@
-<span style="color:red">TD </span>
-
 ### Transition Specific A-Einstein Coefficients:
 
-
-In atomphys we also allow to calculate transition specific linewidths. Each transition has an associated A-einstein-coefficient, which characterises the strength of this transition. Following (James, 1998) we can write this to be:
+It is sometimes useful to calculate zeeman-sublevel transition specific A-Einstein coefficients. For this we can use Wigner-Eckart theorem [James 1998](https://doi.org/10.1007/s003400050373).
 
 $$
 A_{ij}^{(E 1)}=\frac{4 c \alpha k_{12}^3}{3} \sum_{q=-1}^1\left|\left\langle i\left|r C_q^{(1)}\right| j\right\rangle\right|^2
@@ -26,6 +23,3 @@ $$
 with 
 - $A_{ij}$ standing for a Zeeman sublevel specific transition  A-Einstein coefficient,
 - $A_{IJ}$ standing for a Zeeman manifold transition  A-Einstein coefficient,
-
-
-Similar result can be derived using combination of considerations outlined in the Rabi Frequency section and Wigner-Weisskopf formalism
