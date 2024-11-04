@@ -27,13 +27,15 @@ H &=\sum_\alpha\left(\frac{\left[\mathbf{p}^{(\alpha)}-q^{(\alpha)} \mathbf{A}\l
 \end{aligned}
 $$
 
-Neglecting less dominant terms of the interaction Hamiltonian $\frac{q_\alpha^2\mathbf{A}\left(\mathbf{x}_\alpha, t\right)^2}{2 m_\alpha}$ and $\frac{e \hbar}{2 m c} \boldsymbol{\sigma} \cdot \boldsymbol{\nabla} \times \mathbf{A}$, and grouping them together we get:
+Neglecting less dominant terms of the interaction Hamiltonian $\frac{q_\alpha^2\mathbf{A}\left(\mathbf{x}_\alpha, t\right)^2}{2 m_\alpha}$, and grouping them together we get:
 
 $$ 
 \begin{aligned}
-&H = H_0 + H_I \\
+&H = H_0 + H_I + H_Z \\
 &H_0 = \sum_\alpha \frac{\mathbf{p^{(\alpha)}}^2}{2 m^{(\alpha)}}+V_{\text {Coul }} = \sum_i \mathcal{E}_i\left|i\right>\left< i\right| \\
 &H_I = \sum_\alpha-q^{(\alpha)} \mathbf{\dot{x}}^{(\alpha)} \cdot \mathbf{A}\left(\mathbf{x}^{(\alpha)}, t\right)
+\\
+&H_Z = \frac{e \hbar}{2 m c} \boldsymbol{\sigma} \cdot \mathbf{B}
 \end{aligned}
 $$
 
@@ -139,7 +141,7 @@ Collecting all the terms up to the 1st Order of Taylor expansion of $A_\mu$, we 
 $$
 H_I =  \sum_{\alpha, i, j} |i\rangle\left( \underbrace{i e \omega_{0} A^\mu\left\langle i\left| r^{(\alpha)}_{\mu} \right| j\right\rangle }_\text{Electric Dipole} + 
 \underbrace{\frac{1}{2} ie\omega_0 \partial^\nu A^\mu \left\langle i\left| r^{(\alpha)}_{\mu}  r^{(\alpha)}_{\nu}  \right| j\right\rangle}_\text{Electric Quadrupole} +
-\underbrace{\frac{1}{2} \hbar e \varepsilon_{i}^{j k} \partial_j A_k \left\langle i\left| L^i \right| j\right\rangle}_\text{Magnetic Dipole} + ... \right) \langle j|
+\underbrace{\frac{1}{2} \hbar e \varepsilon_{i}^{j k} \partial_j A_k \left\langle i\left| L^i \right| j\right\rangle}_\text{Magnetic Dipole} + ... \right) \left< j\right|
 $$
 
 In atomphys for now we don't support calculation of the magnetic dipole matrix elements, and so we will therefore only focus on the first two terms, assuming the light field interating with our atom doesn't have intrinsically large magnetic dipole moment. 
