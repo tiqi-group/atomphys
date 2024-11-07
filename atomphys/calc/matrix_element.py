@@ -11,10 +11,9 @@
 # I took j' to be the lower level states, as it agrees with other sources and makes sense intuitively
 # -> it increases spontaneous decay rate the more possibilities of decays to the lower states there are.
 
-import numpy as np
 import pint
 from sympy.physics.wigner import wigner_3j as w3j
-from .util import spherical_basis_second_rank_tensor, spherical_basis_vector
+from atomphys.utils.utils import spherical_basis_second_rank_tensor, spherical_basis_vector, inthalf
 
 
 def reduced_dipole_matrix_element(
@@ -114,8 +113,9 @@ def dipole_matrix_element(
 
     dme = 0 * _ureg("a0")
     d = reduced_dipole_matrix_element(A, k, J_f, _ureg)
+
     for q in range(-1, 2):
-        w3j_coeff = float(w3j(J_f, 1, J_i, -mJ_f, q, mJ_i))
+        w3j_coeff = float(w3j(inthalf(J_f), 1, inthalf(J_i), inthalf(-mJ_f), q, inthalf(mJ_i)))
         dme += w3j_coeff * spherical_basis_vector(q) * d
     return dme.to("a0").magnitude * _ureg("a0")
 
@@ -149,7 +149,7 @@ def quadrupole_matrix_element(
     qme = 0 * _ureg("a0**2")
     red_q = reduced_quadrupole_matrix_element(A, k, J_f, _ureg)
     for q in range(-2, 3):
-        w3j_coeff = float(w3j(J_f, 2, J_i, -mJ_f, q, mJ_i))
+        w3j_coeff = float(w3j(inthalf(J_f), 2, inthalf(J_i), inthalf(-mJ_f), q, inthalf(mJ_i)))
         sbt = spherical_basis_second_rank_tensor(q)
         qme += w3j_coeff * sbt * red_q
     return abs(qme.to("a0**2").magnitude) * _ureg("a0**2")

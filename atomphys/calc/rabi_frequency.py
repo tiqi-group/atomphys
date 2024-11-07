@@ -13,14 +13,11 @@
 # -> Master Thesis of Beck, Gillenhall from 2020 (ETH Zürich) - Trapped Ion Quantum Informaiton Group
 
 
-import pint
-from .matrix_element import (
-    dipole_matrix_element, quadrupole_matrix_element,
-    reduced_dipole_matrix_element, w3j
-)
 import numpy as np
-from ..electric_field import ElectricField
-from ..transition import Transition, TransitionType
+import pint
+from atomphys.calc.matrix_element import dipole_matrix_element, quadrupole_matrix_element
+from atomphys.electric_field import ElectricField
+from atomphys.transition import Transition, TransitionType
 
 
 def dipole_Rabi_Frequency(

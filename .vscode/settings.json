@@ -8,4 +8,13 @@
     "python.linting.lintOnSave": true,
     "python.analysis.typeCheckingMode": "basic",
     "python.linting.pylintEnabled": true,
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/__pycache__": true,
+        "**/.atomphys": true,
+        "**/.venv": true,
+        "**/package-lock.json": true,
+        "**/__init__.py": true,
+        "**/.mypy_cache": true
+    },
 }

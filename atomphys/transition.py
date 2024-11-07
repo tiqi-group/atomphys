@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-#
-# Created: 06/2023
-# Author: Carmelo Mordini <cmordini@phys.ethz.ch>
 
-import numpy as np
 import pint
 from .state import State
-from .util import default_units, make_alias
-from .calc.coupling import Coupling
-from .calc.selection_rules import get_transition_type_LS, TransitionType
+from .utils.utils import default_units
+from .utils.coupling import Coupling
+from .utils.selection_rules import get_transition_type_LS, TransitionType
 from .calc.matrix_element import (
     reduced_electric_dipole_matrix_element,
     reduced_electric_quadrupole_matrix_element,
@@ -29,7 +25,6 @@ class Transition:
 
     def __init__(self, state_i: State, state_f: State, A: pint.Quantity, _ureg: pint.UnitRegistry | None = None):
         self._ureg = _ureg if _ureg is not None else pint.get_application_registry()
-        # sort states
         self.state_i, self.state_f = sorted([state_i, state_f])
         self.A = A
 
@@ -44,6 +39,15 @@ class Transition:
     @default_units("1 / s")
     def A(self, value: pint.Quantity):
         self._A = value
+        
+    @property
+    def Gamma(self) -> pint.Quantity:
+        return self.A.to('_2pi*MHz')
+    
+    @Gamma.setter
+    @default_units("_2pi*MHz")
+    def Gamma(self, value: pint.Quantity):
+        self.A = value.to('1/s')
 
     @property
     def energy(self) -> pint.Quantity:
@@ -58,7 +62,7 @@ class Transition:
 
     @property
     def k(self) -> pint.Quantity:
-        return (self._ureg("2*pi") * 1 / self.wavelength).to("1/m")
+        return (self._ureg('_2pi') * 1 / self.wavelength).to("1/m")
 
     @property
     def frequency(self) -> pint.Quantity:
@@ -67,7 +71,7 @@ class Transition:
     @property
     def angular_frequency(self) -> pint.Quantity:
         return self.energy.to('1/s', 'sp') * self._ureg('_2pi')
-      
+
     @property
     def reduced_electric_matrix_element(self):
         """
@@ -96,6 +100,11 @@ class Transition:
             J_i = self.state_i.quantum_numbers["J"]
             J_f = self.state_f.quantum_numbers["J"]
             return quadrupole_matrix_element(self.A, self.k, J_i, J_f, mJ_i, mJ_f, self._ureg).to("a0**2")
+        else:
+            raise NotImplementedError(
+                f"Matrix element calculation is implemented only for type E1/E2, but transition has {self.type}"
+            )
+    
     def electric_matrix_element(self, mJ_i: int, mJ_f: int):
         if self.type == TransitionType.E1:
             J_i = self.state_i.quantum_numbers["J"]
@@ -105,6 +114,10 @@ class Transition:
             J_i = self.state_i.quantum_numbers["J"]
             J_f = self.state_f.quantum_numbers["J"]
             return electric_quadrupole_matrix_element(self.A, self.k, J_i, J_f, mJ_i, mJ_f, self._ureg).to("e a0**2")
+        else:
+            raise NotImplementedError(
+                f"Matrix element calculation is implemented only for type E1/E2, but transition has {self.type}"
+            )
 
     @property
     def delta_m(self):
@@ -145,11 +158,6 @@ class Transition:
     def saturation_intensity(self):
         return (self._ureg('pi*planck_constant*c/3') * self.A / (self.wavelength ** 3)).to('mW/cm^2')
     
-    # @property
-    # def transition_specific_saturation_intensity(self, mJ_i, mJ_f):
-    #     sA = transition_specific_linewidth(self, mJ_i, mJ_f, self._ureg).to('1/s')
-    #     return (self._ureg('pi*planck_constant*c/3') * sA / (self.wavelength ** 3)).to('mW/cm^2')
-    
     @property
     def cross_section(self):
         return (self._ureg('hbar/2') * self.angular_frequency * self.A / (self.saturation_intensity)).to('cm^2')
@@ -162,8 +170,6 @@ class Transition:
             qn_f = self.state_f.quantum_numbers
             return get_transition_type_LS(qn_i, qn_f)
         else:
-            # print(
-            #     f"Transition type calculation is implemented only between states with LS coupling, but transition has {self.state_i.coupling} --> {self.state_f.coupling}")
             return TransitionType.NONE
 
     def to_json(self):
@@ -172,17 +178,3 @@ class Transition:
             "state_i": {"term": self.state_i.term, "energy": f"{self.state_i.energy.to('Ry'):f~P}"},
             "state_f": {"term": self.state_f.term, "energy": f"{self.state_f.energy.to('Ry'):f~P}"},
         }
-
-    Einstein_coefficient = make_alias(attr_name="_A", get_unit="1/s")
-    Γ = make_alias(attr_name="_A", get_unit="_2pi*MHz")
-    Gamma = make_alias(attr_name="_A", get_unit="_2pi*MHz")
-    ν = make_alias(attr_name="frequency", get_unit="THz")
-    nu = make_alias(attr_name="frequency", get_unit="THz")
-    ω = make_alias(attr_name="angular_frequency", get_unit="_2pi*1/s")
-    omega = make_alias(attr_name="angular_frequency", get_unit="_2pi*1/s")
-    λ = make_alias("wavelength", "nm")
-    d = make_alias("reduced_matrix_element")
-    I_sat = make_alias(attr_name="saturation_intensity", get_unit="mW/cm^2")
-    Isat = make_alias(attr_name="saturation_intensity", get_unit="mW/cm^2")
-    I_s = make_alias(attr_name="saturation_intensity", get_unit="mW/cm^2")
-    σ0 = make_alias(attr_name="cross_section", get_unit="cm^2")

@@ -9,16 +9,16 @@ import numpy as np
 from atomphys.calc.rabi_frequency import Rabi_Frequency
 from atomphys.electric_field import ElectricField
 from atomphys.state import State
-from atomphys.util import set_default_units
+from atomphys.utils.utils import set_default_units
 
 
 def ac_stark_shift(
     state: State,
     mJ: float,
     El_field: ElectricField,
-    wavelengths: np.ndarray | None = None,
-    B: pint.Quantity = 0,
     _ureg: pint.UnitRegistry,
+    wavelengths: np.ndarray | None = None,
+    B: pint.Quantity | float = 0.0
 ):
     delta_E = 0 * _ureg("k*mK")
 

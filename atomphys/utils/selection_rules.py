@@ -7,7 +7,7 @@
 # https://en.wikipedia.org/wiki/Selection_rule#Summary_table
 
 from enum import Enum
-from atomphys.quantum_numbers import QuantumNumbers
+from atomphys.utils.quantum_numbers import QuantumNumbers
 
 
 class TransitionType(Enum):

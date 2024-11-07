@@ -6,7 +6,7 @@
 
 from dataclasses import dataclass, asdict
 from fractions import Fraction
-from .term import print_term, parse_term
+from atomphys.utils.term import print_term, parse_term
 
 
 @dataclass(frozen=True, kw_only=True)

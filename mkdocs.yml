@@ -3,16 +3,24 @@ site_url: https://mgrau.github.io/atomphys
 repo_url: https://github.com/mgrau/atomphys
 edit_uri: edit/main/docs/
 repo_name: atomphys
+use_directory_urls: false
 
 nav:
   - Home: index.md
-  - Getting Started: getting-started.ipynb
+  #- Getting Started: #getting-started.ipynb
   - User Guide:
-      - Atom: user_guide/atom.md
-      - State: user_guide/state.md
-      - Transision: user_guide/transition.md
-      - Laser: user_guide/laser.md
-  - Reference: reference.md
+      - Core: 
+        - Atom: user_guide/core/atom.md
+        - Field: user_guide/core/field.md
+      - Calculations:
+        - Matrix Elements: user_guide/calculations/matrix_elements.md
+        - Rabi Frequencies: user_guide/calculations/rabi_frequencies.md
+        - AC Stark Shifts: user_guide/calculations/ac_stark_shifts.md
+        - Linewidhts: user_guide/calculations/linewidths.md
+      - Qutip Helpers:
+        - Master Equation: user_guide/qutip_helpers/master_equation.md
+        - Hamiltonians: user_guide/qutip_helpers/hamiltonians.md
+        - Collapse Operators: user_guide/qutip_helpers/collapse_operators.md
   - Developers: developers.md
 
 theme:
@@ -28,6 +36,7 @@ theme:
     - search.suggest
   palette:
     - scheme: default
+      primary: indygo
       media: "(prefers-color-scheme: light)"
       toggle:
         icon: material/eye
@@ -40,10 +49,14 @@ theme:
 
 markdown_extensions:
   - footnotes
+  - md_in_html
   - admonition
+  - pymdownx.details
   - pymdownx.superfences
   - pymdownx.arithmatex:
       generic: true
+
+  
 
 extra_javascript:
   - javascripts/mathjax.js
@@ -56,12 +69,12 @@ extra_css:
 plugins:
   - search
   - include-markdown
-  - mknotebooks:
-      execute: true
-      enable_default_jupyter_cell_styling: false
-      binder: true
-      binder_service_name: "gh/mgrau"
-      binder_branch: "main"
-  - mkdocstrings:
-      watch:
-        - atomphys
+  # - mknotebooks:
+  #     execute: true
+  #     enable_default_jupyter_cell_styling: false
+  #     binder: true
+  #     binder_service_name: "gh/mgrau"
+  #     binder_branch: "main"
+  # - mkdocstrings:
+  #     watch:
+  #       - atomphys

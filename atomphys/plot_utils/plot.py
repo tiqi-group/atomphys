@@ -10,35 +10,10 @@ from matplotlib.path import Path
 import networkx as nx
 from math import nan
 
-from .state import State
-from .atom import Atom
-from .util import set_default_units
+from ..state import State
+from ..atom import Atom
+from ..utils.utils import set_default_units
 from collections import defaultdict
-
-# def plot_atom(atom: Atom, ax=None, energy_units='Ry', max_energy=nan, min_energy=nan):
-#     if ax is None:
-#         fig, ax = plt.subplots()
-#     if max_energy is not nan:
-#         atom = atom.remove_states_above_energy(max_energy)
-#     if min_energy is not nan:
-#         atom = atom.remove_states_below_energy(min_energy)
-
-#     g = atom._graph
-#     pos = JE_graph_position(g.nodes, energy_units)
-#     # pos = nx.spring_layout(g)
-#     node_labels = {k: k.term for k in g.nodes}
-#     edge_labels = {edge: f"{tr.wavelength}" for edge, tr in nx.get_edge_attributes(g, 'transition').items()}
-
-#     # https://petercbsmith.github.io/marker-tutorial.html
-#     node_path = Path([(-1, 0), (1, 0)], [Path.MOVETO, Path.LINETO])  # just a simple horizontal line
-#     node_color = ['k' if s not in atom.isolated_states else 'C1' for s in atom.states]
-#     edge_color = [_wavelength_to_rgb(tr.wavelength.to('nm').m) for tr in atom.transitions]
-#     nx.draw_networkx_nodes(g, pos, node_shape=node_path, node_color=node_color, node_size=200, linewidths=2, ax=ax)
-#     nx.draw_networkx_labels(g, pos, node_labels, font_size=9, verticalalignment='bottom', ax=ax, clip_on=False)
-#     nx.draw_networkx_edges(g, pos, edge_color=edge_color, node_size=50, ax=ax)
-#     nx.draw_networkx_edge_labels(g, pos, edge_labels, font_size=9, clip_on=False, ax=ax)
-#     ax.tick_params(top=False, right=False, reset=True)
-#     ax.set(xlabel="Angular momentum [L]", ylabel=f"Energy [{energy_units}]", title=atom)
 
 
 def plot_atom(
