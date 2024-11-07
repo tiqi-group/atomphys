@@ -43,3 +43,6 @@ pymdown-extensions = "^10.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.lint]
+ignore = ["E741"]  # "Ambiguous variable name" (E741)

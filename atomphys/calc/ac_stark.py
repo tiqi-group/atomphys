@@ -60,7 +60,7 @@ def ac_stark_shift(
                         + (Omega * np.conj(Omega)) / (-tr_omega + omega_field)
                     )
                 )
-            except Exception as e:
+            except Exception:
                 pass
                 # Continue with the next operation or iteration here, if needed.
 
@@ -95,7 +95,7 @@ def ac_stark_shift(
                         + (Omega * np.conj(Omega)) / (tr_omega + omega_field)
                     )
                 )
-            except Exception as e:
+            except Exception:
                 pass
 
     if wavelengths is None:
