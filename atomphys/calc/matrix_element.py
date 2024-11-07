@@ -13,11 +13,16 @@
 
 import pint
 from sympy.physics.wigner import wigner_3j as w3j
-from atomphys.utils.utils import spherical_basis_second_rank_tensor, spherical_basis_vector, inthalf
+from atomphys.utils.utils import (
+    spherical_basis_second_rank_tensor,
+    spherical_basis_vector,
+    inthalf,
+)
 
 
 def reduced_dipole_matrix_element(
-        A: pint.Quantity, k: pint.Quantity, J_f: float, _ureg: pint.UnitRegistry):
+    A: pint.Quantity, k: pint.Quantity, J_f: float, _ureg: pint.UnitRegistry
+):
     """
     Args:
         A: Einstein coefficient [1/s]
@@ -83,7 +88,6 @@ def reduced_electric_quadrupole_matrix_element(
     return _ureg("e") * reduced_quadrupole_matrix_element(A, k, J_f, _ureg)
 
 
-
 def dipole_matrix_element(
     A: pint.Quantity,
     k: pint.Quantity,
@@ -115,7 +119,9 @@ def dipole_matrix_element(
     d = reduced_dipole_matrix_element(A, k, J_f, _ureg)
 
     for q in range(-1, 2):
-        w3j_coeff = float(w3j(inthalf(J_f), 1, inthalf(J_i), inthalf(-mJ_f), q, inthalf(mJ_i)))
+        w3j_coeff = float(
+            w3j(inthalf(J_f), 1, inthalf(J_i), inthalf(-mJ_f), q, inthalf(mJ_i))
+        )
         dme += w3j_coeff * spherical_basis_vector(q) * d
     return dme.to("a0").magnitude * _ureg("a0")
 
@@ -149,7 +155,9 @@ def quadrupole_matrix_element(
     qme = 0 * _ureg("a0**2")
     red_q = reduced_quadrupole_matrix_element(A, k, J_f, _ureg)
     for q in range(-2, 3):
-        w3j_coeff = float(w3j(inthalf(J_f), 2, inthalf(J_i), inthalf(-mJ_f), q, inthalf(mJ_i)))
+        w3j_coeff = float(
+            w3j(inthalf(J_f), 2, inthalf(J_i), inthalf(-mJ_f), q, inthalf(mJ_i))
+        )
         sbt = spherical_basis_second_rank_tensor(q)
         qme += w3j_coeff * sbt * red_q
     return abs(qme.to("a0**2").magnitude) * _ureg("a0**2")
@@ -181,7 +189,6 @@ def electric_dipole_matrix_element(
     """
 
     return _ureg("e") * dipole_matrix_element(A, k, J_i, J_f, mJ_i, mJ_f, _ureg)
-
 
 
 def electric_quadrupole_matrix_element(

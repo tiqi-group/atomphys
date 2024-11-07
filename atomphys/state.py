@@ -8,13 +8,17 @@ from .utils.quantum_numbers import QuantumNumbers
 from .utils.utils import default_units
 
 from .calc.hyperfine import hyperfine_shift
-from .calc.zeeman import g_lande_fine_LS, g_lande_hyperfine, field_sensitivity, zeeman_shift
+from .calc.zeeman import (
+    g_lande_fine_LS,
+    g_lande_hyperfine,
+    field_sensitivity,
+    zeeman_shift,
+)
 from .calc.angular_momentum import couple_angular_momenta, magnetic_sublevels
 from .utils.coupling import get_coupling, Coupling
 
 
 class State:
-
     """
     This class represents a quantum state in atomic physics.
 
@@ -55,7 +59,12 @@ class State:
     _ureg: pint.UnitRegistry
 
     def __init__(
-        self, configuration: str, term: str, energy: pint.Quantity, atom=None, _ureg: pint.UnitRegistry | None = None
+        self,
+        configuration: str,
+        term: str,
+        energy: pint.Quantity,
+        atom=None,
+        _ureg: pint.UnitRegistry | None = None,
     ):
         self._atom = atom
         if atom is not None:
@@ -159,11 +168,13 @@ class State:
         return magnetic_sublevels(self.spin)
 
     @property
-    def sublevels_field_sensitivity(self) -> dict[float: pint.Quantity]:
+    def sublevels_field_sensitivity(self) -> dict[float : pint.Quantity]:
         return {m: field_sensitivity(self.g, m, self._ureg) for m in self.sublevels}
 
-    def sublevels_zeeman_shift(self, B: pint.Quantity) -> dict[float: pint.Quantity]:
-        return {m: zeeman_shift(self.g, m, B, self._ureg).to('MHz') for m in self.sublevels}
+    def sublevels_zeeman_shift(self, B: pint.Quantity) -> dict[float : pint.Quantity]:
+        return {
+            m: zeeman_shift(self.g, m, B, self._ureg).to("MHz") for m in self.sublevels
+        }
 
     @property
     def transitions_from(self) -> list:
@@ -199,12 +210,16 @@ class State:
     @property
     def lifetime(self) -> pint.Quantity:
         try:
-            return (1 / self.Gamma).to('seconds')
+            return (1 / self.Gamma).to("seconds")
         except ZeroDivisionError:
             return self._ureg("inf seconds")
 
     def to_json(self):
-        return {"configuration": self.configuration, "term": self.term, "energy": f"{self.energy.to('Ry'):f~P}"}
+        return {
+            "configuration": self.configuration,
+            "term": self.term,
+            "energy": f"{self.energy.to('Ry'):f~P}",
+        }
 
 
 class HyperfineState(State):
@@ -285,6 +300,8 @@ def hyperfine_manifold(
     hstates = []
     for F in Fs:
         energy = state.energy + hyperfine_shift(J, I, F, Ahf, Bhf)
-        hs = HyperfineState(state.configuration, state.term, energy, I, F, state._atom, state._ureg)
+        hs = HyperfineState(
+            state.configuration, state.term, energy, I, F, state._atom, state._ureg
+        )
         hstates.append(hs)
     return hstates

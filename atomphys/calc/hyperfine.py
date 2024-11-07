@@ -13,7 +13,9 @@ References:
 from pint import Quantity
 
 
-def hyperfine_shift(J: float, I: float, F: float, Ahf: Quantity, Bhf: Quantity = 0) -> Quantity:
+def hyperfine_shift(
+    J: float, I: float, F: float, Ahf: Quantity, Bhf: Quantity = 0
+) -> Quantity:
     """
     Calculates the hyperfine energy shift for an atomic or molecular fine structure state [1].
 

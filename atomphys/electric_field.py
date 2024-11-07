@@ -78,7 +78,7 @@ class GaussianBeam(ElectricField):
         power: Quantity,
         polarization: np.ndarray | list,
         direction_of_propagation: np.ndarray | list,
-        _ureg: UnitRegistry
+        _ureg: UnitRegistry,
     ):
         super().__init__(frequency, _ureg=_ureg)
 
@@ -92,37 +92,37 @@ class GaussianBeam(ElectricField):
     def _validate_beam(self):
         if np.abs(np.dot(self.polarization, self.direction_of_propagation)) >= 1e-6:
             raise ValueError("Polarization must be perpendicular to the wavevector")
-        
+
     @classmethod
     def from_json(cls, json_data: dict, _ureg: UnitRegistry):
         def parse_unit_value(json_data: dict, key: str) -> Quantity:
             return _ureg.Quantity(json_data[key]["value"], json_data[key]["units"])
 
         return cls(
-            frequency = parse_unit_value(json_data, 'frequency'), 
-            waist = parse_unit_value(json_data, 'waist'), 
-            power = parse_unit_value(json_data, 'power'), 
-            polarization = np.array(json_data['polarization']), 
-            direction_of_propagation = np.array(json_data['direction_of_propagation']), 
-            _ureg=_ureg
+            frequency=parse_unit_value(json_data, "frequency"),
+            waist=parse_unit_value(json_data, "waist"),
+            power=parse_unit_value(json_data, "power"),
+            polarization=np.array(json_data["polarization"]),
+            direction_of_propagation=np.array(json_data["direction_of_propagation"]),
+            _ureg=_ureg,
         )
 
     def to_json(self):
         def serialize_unit_value(quantity):
-            return {'value': quantity.magnitude, 'units': str(quantity.units)}
+            return {"value": quantity.magnitude, "units": str(quantity.units)}
 
         data = {
-            'frequency': serialize_unit_value(self.frequency),
-            'waist': serialize_unit_value(self.waist),
-            'power': serialize_unit_value(self.power),
-            'polarization': self.polarization.tolist(),
-            'direction_of_propagation': self.direction_of_propagation.tolist()
+            "frequency": serialize_unit_value(self.frequency),
+            "waist": serialize_unit_value(self.waist),
+            "power": serialize_unit_value(self.power),
+            "polarization": self.polarization.tolist(),
+            "direction_of_propagation": self.direction_of_propagation.tolist(),
         }
         return data
 
     @property
     def waist(self) -> Quantity:
-        """ Returns the waist of the Gaussian beam. """
+        """Returns the waist of the Gaussian beam."""
         return self._waist
 
     @waist.setter
@@ -133,7 +133,7 @@ class GaussianBeam(ElectricField):
 
     @property
     def power(self) -> Quantity:
-        """ Returns the power of the Gaussian beam in W, mW, uW, nW, or pW depending on the magnitude of the power. This would be the total power of the beam. The one that you would measure with a powermeter in a lab."""
+        """Returns the power of the Gaussian beam in W, mW, uW, nW, or pW depending on the magnitude of the power. This would be the total power of the beam. The one that you would measure with a powermeter in a lab."""
         return self._power.to_compact()
 
     @power.setter
@@ -143,7 +143,7 @@ class GaussianBeam(ElectricField):
 
     @property
     def polarization(self) -> np.ndarray:
-        """ Returns the Jones polarization vector of the electric field in cartesian coordinates. """
+        """Returns the Jones polarization vector of the electric field in cartesian coordinates."""
         return self._polarization
 
     @polarization.setter
@@ -153,7 +153,7 @@ class GaussianBeam(ElectricField):
 
     @property
     def direction_of_propagation(self):
-        """ Returns the direction of propagation of the Gaussian beam, which is effectively unitless, unit wavevector. """
+        """Returns the direction of propagation of the Gaussian beam, which is effectively unitless, unit wavevector."""
         return self._direction_of_propagation
 
     @direction_of_propagation.setter
@@ -163,16 +163,16 @@ class GaussianBeam(ElectricField):
 
     @staticmethod
     def calculate_intensity(power: Quantity, waist: Quantity) -> Quantity:
-        """ Calculate the peak intensity of a Gaussian beam given the power and waist. """
+        """Calculate the peak intensity of a Gaussian beam given the power and waist."""
         return 2 * power / (np.pi * waist**2)
-    
+
     def _update_field_amplitude(self):
         intensity = self.calculate_intensity(self._power, self._waist)
         self._field_amplitude = np.sqrt(2 * intensity / self._ureg("c*epsilon_0"))
 
     @property
     def wavevector(self) -> np.ndarray:
-        """ Returns the wavevector of the Gaussian beam."""
+        """Returns the wavevector of the Gaussian beam."""
         return self.direction_of_propagation * self.angular_frequency / self._ureg("c")
 
     def field(self):
@@ -180,6 +180,7 @@ class GaussianBeam(ElectricField):
 
     def gradient(self):
         return np.einsum("i,...j->...ij", 1j * self.wavevector, self.field())
+
 
 class SumElectricField(ElectricField):
     def __init__(self, field_a: ElectricField, field_b: ElectricField):

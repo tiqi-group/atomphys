@@ -36,7 +36,9 @@ def plot_atom(
 
     if max_energy is not None:
         max_energy = set_default_units(max_energy, energy_units)
-        atom = atom.remove_states_above_energy(max_energy, remove_isolated=remove_isolated, copy=True)
+        atom = atom.remove_states_above_energy(
+            max_energy, remove_isolated=remove_isolated, copy=True
+        )
     if min_energy is not None:
         min_energy = set_default_units(min_energy, energy_units)
         atom = atom.remove_states_below_energy(min_energy, copy=True)
@@ -52,17 +54,42 @@ def plot_atom(
 
     # Calculate offsets for nodes with similar energy and same angular momentum
     if introduce_offset:
-        pos = offset_similar_nodes(pos, energy_threshold, x_offset_factor, y_offset_factor)
+        pos = offset_similar_nodes(
+            pos, energy_threshold, x_offset_factor, y_offset_factor
+        )
 
     node_labels = {k: getattr(k, state_label) for k in g.nodes}
-    edge_labels = {edge: f"{tr.wavelength:~0.1fP}" for edge, tr in nx.get_edge_attributes(g, "transition").items()}
+    edge_labels = {
+        edge: f"{tr.wavelength:~0.1fP}"
+        for edge, tr in nx.get_edge_attributes(g, "transition").items()
+    }
 
     # https://petercbsmith.github.io/marker-tutorial.html
-    node_path = Path([(-1, 0), (1, 0)], [Path.MOVETO, Path.LINETO])  # just a simple horizontal line
+    node_path = Path(
+        [(-1, 0), (1, 0)], [Path.MOVETO, Path.LINETO]
+    )  # just a simple horizontal line
     node_color = ["k" if s not in atom.isolated_states else "C1" for s in atom.states]
-    edge_color = [_wavelength_to_rgb(tr.wavelength.to("nm").m) for tr in atom.transitions]
-    nx.draw_networkx_nodes(g, pos, node_shape=node_path, node_color=node_color, node_size=200, linewidths=2, ax=ax)
-    nx.draw_networkx_labels(g, pos, node_labels, font_size=9, verticalalignment="bottom", ax=ax, clip_on=False)
+    edge_color = [
+        _wavelength_to_rgb(tr.wavelength.to("nm").m) for tr in atom.transitions
+    ]
+    nx.draw_networkx_nodes(
+        g,
+        pos,
+        node_shape=node_path,
+        node_color=node_color,
+        node_size=200,
+        linewidths=2,
+        ax=ax,
+    )
+    nx.draw_networkx_labels(
+        g,
+        pos,
+        node_labels,
+        font_size=9,
+        verticalalignment="bottom",
+        ax=ax,
+        clip_on=False,
+    )
     if plot_transitions:
         nx.draw_networkx_edges(g, pos, edge_color=edge_color, node_size=50, ax=ax)
         nx.draw_networkx_edge_labels(

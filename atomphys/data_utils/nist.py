@@ -45,7 +45,7 @@ def remove_annotations(s: str) -> str:
 def tokenize_name(name):
     A, element, charge = parse_atom_name(name)
     element = element.lower()
-    ionization_state = 'i' * (charge + 1)
+    ionization_state = "i" * (charge + 1)
     token = f"{element} {ionization_state}"
     return token
 
@@ -63,19 +63,19 @@ class NISTHTMLParser(HTMLParser):
         super().__init__()
         self.in_title = False
         self.in_error = False
-        self.title = ''
-        self.error_message = ''
+        self.title = ""
+        self.error_message = ""
 
     def handle_starttag(self, tag, attrs):
-        if tag == 'h2':
+        if tag == "h2":
             self.in_title = True
-        elif tag == 'font' and ('color', 'red') in attrs:
+        elif tag == "font" and ("color", "red") in attrs:
             self.in_error = True
 
     def handle_endtag(self, tag):
-        if tag == 'h2':
+        if tag == "h2":
             self.in_title = False
-        elif tag == 'font':
+        elif tag == "font":
             self.in_error = False
 
     def handle_data(self, data):
@@ -87,7 +87,7 @@ class NISTHTMLParser(HTMLParser):
 
 def query_nist_database(url: str, params: dict):
     resp = requests.get(url, params=params)
-    if resp.text.startswith('<'):
+    if resp.text.startswith("<"):
         parser = NISTHTMLParser()
         parser.feed(resp.text)
         raise ValueError(f"{parser.title} : {parser.error_message}")
@@ -114,7 +114,9 @@ def fetch_states(atom, refresh_cache=False):
     }
 
     resp_text = query_nist_database(url, values)
-    data = list(csv.DictReader(io.StringIO(resp_text), dialect="excel-tab", restkey="None"))
+    data = list(
+        csv.DictReader(io.StringIO(resp_text), dialect="excel-tab", restkey="None")
+    )
     return data
 
 
@@ -123,7 +125,7 @@ def _parse_state(state: dict):
     if vaildate_term(term):
         _parsed_data = {
             "configuration": state["Configuration"],
-            "term": term.replace('*', ''),
+            "term": term.replace("*", ""),
             "energy": remove_annotations(state["Level (Ry)"]) + " Ry",
             # "g": None if state["g"] == "" else float(state["g"]),
             # "Lande": None if "Lande" not in state or state["Lande"] == "" else float(state["Lande"])
@@ -154,7 +156,7 @@ def fetch_transitions(atom, refresh_cache=False):
         "format": 3,  # format {0: HTML, 1: ASCII, 2: CSV, 3: TSV}
         "en_unit": 2,  # energy units {0: cm^-1, 1: eV, 2: Ry}
         "line_out": 2,  # only with {1: transition , 2: level classifications}
-#        "show_av": 5, - was causing some errors
+        #        "show_av": 5, - was causing some errors
         "allowed_out": 1,
         "forbid_out": 1,
         "enrg_out": "on",
@@ -182,11 +184,11 @@ def _parse_transition(transition: dict):
             "A": A,
             "state_i": {
                 "energy": remove_annotations(transition["Ei(Ry)"]) + " Ry",
-                "term": term_i.replace('*', ''),
+                "term": term_i.replace("*", ""),
             },
             "state_f": {
                 "energy": remove_annotations(transition["Ek(Ry)"]) + " Ry",
-                "term": term_k.replace('*', ''),
+                "term": term_k.replace("*", ""),
             },
             # **data
         }

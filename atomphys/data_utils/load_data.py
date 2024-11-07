@@ -4,7 +4,11 @@ from atomphys.data_utils import nist, json
 
 
 def load_from_database(
-    name: str, states_data: list[dict], transitions_data: list[dict], energy_cutoff="inf", remove_isolated=False
+    name: str,
+    states_data: list[dict],
+    transitions_data: list[dict],
+    energy_cutoff="inf",
+    remove_isolated=False,
 ) -> Atom:
     """
     Returns an atom object given the database input.
@@ -29,7 +33,9 @@ def load_from_database(
 
     # add states
     energy_cutoff = set_default_units(energy_cutoff, "Ry", atom._ureg)
-    states = [State(**d) for d in states_data if atom._ureg(d["energy"]) < energy_cutoff]
+    states = [
+        State(**d) for d in states_data if atom._ureg(d["energy"]) < energy_cutoff
+    ]
     atom.add_states(states)
     print(f"Added {len(states)} states")
 
@@ -55,7 +61,9 @@ def load_from_database(
     return atom
 
 
-def from_nist(name: str, energy_cutoff="inf", remove_isolated=False, refresh_cache=False) -> Atom:
+def from_nist(
+    name: str, energy_cutoff="inf", remove_isolated=False, refresh_cache=False
+) -> Atom:
     """
     Returns an atom from the NIST database
 
@@ -74,7 +82,9 @@ def from_nist(name: str, energy_cutoff="inf", remove_isolated=False, refresh_cac
 
     """
     name, states_data, transitions_data = nist.load_from_nist(name, refresh_cache)
-    return load_from_database(name, states_data, transitions_data, energy_cutoff, remove_isolated)
+    return load_from_database(
+        name, states_data, transitions_data, energy_cutoff, remove_isolated
+    )
 
 
 def from_json(filename: str, energy_cutoff="inf", remove_isolated=False) -> Atom:
@@ -93,4 +103,6 @@ def from_json(filename: str, energy_cutoff="inf", remove_isolated=False) -> Atom
 
     """
     name, states_data, transitions_data = json.load_from_json(filename)
-    return load_from_database(name, states_data, transitions_data, energy_cutoff, remove_isolated)
+    return load_from_database(
+        name, states_data, transitions_data, energy_cutoff, remove_isolated
+    )

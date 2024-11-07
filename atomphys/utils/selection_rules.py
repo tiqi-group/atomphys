@@ -11,10 +11,10 @@ from atomphys.utils.quantum_numbers import QuantumNumbers
 
 
 class TransitionType(Enum):
-    E1 = "E1"    # electric dipole
-    M1 = "M1"    # magnetic dipole
-    E2 = "E2"    # electric quadrupole
-    M2 = "M2"    # magnetic quadrupole
+    E1 = "E1"  # electric dipole
+    M1 = "M1"  # magnetic dipole
+    E2 = "E2"  # electric quadrupole
+    M2 = "M2"  # magnetic quadrupole
     # E3 = "E3"    # electric octupole
     NONE = None  # Not found
 

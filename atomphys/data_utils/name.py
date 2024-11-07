@@ -35,11 +35,11 @@ def parse_atom_name(name: str) -> tuple[int, str, int]:
     # TODO move this docstring perhaps somewhere else
     match = re_atom_name.match(name)
     if match:
-        A = int(match.group('A')) if match.group('A') else 0
-        element = match.group('element')
-        charge = match.group('charge')
+        A = int(match.group("A")) if match.group("A") else 0
+        element = match.group("element")
+        charge = match.group("charge")
         if charge:
-            charge = charge.count('+') if set(charge) == {'+'} else int(charge[:-1])
+            charge = charge.count("+") if set(charge) == {"+"} else int(charge[:-1])
         else:
             charge = 0
         return A, element, charge

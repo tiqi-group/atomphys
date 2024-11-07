@@ -12,6 +12,7 @@ References:
 
 import numpy as np
 import pint
+
 g_spin = 2.00231930436256
 
 
@@ -31,8 +32,9 @@ def g_lande_fine_LS(L, S, J, gL=1):
     """
     if J == 0:
         return 0
-    gJ = gL * (J * (J + 1) - S * (S + 1) + L * (L + 1)) / (2 * J * (J + 1)) + \
-        g_spin * (J * (J + 1) + S * (S + 1) - L * (L + 1)) / (2 * J * (J + 1))
+    gJ = gL * (J * (J + 1) - S * (S + 1) + L * (L + 1)) / (2 * J * (J + 1)) + g_spin * (
+        J * (J + 1) + S * (S + 1) - L * (L + 1)
+    ) / (2 * J * (J + 1))
     return gJ
 
 
@@ -62,19 +64,19 @@ def g_lande_hyperfine(J, I, F, gJ, gI=0):  # noqa: E741
 def zeeman_shift(g, m, B: pint.Quantity, _ureg: pint.UnitRegistry | None = None):
     _ureg = pint.get_application_registry() if _ureg is None else _ureg
     mu = _ureg.bohr_magneton
-    return mu * g * m * B.to('tesla', 'Gaussian')
+    return mu * g * m * B.to("tesla", "Gaussian")
 
 
 def quadratic_clock_shift(gJ, dE_hf, B, _ureg=None):
     _ureg = pint.get_application_registry() if _ureg is None else _ureg
     mu = _ureg.bohr_magneton
-    return gJ**2 * mu**2 * B.to('tesla', 'Gaussian')**2 / 2 / dE_hf
+    return gJ**2 * mu**2 * B.to("tesla", "Gaussian") ** 2 / 2 / dE_hf
 
 
 def field_sensitivity(g, m, _ureg=None):
     _ureg = pint.get_application_registry() if _ureg is None else _ureg
-    mu = (1 * _ureg.bohr_magneton).to('J/gauss', 'Gaussian')
-    return (mu * g * m / _ureg.planck_constant).to('MHz/gauss')
+    mu = (1 * _ureg.bohr_magneton).to("J/gauss", "Gaussian")
+    return (mu * g * m / _ureg.planck_constant).to("MHz/gauss")
 
 
 def breit_rabi(B, Ahf, I, mJ, mI, gJ, gI=0, _ureg=None):
@@ -97,14 +99,16 @@ def breit_rabi(B, Ahf, I, mJ, mI, gJ, gI=0, _ureg=None):
 
     Ehf = Ahf * (I + 1 / 2)
     mu = _ureg.bohr_magneton
-    B = B.to('tesla', 'Gaussian')
+    B = B.to("tesla", "Gaussian")
     sign = np.sign(mJ)
     if np.abs(mI) == I and np.sign(mI) == sign:  # stretched states
         dE = Ehf * I / (2 * I + 1) + sign * 0.5 * (gJ + 2 * I * gI) * mu * B
     else:
         mF = mI + mJ
         x = (gJ - gI) * mu * B / Ehf
-        dE = -Ehf / 2 / (2 * I + 1) + sign * Ehf / 2 * np.sqrt(1 + 4 * mF * x / (2 * I + 1) + x**2)
+        dE = -Ehf / 2 / (2 * I + 1) + sign * Ehf / 2 * np.sqrt(
+            1 + 4 * mF * x / (2 * I + 1) + x**2
+        )
         if gI != 0:
             dE += gI * mu * mF * B
     return dE
@@ -130,14 +134,21 @@ def breit_rabi_dEdB(B, Ahf, I, mJ, mI, gJ, gI=0, _ureg=None):
 
     Ehf = Ahf * (I + 1 / 2)
     mu = _ureg.bohr_magneton
-    B = B.to('tesla', 'Gaussian')
+    B = B.to("tesla", "Gaussian")
     sign = np.sign(mJ)
     if np.abs(mI) == I and np.sign(mI) == sign:  # stretched states
         dEdB = sign * 0.5 * (gJ + 2 * I * gI) * mu * np.ones_like(B)
     else:
         mF = mI + mJ
         x = (gJ - gI) * mu * B / Ehf
-        dEdB = sign / 4 * (2 * x + 4 * mF / (2 * I + 1)) / np.sqrt(1 + 4 * mF * x / (2 * I + 1) + x**2) * (gJ - gI) * mu
+        dEdB = (
+            sign
+            / 4
+            * (2 * x + 4 * mF / (2 * I + 1))
+            / np.sqrt(1 + 4 * mF * x / (2 * I + 1) + x**2)
+            * (gJ - gI)
+            * mu
+        )
         if gI != 0:
             dEdB += gI * mu * mF
     return dEdB

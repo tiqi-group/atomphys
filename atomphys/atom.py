@@ -156,7 +156,9 @@ class Atom:
         g.remove_nodes_from(isolated)
         return atom
 
-    def remove_states_above_energy(self, energy: pint.Quantity, copy=True, remove_isolated=False):
+    def remove_states_above_energy(
+        self, energy: pint.Quantity, copy=True, remove_isolated=False
+    ):
         """
         Removes states with energy above a given value from the Atom
 
@@ -177,7 +179,9 @@ class Atom:
             atom.remove_isolated(copy=False)
         return atom
 
-    def remove_states_below_energy(self, energy: pint.Quantity, copy=True, remove_isolated=True):
+    def remove_states_below_energy(
+        self, energy: pint.Quantity, copy=True, remove_isolated=True
+    ):
         """
         Removes states with energy below a given value from the Atom
 
@@ -283,7 +287,7 @@ class Atom:
         """
         Retrieves a state from the Atom by parsing energy.
 
-        This method iterates through the states of an Atom and returns 
+        This method iterates through the states of an Atom and returns
         the state that is the closest match to the given energy.
 
         Args:
@@ -302,8 +306,8 @@ class Atom:
         """
         Returns a list of states matching term-key
 
-        This method returns a list of states matching the given term-key 
-        The term-key is the name of the state to retrieve, 
+        This method returns a list of states matching the given term-key
+        The term-key is the name of the state to retrieve,
         which follows the format (configuration, quantum_numbers).
         If no matching state is found, it returns None.
 
@@ -311,7 +315,7 @@ class Atom:
             key (str): The name of the state to retrieve.
 
         Returns:
-            list[State]: A list of State objects with a name matching the key. 
+            list[State]: A list of State objects with a name matching the key.
             Returns None if no match is found.
 
         Raises:
@@ -324,13 +328,13 @@ class Atom:
         Returns a state matching term and energy
 
         This method returns a state matching the given term and energy.
-        The term is the name of the state to retrieve, which follows the format 
+        The term is the name of the state to retrieve, which follows the format
         (configuration, quantum_numbers). The energy is the energy of the state to retrieve.
         If no matching state is found, it returns None.
 
         Args:
             key (str):              The name of the state to retrieve.
-            energy (pint.Quantity): The energy of the state to retrieve. 
+            energy (pint.Quantity): The energy of the state to retrieve.
                                     It should be in units of energy.
 
         Returns:
@@ -379,7 +383,7 @@ class Atom:
         """
         Retrieve all transitions to a given state
 
-        This method returns a list of all transitions to a given state. 
+        This method returns a list of all transitions to a given state.
         The transitions are returned in the order they are stored in the Atom.
 
         Args:
@@ -420,10 +424,8 @@ class Atom:
         """
         Args:
             wavelength (str | float | pint.Quantity): The wavelength of the transition to retrieve. [m]
-        
+
         Returns:
             Transition: A Transition object with a wavelength closest to the given wavelength.
         """
         return min(self.transitions, key=lambda tr: abs(tr.wavelength - wavelength))
-
-

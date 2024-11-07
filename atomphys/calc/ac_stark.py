@@ -18,11 +18,11 @@ def ac_stark_shift(
     El_field: ElectricField,
     _ureg: pint.UnitRegistry,
     wavelengths: np.ndarray | None = None,
-    B: pint.Quantity | float = 0.0
+    B: pint.Quantity | float = 0.0,
 ):
     delta_E = 0 * _ureg("k*mK")
 
-    B = set_default_units(B, 'tesla')
+    B = set_default_units(B, "tesla")
 
     if wavelengths is None:
         omega_field = El_field.angular_frequency
@@ -36,7 +36,6 @@ def ac_stark_shift(
 
         mJ_i = mJ
         for mJ_f in state_f.sublevels:
-
             try:
                 tr_omega = transition.angular_frequency + zeeman_shifts[(mJ_i, mJ_f)]
 
@@ -57,10 +56,8 @@ def ac_stark_shift(
                     _ureg("hbar")
                     / 4
                     * (
-                        (Omega * np.conj(Omega))
-                        / (-tr_omega - omega_field)
-                        + (Omega * np.conj(Omega))
-                        / (-tr_omega + omega_field)
+                        (Omega * np.conj(Omega)) / (-tr_omega - omega_field)
+                        + (Omega * np.conj(Omega)) / (-tr_omega + omega_field)
                     )
                 )
             except Exception as e:
@@ -74,7 +71,6 @@ def ac_stark_shift(
 
         mJ_f = mJ
         for mJ_i in state_i.sublevels:
-
             try:
                 tr_omega = transition.angular_frequency + zeeman_shifts[(mJ_i, mJ_f)]
 
@@ -95,23 +91,18 @@ def ac_stark_shift(
                     _ureg("hbar")
                     / 4
                     * (
-                        (Omega * np.conj(Omega))
-                        / (tr_omega - omega_field)
-                        + (Omega * np.conj(Omega))
-                        / (tr_omega + omega_field)
+                        (Omega * np.conj(Omega)) / (tr_omega - omega_field)
+                        + (Omega * np.conj(Omega)) / (tr_omega + omega_field)
                     )
                 )
             except Exception as e:
                 pass
 
     if wavelengths is None:
-        return delta_E.to("k*mK").magnitude.real* _ureg("k*mK")
+        return delta_E.to("k*mK").magnitude.real * _ureg("k*mK")
     else:
         return np.array(
-            [
-                ((delta_single_E.to("k*mK")).magnitude).real
-                for delta_single_E in delta_E
-            ]
+            [((delta_single_E.to("k*mK")).magnitude).real for delta_single_E in delta_E]
         ) * _ureg("k*mK")
 
 

@@ -15,7 +15,10 @@
 
 import numpy as np
 import pint
-from atomphys.calc.matrix_element import dipole_matrix_element, quadrupole_matrix_element
+from atomphys.calc.matrix_element import (
+    dipole_matrix_element,
+    quadrupole_matrix_element,
+)
 from atomphys.electric_field import ElectricField
 from atomphys.transition import Transition, TransitionType
 
@@ -62,7 +65,7 @@ def quadrupole_Rabi_Frequency(
     mJ_i: float,
     mJ_f: float,
     _ureg: pint.UnitRegistry,
-):   
+):
     """
     Funciton will only work for a quadrupole transitions
 

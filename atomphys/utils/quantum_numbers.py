@@ -39,5 +39,9 @@ class QuantumNumbers:
         return asdict(self)
 
     def __repr__(self) -> str:
-        out = [f"{key}={Fraction(value)}" for key, value in asdict(self).items() if value is not None]
+        out = [
+            f"{key}={Fraction(value)}"
+            for key, value in asdict(self).items()
+            if value is not None
+        ]
         return f"QuantumNumbers({', '.join(out)})"

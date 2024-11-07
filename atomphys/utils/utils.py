@@ -51,7 +51,6 @@ def spherical_basis_vector(q):
     else:
         raise ValueError("q should be -1, 0, or 1.")
 
- 
         raise ValueError(f"Invalid value {q} for q. It must be one of (-1, 0, 1).")
 
 
@@ -82,7 +81,9 @@ def spherical_basis_second_rank_tensor(q):
         return (1 / np.sqrt(6)) * np.array([[1, 1j, 0], [1j, -1, 0], [0, 0, 0]])
         return (1 / np.sqrt(6)) * np.array([[1, 1j, 0], [1j, -1, 0], [0, 0, 0]])
     else:
-        raise ValueError(f"Invalid value {q} for q. It must be one of (-2, -1, 0, 1, 2).")
+        raise ValueError(
+            f"Invalid value {q} for q. It must be one of (-2, -1, 0, 1, 2)."
+        )
 
 
 def fsolve(func: Callable, x0, x1=None, tol: float = 1.49012e-08, maxfev: int = 100):
@@ -115,10 +116,11 @@ def fsolve(func: Callable, x0, x1=None, tol: float = 1.49012e-08, maxfev: int = 
         i += 1
     return x1
 
+
 def inthalf(value):
     if abs(value - round(value)) < 1e-8:  # Close enough to an integer
         return int(round(value))  # Convert to an integer
-    elif abs(value*2 - round(value*2)) < 1e-8:  # Close enough to a half-integer
+    elif abs(value * 2 - round(value * 2)) < 1e-8:  # Close enough to a half-integer
         return round(value * 2) / 2  # Convert to a half-integer (like 0.5, 1.5, etc.)
     else:
         raise ValueError(f"Cannot convert {value} to integer or half-integer.")

@@ -15,7 +15,9 @@ Matches a pattern that consists of:
 - $: End of the string.
 """
 
-J1J2_term = re.compile(r"^\((?P<J1>\d+(/2)?),(?P<J2>\d+(/2)?)\)(?P<parity>\*)?(?P<J>\d+(/2)?)$")
+J1J2_term = re.compile(
+    r"^\((?P<J1>\d+(/2)?),(?P<J2>\d+(/2)?)\)(?P<parity>\*)?(?P<J>\d+(/2)?)$"
+)
 r"""
 Regular expression for J1J2 terms.
 
@@ -104,7 +106,17 @@ def parse_term(term: str) -> dict:
 
 
 def print_term(
-    J=None, S=None, L=None, J1=None, J2=None, S2=None, K=None, I=None, F=None, parity=None, ionization_limit=None
+    J=None,
+    S=None,
+    L=None,
+    J1=None,
+    J2=None,
+    S2=None,
+    K=None,
+    I=None,
+    F=None,
+    parity=None,
+    ionization_limit=None,
 ) -> str:
     if ionization_limit is not None and ionization_limit:
         return "Ionization Limit"
@@ -132,4 +144,9 @@ def vaildate_term(term: str) -> dict:
     """
     parse term symbol string in NIST ASD
     """
-    return "Limit" in term or LS_term.search(term) or J1J2_term.search(term) or LK_term.search(term)
+    return (
+        "Limit" in term
+        or LS_term.search(term)
+        or J1J2_term.search(term)
+        or LK_term.search(term)
+    )

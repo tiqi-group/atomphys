@@ -13,7 +13,9 @@ from atomphys.transition import Transition
 from atomphys.calc.linewidths import transition_specific_linewidth
 
 
-def sqrt_lindblad_operator(transition: Transition, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry):
+def sqrt_lindblad_operator(
+    transition: Transition, mJ_i: float, mJ_f: float, _ureg: pint.UnitRegistry
+):
     """
     Args:
         transition: Transition object
@@ -27,4 +29,4 @@ def sqrt_lindblad_operator(transition: Transition, mJ_i: float, mJ_f: float, _ur
 
     lo = transition_specific_linewidth(transition, mJ_i, mJ_f, _ureg)
 
-    return np.sqrt(complex((lo.to('MHz')).magnitude)) * _ureg('MHz**0.5')
+    return np.sqrt(complex((lo.to("MHz")).magnitude)) * _ureg("MHz**0.5")
