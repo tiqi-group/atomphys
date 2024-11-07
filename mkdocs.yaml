@@ -1,7 +1,7 @@
 site_name: atomphys
-site_url: https://mgrau.github.io/atomphys
-repo_url: https://github.com/mgrau/atomphys
-edit_uri: edit/main/docs/
+site_url: https://atomphys.readthedocs.io
+repo_url: https://github.com/tiqi-group/atomphys
+edit_uri: blob/docs/docs/
 repo_name: atomphys
 use_directory_urls: false
 
@@ -16,12 +16,12 @@ nav:
         - Matrix Elements: user_guide/calculations/matrix_elements.md
         - Rabi Frequencies: user_guide/calculations/rabi_frequencies.md
         - AC Stark Shifts: user_guide/calculations/ac_stark_shifts.md
-        - Linewidhts: user_guide/calculations/linewidths.md
+        - Linewidths: user_guide/calculations/linewidths.md
       - Qutip Helpers:
         - Master Equation: user_guide/qutip_helpers/master_equation.md
         - Hamiltonians: user_guide/qutip_helpers/hamiltonians.md
         - Collapse Operators: user_guide/qutip_helpers/collapse_operators.md
-  - Developers: developers.md
+  - Data References: data.md
 
 theme:
   logo: img/atom.svg
@@ -69,12 +69,14 @@ extra_css:
 plugins:
   - search
   - include-markdown
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [atomphys] # search packages in the src folder
   # - mknotebooks:
   #     execute: true
   #     enable_default_jupyter_cell_styling: false
   #     binder: true
   #     binder_service_name: "gh/mgrau"
   #     binder_branch: "main"
-  # - mkdocstrings:
-  #     watch:
-  #       - atomphys

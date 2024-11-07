@@ -2,10 +2,14 @@
 name = "atomphys"
 version = "0.1.0"
 description = "Atomic physics for Python"
-authors = ["Wojciech Adamczyk <wadamczyk@phys.ethz.ch>", "Carmelo Mordini <cmordini@phys.ehtz.ch>"]
+authors = [
+    "Carmelo Mordini <cmordini@phys.ehtz.ch>",
+    "Wojciech Adamczyk <wadamczyk@phys.ethz.ch>",
+    "Matt Grau <mgrau@odu.edu>"
+    ]
 license = "MIT"
 readme = "README.md"
-packages = [{ include = "atomphys", from='.' }]
+packages = [{ include = "atomphys", from = '.' }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -16,7 +20,9 @@ numpy = "^1.25.0"
 sympy = "^1.12"
 matplotlib = "^3.7.2"
 qutip = "^4.7.2"
-setuptools = "^73.0.1"
+
+[tool.poetry.group.dev]
+optional = true
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.24.0"
@@ -24,6 +30,16 @@ autopep8 = "^2.0.2"
 flake8 = "^6.0.0"
 pytest = "^7.4.0"
 pylint = "^2.17.5"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+mkdocs-material = "^9.5.30"
+mkdocs-include-markdown-plugin = "^3.9.1"
+mkdocstrings = {extras = ["python"], version = "^0.25.2"}
+pymdown-extensions = "^10.1"
+
 
 [build-system]
 requires = ["poetry-core"]
