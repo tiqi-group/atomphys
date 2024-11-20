@@ -3,7 +3,7 @@ from .state import State
 from .transition import Transition
 from .electric_field import ElectricField, GaussianBeam
 from .data_utils.load_data import from_json, from_nist
-import pkg_resources
+from importlib.metadata import version
 import pint
 
 _ureg = pint.UnitRegistry(system="SI", auto_reduce_dimensions=True)
@@ -13,8 +13,7 @@ _ureg.default_format = "~0.3gP"
 
 pint.set_application_registry(_ureg)
 _ureg = pint.get_application_registry()
-__version__ = pkg_resources.get_distribution("atomphys").version
-
+__version__ = version("atomphys")
 __all__ = [
     "Atom",
     "State",
