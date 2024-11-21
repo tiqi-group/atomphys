@@ -1,0 +1,82 @@
+site_name: atomphys
+site_url: https://atomphys.readthedocs.io
+repo_url: https://github.com/tiqi-group/atomphys
+edit_uri: blob/docs/docs/
+repo_name: atomphys
+use_directory_urls: false
+
+nav:
+  - Home: index.md
+  #- Getting Started: #getting-started.ipynb
+  - User Guide:
+      - Core: 
+        - Atom: user_guide/core/atom.md
+        - Field: user_guide/core/field.md
+      - Calculations:
+        - Matrix Elements: user_guide/calculations/matrix_elements.md
+        - Rabi Frequencies: user_guide/calculations/rabi_frequencies.md
+        - AC Stark Shifts: user_guide/calculations/ac_stark_shifts.md
+        - Linewidths: user_guide/calculations/linewidths.md
+      - Qutip Helpers:
+        - Master Equation: user_guide/qutip_helpers/master_equation.md
+        - Hamiltonians: user_guide/qutip_helpers/hamiltonians.md
+        - Collapse Operators: user_guide/qutip_helpers/collapse_operators.md
+  - Data References: data.md
+
+theme:
+  logo: img/atom.svg
+  favicon: img/atom.svg
+  name: material
+  features:
+    - navigation.instant
+    # - navigation.tabs
+    - navigation.top
+    - navigation.expand
+    - navigation.sections
+    - search.suggest
+  palette:
+    - scheme: default
+      primary: indygo
+      media: "(prefers-color-scheme: light)"
+      toggle:
+        icon: material/eye
+        name: Switch to dark mode
+    - scheme: slate
+      media: "(prefers-color-scheme: dark)"
+      toggle:
+        icon: material/eye-outline
+        name: Switch to light mode
+
+markdown_extensions:
+  - footnotes
+  - md_in_html
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+
+  
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - css/colors.css
+
+plugins:
+  - search
+  - include-markdown
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [atomphys] # search packages in the src folder
+  # - mknotebooks:
+  #     execute: true
+  #     enable_default_jupyter_cell_styling: false
+  #     binder: true
+  #     binder_service_name: "gh/mgrau"
+  #     binder_branch: "main"

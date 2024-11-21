@@ -1,30 +1,33 @@
-# atomphys
+# atomphys <!-- omit from toc -->
 
 <p align="left">
   <a href="https://mgrau.github.io/atomphys/"><img src="https://mgrau.github.io/atomphys/img/logo.svg" alt="atomphys logo"></a>
 </p>
 
-<!--intro-start-->
-
 A Python package to help with atomic physics calculations.
 
-[![Tests](https://github.com/mgrau/atomphys/actions/workflows/tests.yml/badge.svg)](https://github.com/mgrau/atomphys/actions/workflows/tests.yml)
-[![Codecov](https://img.shields.io/codecov/c/github/mgrau/atomphys)](https://app.codecov.io/gh/mgrau/atomphys)
-[![GitHub](https://img.shields.io/github/license/mgrau/atomphys)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/tiqi-group/atomphys/actions/workflows/tests.yml/badge.svg)](https://github.com/tiqi-group/atomphys/actions/workflows/tests.yml)
+[![Codecov](https://img.shields.io/codecov/c/github/tiqi-group/atomphys)](https://app.codecov.io/gh/tiqi-group/atomphys)
 [![PyPI](https://img.shields.io/pypi/v/atomphys)](https://pypi.org/project/atomphys/)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mgrau/atomphys/main?urlpath=%2Ftree%2Fexamples)
 
 ---
 
 **Documentation**: [mgrau.github.io/atomphys/](https://mgrau.github.io/atomphys/)
 
-**Source Code**: [github.com/mgrau/atomphys](https://github.com/mgrau/atomphys)
+**Source Code**: [github.com/tiqi-group/atomphys](https://github.com/mgrau/atomphys)
 
 ---
 
 atomphys is meant to be a good starting off point for your atomic physics calculations. It can automate much of the frustrating process of searching for and compiling physical data and simple physical relations, and help you more quickly get to the good stuff.
 
 It's designed with a natural interface and is easy to use.
+
+## Installation
+
+```bash
+pip install atomphys
+```
 
 ## Example
 
@@ -39,14 +42,6 @@ It's designed with a natural interface and is easy to use.
 27.7 ns
 ```
 
-## Installation
-
-To install atomphys, simply use pip:
-
-```console
-$ pip install atomphys
-```
-
 ## Features
 
 - Integration with [Pint](https://pint.readthedocs.io/en/stable/) for robust handling of units
@@ -55,8 +50,23 @@ $ pip install atomphys
 
 ## Requirements
 
-Python 3.6+
+Python 3.10+
 
 atomphys makes extensive use of the excellent package [Pint](https://pint.readthedocs.io/en/stable/) to handle units.
 
-<!--intro-end-->
+## License
+
+Atomphys is open source and released under the MIT license [(MIT)](https://opensource.org/license/mit/).
+
+## Contributors
+
+The project has been develoed in the [Trapped Ion Quantum Information](https://tiqi.ethz.ch/) (TIQI) group at [ETH Zurich](https://ethz.ch/), originally written by Matt Grau.
+
+At a later stage, Carmelo Mordini and Wojtek Adamczyk contributed by extensively rewriting the package data structures, including access to different atomic databases, adding visualization tools and integration with `qutip`.
+Philip Leindecker contributed with valuable advice of how to build the package such that its API is well integrateable to web-development.
+
+Other contributors, listed alphabetically, are:
+
+- Christoph Fischer
+- Maria Radisch
+- Will Cairncross

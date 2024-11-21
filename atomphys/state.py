@@ -1,313 +1,307 @@
-import enum
-from collections import UserList
-from collections.abc import Iterable
-from fractions import Fraction
-from typing import Any
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
 
+import warnings
 import pint
+from fractions import Fraction
+from .utils.quantum_numbers import QuantumNumbers
+from .utils.utils import default_units
 
-from . import _ureg
-from .calc import polarizability
-from .constants import gs
-from .laser import Laser
-from .term import L_inv, parse_term, print_term
-from .transition import TransitionRegistry
-from .util import default_units
-
-
-class Coupling(enum.Enum):
-    LS = "LS"  # Russell-Saunders
-    jj = "jj"
-    LK = "LK"  # pair coupling
+from .calc.hyperfine import hyperfine_shift
+from .calc.zeeman import (
+    g_lande_fine_LS,
+    g_lande_hyperfine,
+    field_sensitivity,
+    zeeman_shift,
+)
+from .calc.angular_momentum import couple_angular_momenta, magnetic_sublevels
+from .utils.coupling import get_coupling, Coupling
 
 
 class State:
+    """
+    This class represents a quantum state in atomic physics.
 
+    The idea behind this class is that all properties of the state are re-derived from
+    few basic properties, such as the electron configuration, the term symbol and the energy of the atom.
+
+    Attributes:
+        configuration (str): The electron configuration of the state.
+        quantum_numbers (QuantumNumbers): Quantum numbers of the state.
+        _energy (pint.Quantity): Energy of the state.
+        _ureg (pint.UnitRegistry): Unit registry for the state.
+
+    Methods:
+        __init__(configuration, term, energy, atom=None, _ureg=None): Initializes a new instance of the State class.
+        energy: Property that gets or sets the energy of the state.
+        name: Property that gets the name of the state.
+        __repr__(): Returns a string representation of the state.
+        __eq__(other): Determines whether the current state is equal to another state.
+        __lt__(other): Determines whether the current state is less than another state.
+        __hash__(): Returns a hash value for the state.
+        match(pattern): Determines whether the state name matches a pattern.
+        term: Property that gets the term of the state.
+        coupling: Property that gets the coupling of the state.
+        atom: Property that gets or sets the atom of the state.
+        gJ: Property that gets the Landé g-factor for the state.
+        g: Property that gets the Landé g-factor for the state.
+        sublevels: Property that gets the magnetic sublevels of the state.
+        transitions_from: Property that gets the transitions from the state.
+        transitions_to: Property that gets the transitions to the state.
+        Gamma: Property that gets the total decay rate of the state.
+        decay_branching_ratios: Property that gets the decay branching ratios of the state.
+        lifetime: Property that gets the lifetime of the state.
+    """
+
+    configuration: str
+    quantum_numbers: QuantumNumbers
+    _energy: pint.Quantity
     _ureg: pint.UnitRegistry
-    __energy: pint.Quantity
-    __quantum_numbers: dict
-    __atom = None
-    __transitions: TransitionRegistry
 
-    def __init__(self, term=None, energy=None, ureg=None, atom=None, **state):
-        self.__atom = atom
-
-        self._ureg = _ureg
-        if ureg is not None:
-            self._ureg = ureg
+    def __init__(
+        self,
+        configuration: str,
+        term: str,
+        energy: pint.Quantity,
+        atom=None,
+        _ureg: pint.UnitRegistry | None = None,
+    ):
+        self._atom = atom
         if atom is not None:
             self._ureg = atom._ureg
-
-        if energy:
-            self._energy = energy
-        elif "En" in state:
-            self._En = state["En"]
+        elif _ureg is not None:
+            self._ureg = _ureg
         else:
-            self._energy = 0
+            self._ureg = pint.get_application_registry()
 
-        self.__quantum_numbers = {}
-        if term:
-            self.__quantum_numbers = parse_term(term)
+        self.configuration = configuration
+        self.quantum_numbers = QuantumNumbers.from_term(term)
+        self.energy = energy
 
-        for qN in ["S", "L", "J1", "J2", "S2", "K", "J", "n", "parity"]:
-            if qN in state:
-                self.__quantum_numbers[qN] = state[qN]
-        if "J" not in self.__quantum_numbers:
-            self.J = 0
-
-        self.__transitions = TransitionRegistry(atom=self.__atom)
-
-    def __repr__(self):
-        name = f"{self.name}: " if self.name else ""
-        return f"State({name}{self.energy:0.4g~P})"
-
-    def __getattr__(self, name: str) -> Any:
-        if name in self.__quantum_numbers:
-            return self.__quantum_numbers[name]
-        raise AttributeError(f"{self.__class__.__name__} has no attribute {name}")
-
-    def __eq__(self, other):
-        return (
-            self.energy == other.energy
-            and self.quantum_numbers == other.quantum_numbers
-        )
-
-    def __lt__(self, other):
-        return self.energy < other.energy
-
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "energy": f"{self.energy:~P}",
-            "term": self.term,
-            "quantum numbers": self.quantum_numbers,
-        }
-
-    def match(self, name):
-        return name.lower() in self.name.lower()
-
-    # ------
-    # Energy
-    # ------
-
-    @property
-    def _energy(self) -> pint.Quantity:
-        return self.__energy
-
-    @_energy.setter
-    @default_units("E_h")
-    def _energy(self, energy):
-        self.__energy = energy
+    def __repr__(self) -> str:
+        return f"State({self.name} {self.energy:0.4g~P})"
 
     @property
     def energy(self) -> pint.Quantity:
-        return self.__energy
+        return self._energy
+
+    @energy.setter
+    @default_units("Ry")
+    def energy(self, value: pint.Quantity):
+        self._energy = value
 
     @property
-    def _En(self) -> pint.Quantity:
-        return self.__energy
-
-    @_En.setter
-    @default_units("E_h")
-    def _En(self, energy):
-        self.__energy = energy
+    def frequency(self) -> pint.Quantity:
+        return self.energy.to("THz", "sp")
 
     @property
-    def En(self) -> pint.Quantity:
-        return self.__energy
+    def angular_frequency(self) -> pint.Quantity:
+        return self.energy.to("1/s", "sp") * self._ureg("2*pi")
 
     @property
-    def quantum_numbers(self) -> dict:
-        return self.__quantum_numbers
+    def name(self) -> str:
+        return f"{self.configuration} {self.term}"
 
     @property
-    def term(self):
-        return print_term(**self.__quantum_numbers)
+    def __key(self):
+        return (self.configuration, self.quantum_numbers, self.energy)
+
+    def __eq__(self, other):
+        if isinstance(other, State):
+            return self.__key == other.__key
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, State):
+            return self.energy < other.energy
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.__key)
+
+    def match(self, pattern):
+        return pattern.lower() in self.name.lower()
+
+    @property
+    def atom(self):
+        return self._atom
+
+    @atom.setter
+    def atom(self, value):
+        self._atom = value
+
+    # Derived properties
+
+    @property
+    def term(self) -> str:
+        return self.quantum_numbers.term
+
+    @property
+    def coupling(self) -> Coupling:
+        return get_coupling(self.quantum_numbers)
+
+    @property
+    def gJ(self) -> float:
+        if self.coupling == Coupling.LS:
+            L, S, J = (getattr(self.quantum_numbers, n) for n in ("L", "S", "J"))
+            return g_lande_fine_LS(L, S, J)
+        else:
+            raise NotImplementedError(
+                f"Lande factor calculation is implemented only for LS coupling, but state has {self.coupling}"
+            )
+
+    @property
+    def g(self) -> float:
+        return self.gJ
+
+    @property
+    def spin(self) -> float:
+        """Total spin quantum number.
+
+        Return
+            J for Fine structure States, F for Hyperfine states
+        """
+        return self.quantum_numbers.J
+
+    @property
+    def sublevels(self) -> list[float]:
+        return magnetic_sublevels(self.spin)
+
+    @property
+    def sublevels_field_sensitivity(self) -> dict[float : pint.Quantity]:
+        return {m: field_sensitivity(self.g, m, self._ureg) for m in self.sublevels}
+
+    def sublevels_zeeman_shift(self, B: pint.Quantity) -> dict[float : pint.Quantity]:
+        return {
+            m: zeeman_shift(self.g, m, B, self._ureg).to("MHz") for m in self.sublevels
+        }
+
+    @property
+    def transitions_from(self) -> list:
+        if self._atom is None:
+            warnings.warn("State not attached to an Atom: no transitions available")
+            return list()
+        return self._atom.transitions_from(self)
+
+    @property
+    def transitions_to(self) -> list:
+        if self._atom is None:
+            warnings.warn("State not attached to an Atom: no transitions available")
+            return list()
+        return self._atom.transitions_to(self)
+
+    @property
+    def transitions(self) -> list:
+        return self.transitions_from + self.transitions_to
+
+    @property
+    def Gamma(self) -> pint.Quantity:
+        transitions_to = self.transitions_to
+        if len(self.transitions_to) == 0:
+            return self._ureg("0 MHz")
+        return sum([tr.Gamma for tr in transitions_to])
+
+    @property
+    def decay_branching_ratios(self) -> dict:
+        transitions_to = self.transitions_to.copy()
+        transitions_to.sort(key=lambda tr: tr.Gamma.m, reverse=True)
+        return {tr.state_i: (tr.Gamma / self.Gamma).m for tr in transitions_to}
+
+    @property
+    def lifetime(self) -> pint.Quantity:
+        try:
+            return (1 / self.Gamma).to("seconds")
+        except ZeroDivisionError:
+            return self._ureg("inf seconds")
+
+    def to_json(self):
+        return {
+            "configuration": self.configuration,
+            "term": self.term,
+            "energy": f"{self.energy.to('Ry'):f~P}",
+        }
+
+
+class HyperfineState(State):
+    """
+    This class represents a hyperfine quantum state in atomic physics, and it extends the State class.
+
+    Methods:
+        __init__(configuration, term, energy, I, F, atom=None, _ureg=None): Initializes a new instance of the HyperfineState class.
+        name: Property that gets the name of the state.
+        __repr__(): Returns a string representation of the state.
+        gF: Property that gets the Landé g-factor for the hyperfine state.
+        g: Property that gets the Landé g-factor for the hyperfine state.
+        sublevels: Property that gets the magnetic sublevels of the hyperfine state.
+    """
+
+    def __init__(
+        self,
+        configuration: str,
+        term: str,
+        energy: pint.Quantity,
+        I: float,
+        F: float,
+        atom=None,
+        _ureg=None,
+    ):
+        super().__init__(configuration, term, energy, atom, _ureg)
+        self._gI = 0  # TODO: fix
+        self.quantum_numbers = QuantumNumbers.from_term(term, I=I, F=F)
 
     @property
     def name(self):
-        if self.term is None:
-            return None
-        if "n" in self.__quantum_numbers:
-            return f"{self.n}{L_inv[self.L]}{Fraction(self.J)}, {self.term}"
-        return f"{self.term}"
-
-    # -----------
-    # Transitions
-    # -----------
-
-    @property
-    def transitions(self):
-        return self.__transitions
-
-    @property
-    def to(self):
-        return self.__transitions
-
-    @property
-    def transitions_down(self):
-        return self.__transitions.down_from(self)
-
-    @property
-    def transitions_up(self):
-        return self.__transitions.up_from(self)
-
-    @property
-    def down(self):
-        return self.transitions_down
-
-    @property
-    def up(self):
-        return self.transitions_up
-
-    # ---------------------
-    # high level properties
-    # ---------------------
-
-    @property
-    def coupling(self):
-        if all(key in self.__quantum_numbers.keys() for key in ["S", "L"]):
-            return Coupling.LS
-        if all(key in self.__quantum_numbers.keys() for key in ["J1", "J2"]):
-            return Coupling.jj
-        if all(key in self.__quantum_numbers.keys() for key in ["S2", "K"]):
-            return Coupling.LK
-        return None
-
-    @property
-    def g(self):
-        try:
-            L, S, J = self.L, self.S, self.J
-        except AttributeError:
-            return None
-        if J == 0:
-            return 0
-        return (J * (J + 1) - S * (S + 1) + L * (L + 1)) / (2 * J * (J + 1)) + gs * (
-            J * (J + 1) + S * (S + 1) - L * (L + 1)
-        ) / (2 * J * (J + 1))
-
-    @property
-    def lifetime(self):
-        Gamma = sum([transition.Gamma for transition in self.transitions_down])
-        if Gamma == 0:
-            return self._ureg.Quantity(float("inf"), "s")
-        else:
-            return 1 / Gamma
-
-    @property
-    def τ(self):
-        return self.lifetime
-
-    def polarizability(self, laser=None, mJ=None, **kwargs):
-        if laser is None:
-            laser = Laser(**kwargs)
-        else:
-            laser = Laser(laser=laser, **kwargs)
-        return polarizability.total(
-            self,
-            mJ=mJ,
-            omega=laser.omega,
-            A=laser.A,
-            theta_k=laser.theta_k,
-            theta_p=laser.theta_p,
-        )
-
-    @property
-    def α(self):
-        return self.polarizability
-
-
-class StateRegistry(UserList):
-    _ureg: pint.UnitRegistry = None
-
-    def __init__(self, data=[], ureg=None, atom=None):
-        if not all(isinstance(state, State) for state in data):
-            raise TypeError("StateRegistry can only contain states")
-        super().__init__(data)
-
-        if atom:
-            self._ureg = atom._ureg
-        elif ureg:
-            self._ureg = ureg
-        else:
-            self._ureg = _ureg
-
-    def __call__(self, key):
-        if isinstance(key, int):
-            return self[key]
-        elif isinstance(key, str):
-            try:
-                return self(self._ureg.Quantity(key))
-            except (pint.errors.UndefinedUnitError, pint.errors.DimensionalityError):
-                pass
-
-            try:
-                return next(state for state in self if state.match(key))
-            except StopIteration:
-                pass
-
-            raise KeyError(f"no state {key} found")
-        elif isinstance(key, float):
-            energy = self._ureg.Quantity(key, "E_h")
-            return min(self, key=lambda state: abs(state.energy - energy))
-        elif isinstance(key, self._ureg.Quantity):
-            return min(self, key=lambda state: abs(state.energy - key))
-        elif isinstance(key, Iterable):
-            return StateRegistry([self(item) for item in key], ureg=self._ureg)
-        else:
-            raise TypeError(
-                "key must be integer index, term string, energy, or iterable"
-            )
+        F = self.quantum_numbers.F
+        return f"{self.configuration} {self.term} F={Fraction(F)}"
 
     def __repr__(self):
-        repr = f"{len(self)} States (\n"
-        if self.__len__() <= 6:
-            for state in self:
-                repr += f"{state}\n"
-        else:
-            for state in self[:3]:
-                repr += f"{state}\n"
-            repr += "...\n"
-            for state in self[-3:]:
-                repr += f"{state}\n"
-        repr = repr[:-1] + ")"
-        return repr
+        return f"HyperfineState({self.name} {self.energy:0.4g~P})"
 
-    def _assert_State(self, state: Any):
-        if not isinstance(state, State):
-            raise TypeError("StateRegistry can only contain states")
+    @property
+    def gF(self) -> float:
+        J, I, F = (getattr(self.quantum_numbers, n) for n in ("J", "I", "F"))
+        return g_lande_hyperfine(J, I, F, self.gJ, self.gI)
 
-    def __setitem__(self, index: int, state: State):
-        self._assert_State(state)
-        super().__setitem__(index, state)
+    @property
+    def gI(self) -> float:
+        return self._gI
 
-    def insert(self, index: int, state: State):
-        self._assert_State(state)
-        super().insert(index, state)
+    @property
+    def g(self) -> float:
+        return self.gF
 
-    def append(self, state: State):
-        self._assert_State(state)
-        super().append(state)
+    @property
+    def spin(self) -> float:
+        """Total spin
+        J for Fine structure States
+        F for Hyperfine states
+        """
+        return self.quantum_numbers.F
 
-    def extend(self, states):
-        [self._assert_State(state) for state in states]
-        super().extend(states)
 
-    def search(self, func):
-        def search_func(state):
-            try:
-                return func(state)
-            except BaseException:
-                return False
+def hyperfine_manifold(
+    state: State, I: float, Ahf: pint.Quantity, Bhf: pint.Quantity = 0
+) -> list[HyperfineState]:  # noqa: E741
+    """
+    This function generates a list of hyperfine states for a given state.
 
-        return StateRegistry(list(filter(search_func, self)), ureg=self._ureg)
+    Arguments:
+        state (State): The state for which to generate the hyperfine states.
+        I (float): The nuclear spin quantum number.
+        Ahf (pint.Quantity): The magnetic dipole hyperfine structure constant.
+        Bhf (pint.Quantity, optional): The electric quadrupole hyperfine structure constant. Defaults to 0.
 
-    def match(self, **kwargs):
-        kwargs.pop("energy", None)
-        kwargs.pop("En", None)
-        return self.search(
-            lambda state: all(getattr(state, key) == val for key, val in kwargs.items())
+    Returns:
+        list[HyperfineState]: A list of hyperfine states.
+    """
+    J = state.quantum_numbers.J
+    Fs = couple_angular_momenta(J, I)
+
+    hstates = []
+    for F in Fs:
+        energy = state.energy + hyperfine_shift(J, I, F, Ahf, Bhf)
+        hs = HyperfineState(
+            state.configuration, state.term, energy, I, F, state._atom, state._ureg
         )
-
-    def to_dict(self):
-        return [state.to_dict() for state in self]
+        hstates.append(hs)
+    return hstates

@@ -1,0 +1,34 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: atomphys
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Carmelo
+    family-names: Mordini
+    orcid: 'https://orcid.org/0000-0002-7162-4836'
+    affiliation: University of Padua
+    email: carmelo.mordini@gmail.com
+  - given-names: Wojtech
+    family-names: Adamczyk
+    affiliation: ETH Zurich
+  - given-names: Matt
+    family-names: Grau
+    affiliation: Old Dominion University
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.14197195
+    description: latest
+url: 'https://github.com/tiqi-group/atomphys'
+abstract: A Python package for atomic physics data and calculations.
+keywords:
+  - AOM
+  - atomic physics
+  - atomic transitions
+  - energy levels
+  - hamiltonian simulations
+license: MIT
