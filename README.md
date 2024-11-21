@@ -8,6 +8,7 @@
 
 A Python package to help with atomic physics calculations.
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14197195.svg)](https://doi.org/10.5281/zenodo.14197195)
 [![Tests](https://github.com/mgrau/atomphys/actions/workflows/tests.yml/badge.svg)](https://github.com/mgrau/atomphys/actions/workflows/tests.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/mgrau/atomphys)](https://app.codecov.io/gh/mgrau/atomphys)
 [![GitHub](https://img.shields.io/github/license/mgrau/atomphys)](LICENSE)
@@ -44,7 +45,7 @@ It's designed with a natural interface and is easy to use.
 To install atomphys, simply use pip:
 
 ```console
-$ pip install atomphys
+pip install atomphys
 ```
 
 ## Features
