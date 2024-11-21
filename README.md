@@ -6,6 +6,7 @@
 
 A Python package to help with atomic physics calculations.
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14197195.svg)](https://doi.org/10.5281/zenodo.14197195)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://github.com/tiqi-group/atomphys/actions/workflows/tests.yml/badge.svg)](https://github.com/tiqi-group/atomphys/actions/workflows/tests.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/tiqi-group/atomphys)](https://app.codecov.io/gh/tiqi-group/atomphys)
