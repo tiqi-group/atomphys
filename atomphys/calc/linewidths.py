@@ -6,7 +6,8 @@
 
 import pint
 from sympy.physics.wigner import wigner_3j as w3j
-from atomphys.transition import Transition, TransitionType
+from atomphys.transition import Transition
+from atomphys.utils.selection_rules import TransitionType
 from atomphys.calc.matrix_element import (
     reduced_dipole_matrix_element,
     reduced_quadrupole_matrix_element,
