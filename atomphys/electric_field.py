@@ -86,7 +86,8 @@ class GaussianBeam(ElectricField):
         self._power = power
         self._update_field_amplitude()
         self._polarization = np.asarray(polarization)
-        self.direction_of_propagation = np.asarray(direction_of_propagation)
+        self._polarization = self._polarization / np.linalg.norm(self._polarization)
+        self.direction_of_propagation = np.asarray(direction_of_propagation) / np.linalg.norm(np.asarray(direction_of_propagation))
         self._validate_beam()
 
     def _validate_beam(self):
