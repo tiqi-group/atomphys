@@ -4,7 +4,7 @@
 # Created: 07/2023
 # Author: Carmelo Mordini <cmordini@phys.ethz.ch>
 
-
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import networkx as nx
@@ -13,6 +13,7 @@ from math import nan
 from ..state import State
 from ..atom import Atom
 from ..utils.utils import set_default_units
+from ..utils.coupling import Coupling
 from collections import defaultdict
 
 
@@ -50,7 +51,7 @@ def plot_atom(
     g = atom._graph
 
     # Get original positions
-    pos = JE_graph_position(g.nodes, energy_units, max_energy, min_energy)
+    pos = JE_graph_position(g.nodes, energy_units)
 
     # Calculate offsets for nodes with similar energy and same angular momentum
     if introduce_offset:
@@ -64,10 +65,7 @@ def plot_atom(
         for edge, tr in nx.get_edge_attributes(g, "transition").items()
     }
 
-    # https://petercbsmith.github.io/marker-tutorial.html
-    node_path = Path(
-        [(-1, 0), (1, 0)], [Path.MOVETO, Path.LINETO]
-    )  # just a simple horizontal line
+    node_shape = "_"  # horizontal line
     node_color = ["k" if s not in atom.isolated_states else "C1" for s in atom.states]
     edge_color = [
         _wavelength_to_rgb(tr.wavelength.to("nm").m) for tr in atom.transitions
@@ -75,7 +73,7 @@ def plot_atom(
     nx.draw_networkx_nodes(
         g,
         pos,
-        node_shape=node_path,
+        node_shape=node_shape,
         node_color=node_color,
         node_size=200,
         linewidths=2,
@@ -172,6 +170,11 @@ def JE_graph_position(states, energy_units: str, max_energy=None, min_energy=Non
     # if min_energy is not None:
     #     states = [s for s in states if s.energy >= min_energy]
     return {s: (x_pos_angular_momentum(s), s.energy.to(energy_units).m) for s in states}
+
+
+# def JE_graph_position(states: list[State], energy_units: str):
+#     for state in states:
+#         qn = state.quantum_numbers
 
 
 # def spreaded_JE_graph_position(states, energy_units: str, threshold: float | None):
