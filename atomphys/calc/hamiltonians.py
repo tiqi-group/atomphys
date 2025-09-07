@@ -96,6 +96,31 @@ def H_detuning(states, dets_vector, _ureg: pint.UnitRegistry):
             counter += 1
     return H
 
+def H_detuning_bare(states, dets_vector, _ureg: pint.UnitRegistry):
+    total = 0
+    for state in states:
+        J = state.quantum_numbers["J"]
+        for i in range(int(2 * J) + 1):
+            total += 1
+
+    counter = 0
+
+    ket = [qutip.basis(total, i) for i in range(total)]
+
+    H = 0
+
+    for s, state in enumerate(states):
+        J = state.quantum_numbers["J"]
+        for i in range(int(2 * J) + 1):
+            H += (
+                complex((dets_vector[s] * _ureg("_2pi")).to("MHz").magnitude)
+                * ket[counter]
+                * ket[counter].dag()
+            )
+            counter += 1
+    return H
+
+
 
 def H_zeeman(states: list[State], B_field: pint.Quantity):
     """
