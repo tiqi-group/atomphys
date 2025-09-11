@@ -81,9 +81,13 @@ As the reduced matrix element, doesn't depend on basis this is the most basic bl
 #### Reduced Matrix Elements (Dipole and Quadrupole):
 Following James (equation 5.9) and (equation 5.10) [1]
 
-$A_{12}^{(E 1)} \equiv \sum_{m=-j}^j \bar{A}_{12}^{(E 1)}=\frac{4 c \alpha k_{12}^3}{3\left(2 j^{\prime}+1\right)}\left|\left\langle 1\left\|r \mathbf{C}^{(1)}\right\| 2\right\rangle\right|^2$
+$$
+A_{12}^{(E 1)} \equiv \sum_{m=-j}^j \bar{A}_{12}^{(E 1)}=\frac{4 c \alpha k_{12}^3}{3\left(2 j^{\prime}+1\right)}\left|\left\langle 1\left\|r \mathbf{C}^{(1)}\right\| 2\right\rangle\right|^2
+$$
 
-$A_{12}^{(E 2)} \equiv \sum_{m=-j}^j \bar{A}_{12}^{(E 2)}=\frac{c \alpha k_{12}^5}{15\left(2 j^{\prime}+1\right)}\left|\left\langle 1\left\|r^2 \mathbf{C}^{(2)}\right\| 2\right\rangle\right|^2$
+$$
+A_{12}^{(E 2)} \equiv \sum_{m=-j}^j \bar{A}_{12}^{(E 2)}=\frac{c \alpha k_{12}^5}{15\left(2 j^{\prime}+1\right)}\left|\left\langle 1\left\|r^2 \mathbf{C}^{(2)}\right\| 2\right\rangle\right|^2
+$$
 
 we can rewrite 
 
