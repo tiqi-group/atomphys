@@ -278,12 +278,12 @@ In atomphys for now we don't support calculation of the magnetic dipole matrix e
 
 ####  Constraining A-vector field:
 
-Let us constrain our choice of $\mathbf{A}$ vector-field. In the end what we are interested in is an electric field $\mathbf{E}$ oscilating at single frequency $\omega$. As the electric field is an observable it must be real, and so $\tilde{E}(\mathbf{x}, -\omega)$ =  $\tilde{E}^\dag(\mathbf{x}, \omega)$, and so it can be written as [Oxford Optics notes (1.21)]: $\mathbf{E}=\frac{1}{2}\left(\mathbf{E}(\mathbf{x})e^{-i\omega_lt}+\mathbf{E}^{\dag}(\mathbf{x})e^{i\omega_lt}\right)$. 
+Let us constrain our choice of $\mathbf{A}$ vector-field. In the end what we are interested in is an electric field $\mathbf{E}$ oscilating at single frequency $\omega$. As the electric field is an observable it must be real, and so $\tilde{E}(\mathbf{x}, -\omega)$ =  $\tilde{E}^\dagger(\mathbf{x}, \omega)$, and so it can be written as [Oxford Optics notes (1.21)]: $\mathbf{E}=\frac{1}{2}\left(\mathbf{E}(\mathbf{x})e^{-i\omega_lt}+\mathbf{E}^{\dagger}(\mathbf{x})e^{i\omega_lt}\right)$. 
 
 Working in vacuum in Coulombs gauge we can write $\mathbf{E} = -\frac{\partial \mathbf{A}}{\partial t}$, hence
 
 $$
-\mathbf{A} =\frac{1}{2}\left(\left(\frac{1}{i\omega_l}\mathbf{E}(\mathbf{x})\right)e^{-i\omega_lt} + \left(\frac{1}{i\omega_l}\mathbf{E}(\mathbf{x})\right)^{\dagger}e^{i\omega_lt}\right) = \frac{1}{2}\left(\mathbf{A}(\mathbf{x})e^{-i\omega_lt} + \mathbf{A}^{\dag}(\mathbf{x})e^{i\omega_lt}\right)
+\mathbf{A} =\frac{1}{2}\left(\left(\frac{1}{i\omega_l}\mathbf{E}(\mathbf{x})\right)e^{-i\omega_lt} + \left(\frac{1}{i\omega_l}\mathbf{E}(\mathbf{x})\right)^{\dagger}e^{i\omega_lt}\right) = \frac{1}{2}\left(\mathbf{A}(\mathbf{x})e^{-i\omega_lt} + \mathbf{A}^{\dagger}(\mathbf{x})e^{i\omega_lt}\right)
 $$ 
 
 The interaction then can be written as:
@@ -291,10 +291,8 @@ The interaction then can be written as:
 $$
 \begin{aligned}
 H_I &= \sum_{\alpha, i, j} |i\rangle\left\langle i\left|e \mathbf{\dot{r}}^{(\alpha)} \mathbf{A} \right| j\right\rangle\langle j| \\
-
 &= \sum_{\alpha, i, j} |i\rangle \frac{1}{2} \left( \left\langle i\left|e \mathbf{\dot{r}}^{(\alpha)} \mathbf{A}(\mathbf{x}) \right| j\right\rangle e^{-i\omega_lt}
 + \left\langle i\left|e \mathbf{\dot{r}}^{(\alpha)} \mathbf{A}^{\dagger}(\mathbf{x}) \right| j\right\rangle e^{i\omega_lt} \right) \langle j| \\
-
 &= \sum_{\alpha, i, j} |i\rangle \frac{\hbar}{2} \left(\Omega_{ij} e^{-i\omega_lt}
 + \Omega^\dagger_{ij} e^{i\omega_lt} \right) \langle j| 
 \end{aligned}
@@ -349,9 +347,11 @@ $$
 H(\xi, t+\tau)=H(\xi, t)\\
 \Psi(\xi, t)=\phi(\xi, t) e^{-i \mathcal{E} t},
 $$ 
-such that $\phi(\xi, t+\tau)=\phi(\xi, t) \\
-\mathcal{H}(\xi, t) \equiv H(\xi, t)-i \frac{\partial}{\partial t}\\
-\mathcal{H}(\xi, t) \phi(\xi, t)=\mathcal{E} \phi(\xi, t)
+such that 
+$$
+\begin{aligned}
+\phi(\xi, t+\tau)=\phi(\xi, t) \mathcal{H}(\xi, t)\equiv H(\xi, t)-i \frac{\partial}{\partial t}=\mathcal{H}(\xi, t) \phi(\xi, t)=\mathcal{E} \phi(\xi, t)
+\end{aligned}
 $$
 
 Lets start our perturbation theory from here
