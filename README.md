@@ -69,7 +69,9 @@ However, computing these matrix elements is challenging due to their basis invol
 
 The Wigner-Eckart Theorem states that the matrix elements of spherical tensor operators, within the framework of angular momentum eigenstates, can be broken down into two components: one that is independent of the angular momentum orientation (so called reduced matrix element) and another that is a Clebsch-Gordan coefficient.(https://en.wikipedia.org/wiki/Wigner%E2%80%93Eckart_theorem) 
 
-$\left\langle j m\left|T_q^{(k)}\right| j^{\prime} m^{\prime}\right\rangle=\left\langle j^{\prime} m^{\prime} k q \mid j m\right\rangle\left\langle j\left\|T^{(k)}\right\| j^{\prime}\right\rangle = [j] \left(\begin{array}{ccc}j^{\prime} & k & j^* \\ m^{\prime} & q & m\end{array}\right)  \left\langle j\left\|T^{(k)}\right\| j^{\prime}\right\rangle$
+$$
+\left\langle j m\left|T_q^{(k)}\right| j^{\prime} m^{\prime}\right\rangle=\left\langle j^{\prime} m^{\prime} k q \mid j m\right\rangle\left\langle j\left\|T^{(k)}\right\| j^{\prime}\right\rangle = [j] \left(\begin{array}{ccc}j^{\prime} & k & j^* \\ m^{\prime} & q & m\end{array}\right)  \left\langle j\left\|T^{(k)}\right\| j^{\prime}\right\rangle
+$$
 
 Here, $[j]$ represents the dimension of the representation space of $j$, and $j^*$ indicates a complex conjugate representation to $j$. The parentheses contain the Wigner-3j symbol, and $\left\langle \mid\mid . \mid\mid \right\rangle$ denotes a reduced matrix element.
 
@@ -85,9 +87,13 @@ $A_{12}^{(E 2)} \equiv \sum_{m=-j}^j \bar{A}_{12}^{(E 2)}=\frac{c \alpha k_{12}^
 
 we can rewrite 
 
-$\left|\left\langle 1\left\|r \mathbf{C}^{(1)}\right\| 2\right\rangle\right| = \left( \frac{3\left(2 j^{\prime}+1\right)}{4 c \alpha k_{12}^3} A_{12}^{(E 1)} \right)^{\frac{1}{2}}$
+$$
+\left|\left\langle 1\left\|r \mathbf{C}^{(1)}\right\| 2\right\rangle\right| = \left( \frac{3\left(2 j^{\prime}+1\right)}{4 c \alpha k_{12}^3} A_{12}^{(E 1)} \right)^{\frac{1}{2}}
+$$
 
-$\left|\left\langle 1\left\|r^2 \mathbf{C}^{(2)}\right\| 2\right\rangle\right| = \left(\frac{15\left(2 j^{\prime}+1\right)}{c \alpha k_{12}^5} A_{12}^{(E 2)}\right)^{\frac{1}{2}}$
+$$
+\left|\left\langle 1\left\|r^2 \mathbf{C}^{(2)}\right\| 2\right\rangle\right| = \left(\frac{15\left(2 j^{\prime}+1\right)}{c \alpha k_{12}^5} A_{12}^{(E 2)}\right)^{\frac{1}{2}}$
+$$
 
 Equivalent result can be derived from Wigner-Weisskopf Decay. Example of such derivation can be found in Scully's Quantum Optics[2]
 
@@ -97,15 +103,23 @@ Equivalent result can be derived from Wigner-Weisskopf Decay. Example of such de
 
 Now in order to transform it to actual quantities that we want we can use Wigner-Eckart theorem.
 
-$\left\langle 1\left|\hat{r}_i\right| 2\right\rangle \epsilon_i=\left\langle 1\left\|r \mathbf{C}^{(1)}\right\| 2\right\rangle \sum_{q=-1}^1\left(\begin{array}{ccc}j & 1 & j^{\prime} \\ -m_j & q & m_j^{\prime}\end{array}\right) c_i^{(q)} \epsilon_i$
+$$
+\left\langle 1\left|\hat{r}_i\right| 2\right\rangle \epsilon_i=\left\langle 1\left\|r \mathbf{C}^{(1)}\right\| 2\right\rangle \sum_{q=-1}^1\left(\begin{array}{ccc}j & 1 & j^{\prime} \\ -m_j & q & m_j^{\prime}\end{array}\right) c_i^{(q)} \epsilon_i
+$$
 
-$\left\langle 1\left|\hat{r}_i \hat{r}_j\right| 2\right\rangle \epsilon_i n_j=\left\langle 1\left\|r^2 \mathbf{C}^{(2)}\right\| 2\right\rangle \sum_{q=-2}^2\left(\begin{array}{ccc}j & 2 & j^{\prime} \\ -m & q & m^{\prime}\end{array}\right) c_{i j}^{(q)} \epsilon_i n_j$
+$$
+\left\langle 1\left|\hat{r}_i \hat{r}_j\right| 2\right\rangle \epsilon_i n_j=\left\langle 1\left\|r^2 \mathbf{C}^{(2)}\right\| 2\right\rangle \sum_{q=-2}^2\left(\begin{array}{ccc}j & 2 & j^{\prime} \\ -m & q & m^{\prime}\end{array}\right) c_{i j}^{(q)} \epsilon_i n_j
+$$
 
 keeping only tensorial parts of the equations we drop $\epsilon_i$ and $n_j$.
 
-$\left\langle 1\left|\hat{r}_i\right| 2\right\rangle =\left\langle 1\left\|r \mathbf{C}^{(1)}\right\| 2\right\rangle \sum_{q=-1}^1\left(\begin{array}{ccc}j & 1 & j^{\prime} \\ -m_j & q & m_j^{\prime}\end{array}\right) c_i^{(q)} $
+$$
+\left\langle 1\left|\hat{r}_i\right| 2\right\rangle =\left\langle 1\left\|r \mathbf{C}^{(1)}\right\| 2\right\rangle \sum_{q=-1}^1\left(\begin{array}{ccc}j & 1 & j^{\prime} \\ -m_j & q & m_j^{\prime}\end{array}\right) c_i^{(q)} 
+$$
 
-$\left\langle 1\left|\hat{r}_i \hat{r}_j\right| 2\right\rangle=\left\langle 1\left\|r^2 \mathbf{C}^{(2)}\right\| 2\right\rangle \sum_{q=-2}^2\left(\begin{array}{ccc}j & 2 & j^{\prime} \\ -m & q & m^{\prime}\end{array}\right) c_{i j}^{(q)}$
+$$
+\left\langle 1\left|\hat{r}_i \hat{r}_j\right| 2\right\rangle=\left\langle 1\left\|r^2 \mathbf{C}^{(2)}\right\| 2\right\rangle \sum_{q=-2}^2\left(\begin{array}{ccc}j & 2 & j^{\prime} \\ -m & q & m^{\prime}\end{array}\right) c_{i j}^{(q)}
+$$
 
 
 #### Electric Matrix Elements
@@ -253,11 +267,9 @@ $$
 Collecting all the terms up to the 1st Order of Taylor expansion of $A_\mu$, we get:
 
 $$
-
 H_I =  \sum_{\alpha, i, j} |i\rangle\left( \underbrace{i e \omega_{0} A^\mu\left\langle i\left| r^{(\alpha)}_{\mu} \right| j\right\rangle }_\text{Electric Dipole} + 
 \underbrace{\frac{1}{2} ie\omega_0 \partial^\nu A^\mu \left\langle i\left| r^{(\alpha)}_{\mu}  r^{(\alpha)}_{\nu}  \right| j\right\rangle}_\text{Electric Quadrupole} +
 \underbrace{\frac{1}{2} \hbar e \varepsilon_{i}^{j k} \partial_j A_k \left\langle i\left| L^i \right| j\right\rangle}_\text{Magnetic Dipole} + ... \right) \langle j|
-
 $$
 
 In atomphys for now we don't support calculation of the magnetic dipole matrix elements, and so we will therefore only focus on the first two terms, assuming the light field interating with our atom doesn't have intrinsically large magnetic dipole moment. 
@@ -271,7 +283,7 @@ Let us constrain our choice of $\mathbf{A}$ vector-field. In the end what we are
 Working in vacuum in Coulombs gauge we can write $\mathbf{E} = -\frac{\partial \mathbf{A}}{\partial t}$, hence
 
 $$
-\mathbf{A} =\frac{1}{2}\left(\left(\frac{1}{i\omega_l}\mathbf{E}(\mathbf{x})\right)e^{-i\omega_lt} + \left(\frac{1}{i\omega_l}\mathbf{E}(\mathbf{x})\right)^{\dag}e^{i\omega_lt}\right) = \frac{1}{2}\left(\mathbf{A}(\mathbf{x})e^{-i\omega_lt} + \mathbf{A}^{\dag}(\mathbf{x})e^{i\omega_lt}\right)
+\mathbf{A} =\frac{1}{2}\left(\left(\frac{1}{i\omega_l}\mathbf{E}(\mathbf{x})\right)e^{-i\omega_lt} + \left(\frac{1}{i\omega_l}\mathbf{E}(\mathbf{x})\right)^{\dagger}e^{i\omega_lt}\right) = \frac{1}{2}\left(\mathbf{A}(\mathbf{x})e^{-i\omega_lt} + \mathbf{A}^{\dag}(\mathbf{x})e^{i\omega_lt}\right)
 $$ 
 
 The interaction then can be written as:
@@ -281,10 +293,10 @@ $$
 H_I &= \sum_{\alpha, i, j} |i\rangle\left\langle i\left|e \mathbf{\dot{r}}^{(\alpha)} \mathbf{A} \right| j\right\rangle\langle j| \\
 
 &= \sum_{\alpha, i, j} |i\rangle \frac{1}{2} \left( \left\langle i\left|e \mathbf{\dot{r}}^{(\alpha)} \mathbf{A}(\mathbf{x}) \right| j\right\rangle e^{-i\omega_lt}
-+ \left\langle i\left|e \mathbf{\dot{r}}^{(\alpha)} \mathbf{A}^{\dag}(\mathbf{x}) \right| j\right\rangle e^{i\omega_lt} \right) \langle j| \\
++ \left\langle i\left|e \mathbf{\dot{r}}^{(\alpha)} \mathbf{A}^{\dagger}(\mathbf{x}) \right| j\right\rangle e^{i\omega_lt} \right) \langle j| \\
 
 &= \sum_{\alpha, i, j} |i\rangle \frac{\hbar}{2} \left(\Omega_{ij} e^{-i\omega_lt}
-+ \Omega^\dag_{ij} e^{i\omega_lt} \right) \langle j| 
++ \Omega^\dagger_{ij} e^{i\omega_lt} \right) \langle j| 
 \end{aligned}
 $$
 
@@ -296,11 +308,13 @@ $$
 
 As we saw, we can decompose it through the taylor expansion into the consecutive terms corresponding to different nature of the transition. Usually only one of the coupling types is dominant and the other can be neglected. The dominant type depends on the nature of the transition and the electric field structure.
 
-$\Omega_{i j}= \begin{cases}
+$$
+\Omega_{i j}= \begin{cases}
 \frac{e\omega_{0}}{\hbar\omega_l}E^\mu\left\langle i\left| r^{(\alpha)}_{\mu} \right| j\right\rangle & (\mathrm{E1})
 \\  \frac{e\omega_0}{2\hbar\omega_l} \partial^\nu E^\mu \left\langle i\left| r^{(\alpha)}_{\mu}  r^{(\alpha)}_{\nu}  \right| j\right\rangle & (\mathrm{E2})\\
 \frac{1}{2} e \varepsilon_{\theta}^{\beta \gamma} \partial_\beta A_\gamma \left\langle i\left| L^\theta \right| j\right\rangle & (\mathrm{M1})\\
-\end{cases}$
+\end{cases}
+$$
 
 #### Final Remarks:
 This is the final expression of the rabi-frequencies. As far as we are interested in only electric multipole expansion we took all required terms from the dirac equation. We worked in vacuum and in Coulomb gauge. Not switching the gauge allowed us to not to make any mistakes that arise from working in multiple gauges. 
@@ -316,38 +330,46 @@ Expression of AC Stark Shift in terms of Rabi Frequencies is possible, as we dev
 
 Consider oscilating electric field 
 
-$\mathbf{A_l}=\frac{1}{2}\left(\mathbf{A}_{l}(\mathbf{x})e^{-i\omega_lt}+\mathbf{A}_{l}^{\dag}(\mathbf{x})e^{i\omega_lt}\right)$
+$$
+\mathbf{A_l}=\frac{1}{2}\left(\mathbf{A}_{l}(\mathbf{x})e^{-i\omega_lt}+\mathbf{A}_{l}^{\dag}(\mathbf{x})e^{i\omega_lt}\right)
+$$
 
 Such field interacts with an atom perturbing the hamiltonian by additional term(see section Rabi Frequencies):
 
-$\mathcal{H}_L=-\sum_{i, j, l}|i\rangle \frac{1}{2}\left(\Omega_{ij}^{(l)} e^{-i \omega_l t}+ \Omega_{ij}^{\dag(l)} e^{i \omega_l t}\right)\langle j|$
+$$
+\mathcal{H}_L=-\sum_{i, j, l}|i\rangle \frac{1}{2}\left(\Omega_{ij}^{(l)} e^{-i \omega_l t}+ \Omega_{ij}^{\dag(l)} e^{i \omega_l t}\right)\langle j|
+$$
 
 It is noted that $\Omega_{ij}^{(l)}$ is a time independent operator. For small field amplitudes (condition), one can treat the $\mathcal{H}_L$ as small perturbation to $\mathcal{H}_0$. Using Floquet perturbation theory [Beloy 2009, Appendix D/Chapter 3], one can develop expression for the mean energy shifts $\delta \mathcal{E} = \delta \mathcal{E}^{(1)} + \delta \mathcal{E}^{(2)} + ...$ . Due to symmetry  $\delta \mathcal{E}^{(1)}$ is not present, and so we will start from evaluating $\delta \mathcal{E}^{(2)}$.
 
 ### Floquet Perturbation Theory:
 
-$
+$$
 \left[H(\xi, t)-i \frac{\partial}{\partial t}\right] \Psi(\xi, t)=0 \\
 H(\xi, t+\tau)=H(\xi, t)\\
 \Psi(\xi, t)=\phi(\xi, t) e^{-i \mathcal{E} t},
-$ such that $\phi(\xi, t+\tau)=\phi(\xi, t) \\
+$$ 
+such that $\phi(\xi, t+\tau)=\phi(\xi, t) \\
 \mathcal{H}(\xi, t) \equiv H(\xi, t)-i \frac{\partial}{\partial t}\\
 \mathcal{H}(\xi, t) \phi(\xi, t)=\mathcal{E} \phi(\xi, t)
-$
+$$
 
 Lets start our perturbation theory from here
 
-$
+$$
 H(\xi, t)=H_0(\xi)+V(\xi, t)\\
 \mathcal{H}_0(\xi, t)=\mathcal{H}(\xi, t)-V(\xi, t)=H_0(\xi)-i \frac{\partial}{\partial t}\\
 \mathcal{H}_0(\xi, t) \phi_{n q}^{(0)}(\xi, t)=\mathcal{E}_{n q}^{(0)} \phi_{n q}^{(0)}(\xi, t)\\
-\phi_{n q}^{(0)}(\xi, t)=f_n(\xi) e^{i q \omega t}$ , where $\mathcal{E}_{n q}^{(0)}=E_n+q \omega$ and $H_0(\xi) f_n(\xi)=E_n f_n(\xi)$
+\phi_{n q}^{(0)}(\xi, t)=f_n(\xi) e^{i q \omega t}$ , where $\mathcal{E}_{n q}^{(0)}=E_n+q \omega$ and $H_0(\xi) f_n(\xi)=E_n f_n(\xi)
+$$
 
 ### The second order AC Stark Shift
 
 Using derivation in [Beloy 6], we know that:
 
-$\delta \mathcal{E}_i^{(2)}=\sum_{j} \frac{\Omega_{ij}^{(l)}\Omega_{ij}^{\dag(l)}}{\mathcal{E}_i-\mathcal{E}_{j}+\omega_l}+\sum_{j} \frac{\Omega_{ij}^{(l)}\Omega_{ij}^{\dag (l)}}{\mathcal{E}_i-\mathcal{E}_{j}-\omega_l}$
+$$
+\delta \mathcal{E}_i^{(2)}=\sum_{j} \frac{\Omega_{ij}^{(l)}\Omega_{ij}^{\dag(l)}}{\mathcal{E}_i-\mathcal{E}_{j}+\omega_l}+\sum_{j} \frac{\Omega_{ij}^{(l)}\Omega_{ij}^{\dag (l)}}{\mathcal{E}_i-\mathcal{E}_{j}-\omega_l}
+$$
 
 That's it. You would think that there is much more complicated maths in order to calculate AC Stark Shift, but acctually there isn't. All the long derivations presented in most thesis is to bring it to a simple form, which can only be done when according assumptions have been made. Because of numerical comfort we can keep above expression as final.
 
@@ -355,14 +377,18 @@ Thanks to such expression we didn't need to make any assumptions about the natur
 
 Taking second order AC Stark Shift as the largest contribution to overall stark shift we say:
 
-$\delta \mathcal{E}_i \approx \delta \mathcal{E}_i^{(2)}$ 
+$$
+\delta \mathcal{E}_i \approx \delta \mathcal{E}_i^{(2)}
+$$
 
 
 ### Polarizability
 
 Polarizability of an atom in state $|i \rangle$ , $\alpha_i$, is an AC Stark Shift, $\delta \mathcal{E}_i$  normalized by the electric field causing this stark shift, $E_0$.
 
-$\alpha_i = \frac{-4 \left(\delta \mathcal{E}_i\right)}{E_0^2}$
+$$
+\alpha_i = \frac{-4 \left(\delta \mathcal{E}_i\right)}{E_0^2}
+$$
 
 
 ## References
