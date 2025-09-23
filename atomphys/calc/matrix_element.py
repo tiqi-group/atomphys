@@ -160,7 +160,7 @@ def quadrupole_matrix_element(
         )
         sbt = spherical_basis_second_rank_tensor(q)
         qme += w3j_coeff * sbt * red_q
-    return abs(qme.to("a0**2").magnitude) * _ureg("a0**2")
+    return qme.to("a0**2").magnitude * _ureg("a0**2")
 
 
 def electric_dipole_matrix_element(
