@@ -19,7 +19,7 @@ Details of the Floquet Perturbation Theory can be found in [Beloy 2009](https://
 
 From [Beloy 2009](https://www.dereviankogroup.com/dereviankogroup/resources/Student_work/Beloy_Dissertation_2009.pdf) we know that:
 
-$\delta \mathcal{E}_i^{(2)}=\sum_{j} \frac{\Omega_{ij}^{(l)}\Omega_{ij}^{\dagger(l)}}{\mathcal{E}_i-\mathcal{E}_{j}+\omega_l}+\sum_{j} \frac{\Omega_{ij}^{(l)}\Omega_{ij}^{\dagger (l)}}{\mathcal{E}_i-\mathcal{E}_{j}-\omega_l}$
+$\delta \mathcal{E}_i^{(2)}=\frac{1}{4}\sum_{j} \frac{\Omega_{ij}^{(l)}\Omega_{ij}^{\dagger(l)}}{\mathcal{E}_i-\mathcal{E}_{j}+\omega_l}+\frac{1}{4}\sum_{j} \frac{\Omega_{ij}^{(l)}\Omega_{ij}^{\dagger (l)}}{\mathcal{E}_i-\mathcal{E}_{j}-\omega_l}$
 
 In other sources you can find that people than take this expression and make assumption about the running-wave laser field, and consider only dipole transitions. This allows them to split the expression into scalar, vectorial and tensorial components. For the case of atomphys, it is very easy to calculate the Rabi Frequencies so we don't need to make any of those assumptions. This allows us to then treat Electric Fields of more complex vectorial structure, and see for instance Magnus effect, and equivalent. 
 
