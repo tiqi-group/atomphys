@@ -9,6 +9,7 @@ import numpy as np
 from atomphys.calc.rabi_frequency import Rabi_Frequency
 from atomphys.electric_field import ElectricField
 from atomphys.state import State
+from atomphys.atom import Atom
 from atomphys.utils.utils import spherical_basis_vector
 from atomphys.transition import TransitionType
 from atomphys.calc.matrix_element import electric_dipole_matrix_element
@@ -114,6 +115,7 @@ def ac_stark_shift(
 # https://journals.aps.org/pra/pdf/10.1103/PhysRevA.97.063419
 # and simplifies https://arxiv.org/pdf/2505.22466 by not considering ladder schemes.
 def off_resonant_scattering_rate(
+    atom: Atom,
     state_I: State,
     state_F: State,
     mJ_i: float,
@@ -146,22 +148,26 @@ def off_resonant_scattering_rate(
     
     for q in (-1, 0, 1):
         D_q = 0 * _ureg('e*a0*s')
-        for transition in state_I.transitions_from:
-            if transition.type != TransitionType.E1:
-                continue
+        for transition_ik in state_I.transitions_from:
             state_i = state_I
-            state_k = transition.state_f
-            J_k = state_k.quantum_numbers["J"]
+            state_k = transition_ik.state_f
+            transition_fk = atom.transition_between(state_F, state_k) if state_F.energy < state_k.energy else atom.transition_between(state_k, state_F)
             omega_ki = (state_k.energy - state_i.energy).to("THz", "sp") * _ureg("_2pi")
             omega_fk = (state_F.energy - state_k.energy).to("THz", "sp") * _ureg("_2pi")
+            J_k = state_k.quantum_numbers["J"]
+
+            if transition_fk==None:
+                continue
+            if transition_ik.type != TransitionType.E1 or transition_ik.state_f != state_k:
+                continue
 
             for mJ_k in state_k.sublevels:
                 try:
-                    Omega = complex(
+                    Omega_ik = complex(
                         (
                             Rabi_Frequency(
                                 E_field=El_field,
-                                transition=transition,
+                                transition=transition_ik,
                                 mJ_i=mJ_i,
                                 mJ_f=mJ_k,
                                 _ureg=_ureg,
@@ -171,32 +177,13 @@ def off_resonant_scattering_rate(
                         .magnitude
                     ) * _ureg("Hz")
                     
-                    fdqk = dipole_matrix_element_basis(transition.A, transition.k, J_k, J_f, mJ_k, mJ_f, q, _ureg)*_ureg('e')
-                    kdqi = dipole_matrix_element_basis(transition.A, transition.k, J_i, J_k, mJ_i, mJ_k, q, _ureg)*_ureg('e')
-                    
-                    D_q += fdqk * Omega / (omega_ki - omega_l) / omega_ki + kdqi * Omega / (omega_ki + omega_prime) / omega_fk
-                except Exception as e:
-                    print(f"Exception in transitions_from loop: {e}")
-                    pass
-        
-        for transition in state_I.transitions_to:
-            if transition.type != TransitionType.E1:
-                continue
-            state_i = state_I
-            state_k = transition.state_i
-            omega_ki = (state_k.energy - state_i.energy).to("THz", "sp") * _ureg("_2pi")
-            omega_fk = (state_F.energy - state_k.energy).to("THz", "sp") * _ureg("_2pi")
-            J_k = state_k.quantum_numbers["J"]
-
-            for mJ_k in state_k.sublevels:
-                try:
-                    Omega = complex(
+                    Omega_fk = complex(
                         (
                             Rabi_Frequency(
                                 E_field=El_field,
-                                transition=transition,
+                                transition=transition_fk,
                                 mJ_i=mJ_k,
-                                mJ_f=mJ_i,
+                                mJ_f=mJ_f,
                                 _ureg=_ureg,
                             )
                         )
@@ -204,129 +191,66 @@ def off_resonant_scattering_rate(
                         .magnitude
                     ) * _ureg("Hz")
                     
-                    fdqk = dipole_matrix_element_basis(transition.A, transition.k, J_k, J_f, mJ_k, mJ_f, q, _ureg)*_ureg('e')
-                    kdqi = dipole_matrix_element_basis(transition.A, transition.k, J_i, J_k, mJ_i, mJ_k, q, _ureg)*_ureg('e')
-                    
-                    D_q += fdqk * Omega / (omega_ki - omega_l) / omega_ki + kdqi * Omega / (omega_ki + omega_prime) / omega_fk
+                    fdqk = dipole_matrix_element_basis(transition_fk.A, transition_fk.k, J_k, J_f, mJ_k, mJ_f, q, _ureg)*_ureg('e')
+                    kdqi = dipole_matrix_element_basis(transition_ik.A, transition_ik.k, J_i, J_k, mJ_i, mJ_k, q, _ureg)*_ureg('e')
+                    D_q += fdqk * Omega_ik / (omega_ki - omega_l) / omega_ki + kdqi * Omega_fk / (omega_ki + omega_prime) / omega_fk
                 except Exception as e:
                     print(f"Exception in transitions_to loop: {e}")
                     pass
         
-        Gamma += prefactor * D_q * D_q.conj()
         
+        for transition_ik in state_I.transitions_to:
+            state_i = state_I
+            state_k = transition_ik.state_i
+            transition_fk = atom.transition_between(state_F, state_k) if state_F.energy < state_k.energy else atom.transition_between(state_k, state_F)
+            omega_ki = (state_k.energy - state_i.energy).to("THz", "sp") * _ureg("_2pi")
+            omega_fk = (state_F.energy - state_k.energy).to("THz", "sp") * _ureg("_2pi")
+            J_k = state_k.quantum_numbers["J"]
+            if transition_fk==None:
+                continue
+            if transition_ik.type != TransitionType.E1 or transition_ik.state_f != state_k:
+                continue
+            
+
+            for mJ_k in state_k.sublevels:
+                try:
+                    Omega_ik = complex(
+                        (
+                            Rabi_Frequency(
+                                E_field=El_field,
+                                transition=transition_ik,
+                                mJ_i=mJ_i,
+                                mJ_f=mJ_k,
+                                _ureg=_ureg,
+                            )
+                        )
+                        .to("Hz")
+                        .magnitude
+                    ) * _ureg("Hz")
+                    
+                    Omega_fk = complex(
+                        (
+                            Rabi_Frequency(
+                                E_field=El_field,
+                                transition=transition_fk,
+                                mJ_i=mJ_k,
+                                mJ_f=mJ_f,
+                                _ureg=_ureg,
+                            )
+                        )
+                        .to("Hz")
+                        .magnitude
+                    ) * _ureg("Hz")
+                    
+                    fdqk = dipole_matrix_element_basis(transition_fk.A, transition_fk.k, J_k, J_f, mJ_k, mJ_f, q, _ureg)*_ureg('e')
+                    kdqi = dipole_matrix_element_basis(transition_ik.A, transition_ik.k, J_i, J_k, mJ_i, mJ_k, q, _ureg)*_ureg('e')
+                    D_q += fdqk * Omega_ik / (omega_ki - omega_l) / omega_ki + kdqi * Omega_fk / (omega_ki + omega_prime) / omega_fk
+                except Exception as e:
+                    print(f"Exception in transitions_to loop: {e}")
+                    pass
+        
+        Gamma += prefactor * D_q * D_q.conj()    
     return Gamma.to("Hz")
-    
-    
-                
-
-
-    # Build polarization unit vector epsilon_l (cartesian Jones) from the field
-    E_vec = El_field.field()  # [V/m]
-    E0 = np.linalg.norm(E_vec)
-    if E0 == 0:
-        return 0 * _ureg("1/s")
-    # epsilon (unit vector) not explicitly used further because we compute d·epsilon via Rabi_Frequency
-
-    # Helper to compute <a| d_q | b> in units of e a0 by projecting cartesian vector onto spherical basis
-    def d_q(a: State, mJ_a: float, b: State, mJ_b: float, q: int):
-        # Only include transitions that are E1-allowed between a and b
-        # Find matching Transition object if it exists
-        candidates = []
-        for tr in a.transitions_from:
-            if tr.state_f == b and tr.type == TransitionType.E1:
-                candidates.append(tr)
-        for tr in a.transitions_to:
-            if tr.state_i == b and tr.type == TransitionType.E1:
-                candidates.append(tr)
-        if len(candidates) == 0:
-            return 0.0 * _ureg("e*a0")
-        # Use the first matching E1 transition (A, k define magnitude; sign via w3j inside electric_dipole_matrix_element)
-        tr = candidates[0]
-        J_i = tr.state_i.quantum_numbers["J"]
-        J_f = tr.state_f.quantum_numbers["J"]
-        # Determine direction of matrix element based on ordering of states in the Transition
-        if tr.state_i == a and tr.state_f == b:
-            val = electric_dipole_matrix_element(tr.A, tr.k, J_i, J_f, mJ_a, mJ_b, _ureg)
-        else:
-            # Element <a|d|b> = conjugate of <b|d|a>; for real Wigner-3j-based elements this is equal
-            val = electric_dipole_matrix_element(tr.A, tr.k, J_f, J_i, mJ_b, mJ_a, _ureg)
-        # Project onto spherical component q via cartesian basis vector c_q
-        c_q = spherical_basis_vector(q)
-        # electric_dipole_matrix_element returns cartesian vector valued quantity expressed via spherical expansion inside
-        # Here, treat val as cartesian vector magnitude along c_q direction by dot product
-        # If val is scalar in units e a0, embed along c_q direction
-        # If val is vector-like (np.ndarray), project; otherwise return scalar
-        proj = (np.dot(c_q, val) if hasattr(val, "__len__") else val)
-        return proj.to("e*a0")
-
-    # Build the Rabi coupling <k| d·epsilon | i> and <f| d·epsilon | k>
-    def d_dot_eps(a: State, mJ_a: float, b: State, mJ_b: float):
-        # d·epsilon = sum_mu epsilon^mu d_mu (cartesian). Using electric_dipole_matrix_element which already returns vector via w3j and spherical basis
-        # Reuse Rabi_Frequency definition: Omega_ab = (E0 e / ħ) epsilon · d_ab
-        # => epsilon · d_ab = (ħ/eE0) Omega_ab
-        # We can compute Omega via existing helper restricted to E1 automatically by transition.type
-        # Find relevant E1 transition between a and b
-        tr_match = None
-        for tr in a.transitions_from:
-            if tr.state_f == b and tr.type == TransitionType.E1:
-                tr_match = tr
-                break
-        if tr_match is None:
-            for tr in a.transitions_to:
-                if tr.state_i == b and tr.type == TransitionType.E1:
-                    tr_match = tr
-                    break
-        if tr_match is None:
-            return 0 * _ureg("e*a0")
-        Omega = Rabi_Frequency(El_field, tr_match, mJ_a, mJ_b, _ureg).to("1/s")
-        return (Omega * _ureg("hbar/e") / E0).to("e*a0")
-
-    # Sum over intermediate states k that are E1-coupled to i and f
-    amplitude_sum = 0 * _ureg("e^2*a0^2*s^2")
-    for tr_k in state_i.transitions_from:
-        if tr_k.type != TransitionType.E1:
-            continue
-        k = tr_k.state_f
-        omega_ki = tr_k.angular_frequency
-        for mJ_k in k.sublevels:
-            # term 1: <f| d_q | k> * <k| d·epsilon | i> / ((omega_ki - omega_l) * omega_ki)
-            num1 = 0 + 0j
-            for q in (-1, 0, 1):
-                d_fk_q = d_q(state_f, mJ_f, k, mJ_k, q)
-                num1 += d_fk_q
-            dkei = d_dot_eps(k, mJ_k, state_i, mJ_i)
-            term1 = (num1 * dkei) / (omega_ki - omega_l) / omega_ki
-
-            # term 2: <f| d·epsilon | k> * <k| d_q | i> / ((omega_fk) * (omega_ki + omega_l + omega_if))
-            # omega_fk is transition frequency between f and k
-            # Find transition f<->k
-            tr_fk = None
-            for tr in state_f.transitions_from:
-                if tr.state_f == k and tr.type == TransitionType.E1:
-                    tr_fk = tr
-                    break
-            if tr_fk is None:
-                for tr in state_f.transitions_to:
-                    if tr.state_i == k and tr.type == TransitionType.E1:
-                        tr_fk = tr
-                        break
-            if tr_fk is None:
-                omega_fk = 0 * _ureg("1/s")
-            else:
-                omega_fk = tr_fk.angular_frequency
-            dfke = d_dot_eps(state_f, mJ_f, k, mJ_k)
-            num2 = 0 + 0j
-            for q in (-1, 0, 1):
-                d_ki_q = d_q(k, mJ_k, state_i, mJ_i, q)
-                num2 += d_ki_q
-            denom2 = (omega_fk if omega_fk.m != 0 else 1 * _ureg("1/s")) * (omega_ki + omega_l + omega_if)
-            term2 = (dfke * num2) / denom2
-
-            amplitude_sum += (term1 + term2)
-
-    amplitude_sq = (amplitude_sum * np.conj(amplitude_sum))
-    Gamma = (prefactor * amplitude_sq).to("1/s")
-    return Gamma
     
 
 
