@@ -88,6 +88,45 @@ def reduced_electric_quadrupole_matrix_element(
     return _ureg("e") * reduced_quadrupole_matrix_element(A, k, J_f, _ureg)
 
 
+def dipole_matrix_element_basis(
+    A: pint.Quantity,
+    k: pint.Quantity,
+    J_i: float,
+    J_f: float,
+    mJ_i: float,
+    mJ_f: float,
+    q: float,
+    _ureg: pint.UnitRegistry,
+):
+    """
+    Dipole Matrix Element is reduced dipole matrix element decorated with clebsh gordan coefficients (wigner 3j sybol),
+    Dipole Matrix Element is reduced dipole matrix element decorated with clebsh gordan coefficients (wigner 3j sybol),
+    hence expressing the coupling between different magnetic sublevels.
+
+    Args:
+        A: Einstein coefficient [1/s]
+        k: Wavenumber of a transition [1/m]
+        J_i: Angular momentum of the lower state
+        J_f: Angular momentum of the upper state
+        mJ_i: Magnetic quantum number of the lower state
+        mJ_f: Magnetic quantum number of the upper state
+        q: Spherical basis vector
+        _ureg: Unit registry
+
+    Returns:
+        Dipole matrix element [a0]
+    """
+
+    dme = 0 * _ureg("a0")
+    d = reduced_dipole_matrix_element(A, k, J_f, _ureg)
+
+    w3j_coeff = float(
+        w3j(inthalf(J_f), 1, inthalf(J_i), inthalf(-mJ_f), q, inthalf(mJ_i))
+    )
+    dme += w3j_coeff * d
+    
+    return dme.to("a0").magnitude * _ureg("a0")
+
 def dipole_matrix_element(
     A: pint.Quantity,
     k: pint.Quantity,
