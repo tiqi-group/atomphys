@@ -140,7 +140,7 @@ def off_resonant_scattering_rate(
 
     omega_if = (state_I.energy - state_F.energy).to("THz", "sp") * _ureg("_2pi")
     omega_prime = omega_l + omega_if
-    prefactor = (omega_l ** 2) * (omega_prime ** 3) / _ureg("12*pi*vacuum_permittivity*c^3*hbar")
+    prefactor = (omega_l ** 2 * omega_prime ** 3) / _ureg("12*pi*vacuum_permittivity*c^3*hbar")
     J_i = state_I.quantum_numbers["J"]
     J_f = state_F.quantum_numbers["J"]
     
@@ -152,8 +152,9 @@ def off_resonant_scattering_rate(
             state_i = state_I
             state_k = transition_ik.state_f
             transition_fk = atom.transition_between(state_F, state_k) if state_F.energy < state_k.energy else atom.transition_between(state_k, state_F)
-            omega_ki = (state_k.energy - state_i.energy).to("THz", "sp") * _ureg("_2pi")
-            omega_fk = (state_F.energy - state_k.energy).to("THz", "sp") * _ureg("_2pi")
+            transition_ki = atom.transition_between(state_k, state_I) if state_k.energy < state_I.energy else atom.transition_between(state_I, state_k)
+            omega_ki = (state_k.energy - state_I.energy).to("THz", "sp") * _ureg("_2pi")
+            omega_fk = (state_k.energy - state_F.energy).to("THz", "sp") * _ureg("_2pi")
             J_k = state_k.quantum_numbers["J"]
 
             if transition_fk==None:
@@ -193,18 +194,18 @@ def off_resonant_scattering_rate(
                     
                     fdqk = dipole_matrix_element_basis(transition_fk.A, transition_fk.k, J_k, J_f, mJ_k, mJ_f, q, _ureg)*_ureg('e')
                     kdqi = dipole_matrix_element_basis(transition_ik.A, transition_ik.k, J_i, J_k, mJ_i, mJ_k, q, _ureg)*_ureg('e')
-                    D_q += fdqk * Omega_ik / (omega_ki - omega_l) / omega_ki + kdqi * Omega_fk / (omega_ki + omega_prime) / omega_fk
+                    D_q += fdqk * Omega_ik / (omega_ki - omega_l)*(1/omega_ki) + kdqi * Omega_fk / (omega_ki + omega_prime)*(1/omega_fk)
                 except Exception as e:
                     print(f"Exception in transitions_to loop: {e}")
                     pass
         
         
         for transition_ik in state_I.transitions_to:
-            state_i = state_I
             state_k = transition_ik.state_i
             transition_fk = atom.transition_between(state_F, state_k) if state_F.energy < state_k.energy else atom.transition_between(state_k, state_F)
-            omega_ki = (state_k.energy - state_i.energy).to("THz", "sp") * _ureg("_2pi")
-            omega_fk = (state_F.energy - state_k.energy).to("THz", "sp") * _ureg("_2pi")
+            transition_ki = atom.transition_between(state_k, state_I) if state_k.energy < state_I.energy else atom.transition_between(state_I, state_k)
+            omega_ki = (state_k.energy - state_I.energy).to("THz", "sp") * _ureg("_2pi")
+            omega_fk = (state_k.energy - state_F.energy).to("THz", "sp") * _ureg("_2pi")
             J_k = state_k.quantum_numbers["J"]
             if transition_fk==None:
                 continue
@@ -244,14 +245,13 @@ def off_resonant_scattering_rate(
                     
                     fdqk = dipole_matrix_element_basis(transition_fk.A, transition_fk.k, J_k, J_f, mJ_k, mJ_f, q, _ureg)*_ureg('e')
                     kdqi = dipole_matrix_element_basis(transition_ik.A, transition_ik.k, J_i, J_k, mJ_i, mJ_k, q, _ureg)*_ureg('e')
-                    D_q += fdqk * Omega_ik / (omega_ki - omega_l) / omega_ki + kdqi * Omega_fk / (omega_ki + omega_prime) / omega_fk
+                    D_q += fdqk * Omega_ik / (omega_ki - omega_l)*(1/omega_ki) + kdqi * Omega_fk / (omega_ki + omega_prime)*(1/omega_fk)
                 except Exception as e:
                     print(f"Exception in transitions_to loop: {e}")
                     pass
         
         Gamma += prefactor * D_q * D_q.conj()    
-    return Gamma.to("Hz")
-    
+    return Gamma.to("Hz") 
 
 
 def polarizability(
