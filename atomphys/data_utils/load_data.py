@@ -1,6 +1,6 @@
 from atomphys import Atom, State, Transition
 from atomphys.utils.utils import set_default_units
-from atomphys.data_utils import nist, json
+from atomphys.data_utils import nist, json, udel
 
 
 def load_from_database(
@@ -82,6 +82,36 @@ def from_nist(
 
     """
     name, states_data, transitions_data = nist.load_from_nist(name, refresh_cache)
+    return load_from_database(
+        name, states_data, transitions_data, energy_cutoff, remove_isolated
+    )
+
+
+def from_udel(
+    name: str, energy_cutoff="inf", remove_isolated=False, refresh_cache=False
+) -> Atom:
+    """
+    Returns an atom from the UDel ATOM portal (https://www1.udel.edu/atom/)
+
+    The UDel ATOM portal provides high-precision atomic data calculated using
+    linearized coupled-cluster methods, including energies, transition rates,
+    matrix elements, polarizabilities, and hyperfine constants.
+
+    Available elements include monovalent atoms (Li, Na, K, Rb, Cs, Fr),
+    singly-charged ions (Be+, Mg+, Ca+, Sr+, Ba+, Ra+), divalent atoms
+    (Mg, Ca, Sr), and several highly charged ions.
+
+    Args:
+        name (str): Name of the atom to load (e.g. "Rb", "Ca+", "Sr")
+        energy_cutoff (str, optional): Energy cutoff for states. Defaults to "inf".
+        remove_isolated (bool, optional): Remove isolated states. Defaults to False.
+        refresh_cache (bool, optional): Refresh the cache. Defaults to False.
+
+    Returns:
+        Atom: Atom object
+
+    """
+    name, states_data, transitions_data = udel.load_from_udel(name, refresh_cache)
     return load_from_database(
         name, states_data, transitions_data, energy_cutoff, remove_isolated
     )

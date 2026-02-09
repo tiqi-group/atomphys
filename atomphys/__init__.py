@@ -2,7 +2,7 @@ from .atom import Atom
 from .state import State
 from .transition import Transition
 from .electric_field import ElectricField, GaussianBeam
-from .data_utils.load_data import from_json, from_nist
+from .data_utils.load_data import from_json, from_nist, from_udel
 from importlib.metadata import version
 import pint
 
@@ -22,4 +22,5 @@ __all__ = [
     "GaussianBeam",
     "from_json",
     "from_nist",
+    "from_udel",
 ]

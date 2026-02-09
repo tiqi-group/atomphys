@@ -4,6 +4,7 @@
 from copy import deepcopy
 import networkx as nx
 import pint
+from .state import State
 from .transition import Transition
 from .utils.utils import default_units, set_default_units
 
@@ -418,6 +419,123 @@ class Atom:
         if state_f not in self._graph.succ[state_i]:
             return None
         return self._graph.get_edge_data(state_i, state_f)["transition"]
+
+    def merge(
+        self,
+        other: "Atom",
+        copy: bool = False,
+        energy_tolerance: str | pint.Quantity = "0.001 Ry",
+    ) -> "Atom":
+        """
+        Merge data from another Atom, adding only missing states and transitions.
+
+        Existing states and transitions are never overwritten. A state from ``other``
+        is considered "already present" when a state with the same quantum numbers
+        (term symbol) exists in ``self`` and the energy difference is smaller than
+        ``energy_tolerance``. All other states are added. Transitions from ``other``
+        are added only when the corresponding pair of states in the merged atom does
+        not yet have a transition.
+
+        This is useful for combining data from multiple databases, for example::
+
+            ca = from_udel("Ca")
+            ca_nist = from_nist("Ca")
+            ca.merge(ca_nist)   # adds states/transitions NIST has that UDel was missing
+
+        Args:
+            other (Atom): The atom whose data should be merged in.
+            copy (bool, optional): If True, return a merged copy instead of
+                modifying in place. Defaults to False.
+            energy_tolerance (str | pint.Quantity, optional): Maximum energy
+                difference for two states to be considered the same physical
+                state. Defaults to "0.001 Ry" (~100 cm⁻¹).
+
+        Returns:
+            Atom: The merged atom (``self`` when *copy* is False, a new
+            object when *copy* is True).
+        """
+        atom = self.copy() if copy else self
+        energy_tolerance = set_default_units(energy_tolerance, "Ry", atom._ureg)
+
+        # ── 1. Match states from other → states in atom ──────────────────
+        # For each state in `other`, find the closest match in `atom` by
+        # quantum numbers and energy.  If found within tolerance, map to the
+        # existing state.  Otherwise create a new state and add it.
+        state_map: dict = {}  # other_state → atom_state
+        new_states: list[State] = []
+
+        # Use magnitude comparisons in Ry to avoid pint registry mismatches
+        # (which can happen when `copy=True` triggers deepcopy)
+        tol_ry = energy_tolerance.to("Ry").magnitude
+
+        for s_other in other.states:
+            # Find candidates in atom with the same quantum numbers
+            e_other_ry = s_other.energy.to("Ry").magnitude
+            candidates = [
+                s
+                for s in atom.states
+                if s.quantum_numbers == s_other.quantum_numbers
+            ]
+
+            matched = False
+            if candidates:
+                best = min(
+                    candidates,
+                    key=lambda s: abs(s.energy.to("Ry").magnitude - e_other_ry),
+                )
+                if abs(best.energy.to("Ry").magnitude - e_other_ry) < tol_ry:
+                    state_map[s_other] = best
+                    matched = True
+
+            if not matched:
+                # Create a fresh State so we don't mutate `other`
+                new_state = State(
+                    configuration=s_other.configuration,
+                    term=s_other.term,
+                    energy=s_other.energy,
+                )
+                new_states.append(new_state)
+                state_map[s_other] = new_state
+
+        atom.add_states(new_states)
+
+        # ── 2. Add missing transitions ───────────────────────────────────
+        new_transitions: list[Transition] = []
+        skipped_transitions = 0
+
+        for tr_other in other.transitions:
+            si = state_map.get(tr_other.state_i)
+            sf = state_map.get(tr_other.state_f)
+
+            if si is None or sf is None:
+                skipped_transitions += 1
+                continue
+
+            # Ensure consistent ordering (lower energy first)
+            si, sf = sorted([si, sf])
+
+            # Only add if no transition exists between these states yet
+            if atom.transition_between(si, sf) is None:
+                new_tr = Transition(si, sf, tr_other.A)
+                new_transitions.append(new_tr)
+
+        atom.add_transitions(new_transitions)
+
+        # ── 3. Report ────────────────────────────────────────────────────
+        if new_states or new_transitions:
+            print(
+                f"Merged: added {len(new_states)} new states "
+                f"and {len(new_transitions)} new transitions"
+            )
+        else:
+            print("Merged: nothing new to add")
+        if skipped_transitions:
+            print(
+                f"Merged: skipped {skipped_transitions} transitions "
+                f"(endpoints not in atom)"
+            )
+
+        return atom
 
     @default_units("nm")
     def get_transition_by_wavelength(self, wavelength: str | float | pint.Quantity):
