@@ -9,7 +9,7 @@ import pint
 _ureg = pint.UnitRegistry(system="SI", auto_reduce_dimensions=True)
 _ureg.enable_contexts("spectroscopy", "Gaussian")
 _ureg.define("_2pi = 2 * pi")
-_ureg.default_format = "~0.3gP"
+_ureg.formatter.default_format = "~0.3gP"
 
 pint.set_application_registry(_ureg)
 _ureg = pint.get_application_registry()

@@ -4,6 +4,12 @@
 # Created: 09/2023
 # Author: Wojciech Adamczyk <wadamczyk@phys.ethz.ch>
 
+import warnings
+
+# Silence "not implemented" warnings for M1/E2 transitions by default;
+# users can re-enable with warnings.simplefilter("always")
+warnings.filterwarnings("ignore", message=r"Transition type .* not implemented")
+
 import pint
 import numpy as np
 from atomphys.calc.rabi_frequency import Rabi_Frequency
@@ -66,9 +72,10 @@ def ac_stark_shift(
                 )
                 # Ensure we only add the real part to avoid dtype casting issues
                 delta_E += stark_contribution.real
+            except NotImplementedError as e:
+                warnings.warn(str(e), stacklevel=2)
             except Exception as e:
-                print(f"Exception in transitions_from loop: {e}")
-                pass
+                warnings.warn(f"Unexpected error in AC Stark calculation: {e}", stacklevel=2)
 
     for transition in state.transitions_to:
         #zeeman_shifts = transition.sublevels_zeeman_shift(B)
@@ -102,9 +109,10 @@ def ac_stark_shift(
                 )
                 # Ensure we only add the real part to avoid dtype casting issues
                 delta_E += stark_contribution.real
+            except NotImplementedError as e:
+                warnings.warn(str(e), stacklevel=2)
             except Exception as e:
-                print(f"Exception in transitions_from loop: {e}")
-                pass
+                warnings.warn(f"Unexpected error in AC Stark calculation: {e}", stacklevel=2)
 
     if wavelengths is None:
         return delta_E.to("k*mK").magnitude.real * _ureg("k*mK")
@@ -195,9 +203,10 @@ def off_resonant_scattering_rate(
                     fdqk = dipole_matrix_element_basis(transition_fk.A, transition_fk.k, J_k, J_f, mJ_k, mJ_f, q, _ureg)*_ureg('e')
                     kdqi = dipole_matrix_element_basis(transition_ik.A, transition_ik.k, J_i, J_k, mJ_i, mJ_k, q, _ureg)*_ureg('e')
                     D_q += fdqk * Omega_ik / (omega_ki - omega_l) + kdqi * Omega_fk / (omega_ki + omega_prime)
+                except NotImplementedError as e:
+                    warnings.warn(str(e), stacklevel=2)
                 except Exception as e:
-                    print(f"Exception in transitions_to loop: {e}")
-                    pass
+                    warnings.warn(f"Unexpected error in scattering rate calculation: {e}", stacklevel=2)
         
         
         for transition_ik in state_I.transitions_to:
@@ -246,9 +255,10 @@ def off_resonant_scattering_rate(
                     fdqk = dipole_matrix_element_basis(transition_fk.A, transition_fk.k, J_k, J_f, mJ_k, mJ_f, q, _ureg)*_ureg('e')
                     kdqi = dipole_matrix_element_basis(transition_ik.A, transition_ik.k, J_i, J_k, mJ_i, mJ_k, q, _ureg)*_ureg('e')
                     D_q += fdqk * Omega_ik / (omega_ki - omega_l) + kdqi * Omega_fk / (omega_ki + omega_prime)
+                except NotImplementedError as e:
+                    warnings.warn(str(e), stacklevel=2)
                 except Exception as e:
-                    print(f"Exception in transitions_to loop: {e}")
-                    pass
+                    warnings.warn(f"Unexpected error in scattering rate calculation: {e}", stacklevel=2)
         
         Gamma += prefactor * D_q * D_q.conj()    
     return Gamma.to("Hz")

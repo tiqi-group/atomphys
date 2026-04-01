@@ -12,7 +12,9 @@ _ureg = pint.get_application_registry()
 def set_default_units(quantity, unit, _ureg=_ureg):
     if isinstance(quantity, str):
         quantity = _ureg(quantity)
-    if not isinstance(quantity, _ureg.Quantity) or quantity.dimensionless:
+    if isinstance(quantity, _ureg.Quantity) and quantity.dimensionless:
+        quantity = _ureg.Quantity(quantity.magnitude, unit)
+    elif not isinstance(quantity, _ureg.Quantity):
         quantity = _ureg.Quantity(quantity, unit)
     if not quantity.check(unit):
         raise ValueError(f"must have units equivalent to {unit}")
